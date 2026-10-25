@@ -21,8 +21,8 @@ a shared local library, separate from learner assessments.
 
 Lifetime earned hearts determine level: level N starts at 12 × (N − 1)² hearts.
 Spending affects the wallet, never lifetime level or mastery. The initial fox is
-free; pets and charms are fixed-price, permanent cosmetics. No random purchases,
-expiring rewards, streak loss, or paid currency.
+free; pets and charms are fixed-price, permanent cosmetics, equipped immediately
+when bought. No random purchases, expiring rewards, streak loss, or paid currency.
 
 ## MVP curriculum policy
 
@@ -44,7 +44,9 @@ first-response latency and completion latency. Note-name assistance is explicit:
 this MVP measures supported note finding, not independent sight-reading mastery.
 Calendar and monotonic clocks are separate and injectable. Timing starts after
 notation rendering; interrupted rounds retain accuracy evidence but latency is
-null. Speed never changes rewards or unlock eligibility.
+null. Speed never changes rewards or unlock eligibility. Only completed finds
+enter the MVP history; abandoning a partially attempted card does not yet save
+that encounter. The parent view therefore labels this evidence as recent finds.
 
 Tests simulate multi-day journeys, midnight/DST, interrupted timing, difficult
 notes, idempotent awards, profile isolation and concurrent spending without real

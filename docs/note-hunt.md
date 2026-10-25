@@ -7,10 +7,15 @@ octave, without testing rhythm. Note names and a middle-C label support beginner
 
 ## Rounds and rewards
 
-- Every game starts on middle C. The introduction is C4, E4, C4, G4; later cards
-  choose randomly from the selected range without immediately repeating a target.
-- The default range is C4/E4/G4. C4–G4 and C4–C5 add more white notes. No target
-  uses a sharp or flat. A black-key guess still appears accurately on the staff.
+- The default is **My learning path**: C4/E4/G4 anchors, daily review, then gradual
+  expansion through D4/F4/A4/B4/C5. Review completion and unlocked notes persist
+  per learner. Recent first-attempt accuracy across at least three learning days
+  drives expansion; response speed never affects rewards or advancement. See
+  [curriculum policy](learners-and-curriculum.md) for thresholds and test scenarios.
+- Manual C/E/G, C–G and C–C ranges remain available. Each chosen-range game starts
+  on middle C with the C4, E4, C4, G4 introduction, then random nonrepeating targets.
+  Switching learners returns to the adaptive path. No target currently uses a sharp
+  or flat; black-key guesses still appear accurately on the staff.
 - Only fresh attacks count. Transport deduplicates held note-ons by source,
   channel and pitch; releases never count as guesses. Repeated fresh attacks on
   the same wrong note do count. Chords count each attack as a guess.
@@ -22,18 +27,30 @@ octave, without testing rhythm. Note names and a middle-C label support beginner
 - Matched notation and rewards remain visible while any keys are down, then for
   1.6 seconds after all keys are released. Further playing during celebration
   still sounds but cannot alter the matched cards or earn another reward.
-- Switching modes, restarting or changing range releases held keys and cancels
-  the pending round timer. Range changes restart the points and introduction.
-  Game state is in memory only; recordings from Just explore remain separate.
+- Switching modes, restarting, opening profile/device dialogs or changing range
+  releases held keys and cancels pending round work. Current-game points restart;
+  completed encounters and earned hearts remain with their original learner.
+  Switching learners cannot transfer an old card, delayed callback or award.
+- Completed finds save with stable IDs; retry cannot award the same round twice.
+  An explicit save error retains pending encounters in the current tab for retry.
+  Saved history drives a permanent level and spendable cosmetic rewards. Song
+  practice does not award game hearts. Explore recordings remain separate/shared.
+- Note names are currently always available. Learning evidence explicitly records
+  that assistance, exact octave/spelling, guesses, input source and response timing.
+  Timing starts once the target staff renders. Interrupted timings are excluded;
+  a long pause never costs hearts. New sessions do not require a timer or server.
 
 ## Rendering and validation
 
-`src/hunt.ts` owns pure round/score transitions. `src/NoteHunt.tsx` owns the cards
-and lightweight CSS celebration. The shared Score renderer's flashcard option
+`src/hunt.ts` owns pure round/score transitions; `src/learning.ts` owns curriculum
+policy and injectable clocks. `src/useHuntSession.ts` coordinates presentation and
+learner-bound encounters. `src/NoteHunt.tsx` owns cards and the scoped celebration
+stylesheet. The shared Score renderer's flashcard option
 hides time signatures and permits a narrower engraving with larger glyphs.
 The two cards and full piano fit the viewport without scrolling. Reduced motion
 keeps the green cards and hearts while suppressing confetti and heart animation.
-No new dependencies or network services are used.
+No network services are used. Profiles persist through the asynchronous learner
+repository.
 
 Node tests cover reward boundaries, exact-octave matching, single reward per
 round, introduction, range selection and score continuity. One browser boundary
@@ -42,3 +59,8 @@ cards, release/celebration timing, wrong-octave feedback, phone fit, reset and
 switching back to practice. The existing suite covers pointer/computer input and
 practice/explore regressions. Desktop, phone and landscape cards were visually
 checked with bundled Playwright Chromium; physical MIDI remains a manual check.
+
+Browser checks also exercise profile switching, spending without losing level,
+cosmetic equipment, reloads, next-day review resumption, storage failures/retries,
+interrupted clocks and touch-target geometry. Node journeys advance through twenty
+simulated days with seeded randomness rather than real-time waits.

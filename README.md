@@ -6,15 +6,21 @@ with Twinkle, Twinkle, Hot Cross Buns, Räge-Rägetröpfli, free play, and Note 
 
 **Play:** https://kzahel.github.io/kidmidi/
 
-The interface starts with compact song/MIDI controls, then the staff and piano.
-Keep titles, promotional copy, and decorative sections out of the practice view.
-Use **Kid** (default, large notation) or **Compact** (smaller notation), and toggle
-**Multiline** for pages containing multiple printed line groups when space allows.
-Layout choices are remembered in this browser and work independently for every
-song. The staff, illustration and piano fit within the screen without scrolling.
-Kid and Compact set the maximum notation size; engraving adapts to the available
-width and height. Pages advance with played-note feedback, and small arrows allow
-browsing multiline pages. Short or narrow screens show fewer line groups per page.
+The home menu has large activity cards for **Play a song**, **Free play**, and
+**Note hunt**. Songs have their own selection screen. **Home** returns to the menu;
+the learner button opens profiles, hearts and rewards, and the keyboard button
+opens device settings. Activity **Options** contains notation size, Multiline,
+idle hints and sound choices. Navigation and utility controls have at least 48px
+touch targets. Piano keys retain their musical proportions; **Close** shows one
+octave on small screens for wider touch keys, and two octaves on desktop.
+
+Use **Kid** (default, large notation) or **Compact**, and toggle **Multiline** for
+pages containing multiple printed line groups when space allows. Layout choices
+are remembered in this browser and work independently. The staff, illustration
+and piano fit within the screen without scrolling. Kid and Compact set the maximum
+notation size; engraving adapts to available width and height. Pages advance with
+played-note feedback, and small arrows allow browsing multiline pages. Short or
+narrow screens show fewer line groups per page.
 The owner confirmed physical Casio USB-MIDI note input on 2026-10-25.
 
 Correct notes bloom green on the staff and light up the piano key, with a small
@@ -58,7 +64,7 @@ virtual routing ports such as MIDI Through Port-0, IAC Driver and loopMIDI. If o
 a routing port is present initially, plugging in a keyboard upgrades that default.
 Older automatically saved Through defaults are corrected too.
 
-If several inputs are available, choose the piano from the selector. An explicit
+If several inputs are available, choose the piano from the selector in keyboard settings. An explicit
 choice always wins, including a deliberately selected virtual input. Its ID,
 name, manufacturer and whether it was selected manually are remembered locally. Replugging restores that input;
 a temporary fallback does not overwrite the preference. If an ID changes, a
@@ -79,7 +85,8 @@ its volume and receive settings still apply. On-screen keys and saved Explore
 recording playback continue to use the speaker preview voice. See
 [MIDI phrase playback](docs/midi-phrase-playback.md).
 The piano has proportioned keys and stays centered instead of stretching across
-a wide screen. **Close · middle C** starts with C3–C5 and larger touch targets.
+a wide screen. **Close · middle C** shows C3–C5 on desktop and C4–C5 on
+phones/small landscape screens, with larger touch keys.
 **All keys** fits the complete keyboard range on screen, using smaller keys.
 The initial full range is 61 keys, C2–C7, matching the owner's keyboard assumption.
 **Range ⚙** offers 61/88-key presets or **Play end keys to set range**: play the
@@ -114,7 +121,12 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/keyboard.ts` / `src/useKeyboard.ts`: close/full piano layout and per-input key ranges.
 - `src/audio.ts`: local preview voice.
 - `src/phrase-preview.ts`: phrase demonstrations through matched MIDI output or speakers.
-- `src/App.tsx`: practice UI and shared input handling for MIDI, pointer and keys.
+- `src/App.tsx` / `src/ActivityMenu.tsx`: app shell and activity navigation.
+- `src/usePianoSession.ts` / `src/useExploreSession.ts`: shared transport/input routing and recording lifecycle.
+- `src/Piano.tsx`, `src/PracticeScore.tsx`, `src/ActivityControls.tsx`: activity presentation.
+- `src/learning.ts` / `src/useHuntSession.ts`: daily review and adaptive Note Hunt sessions.
+- `src/learners.ts` / `src/learner-repository.ts` / `src/useLearners.ts`: profiles, rewards and asynchronous IndexedDB storage.
+- Component-owned `*.module.css`: scoped styles with exact generated typings and unused-class checks.
 
 The Räge-Rägetröpfli song is manually transcribed from the supplied book photo:
 all 12 bars, key/time signatures, chord symbols, lyrics, stems, flags and final
@@ -138,18 +150,28 @@ the preview voice, with piano highlights, and never records itself. Live playing
 stops playback. Download a recording to keep a separate copy or transfer devices.
 There is no 512-note capture limit. See [live notation and recording behavior](docs/explore-transcription.md).
 
-**Note hunt** shows a single target note beside the note you play. Start with
-middle C, E and G, or choose C–G or C–C for more white notes. A first-, second-, or
-third-try find earns three, two or one heart points. Later finds still celebrate
-with confetti; points never decrease. Higher/lower cues help after a guess.
-Matched cards linger while keys are held and for 1.6 seconds after release, then
-the next card appears. There is no time limit. MIDI, touch and computer keys all
-work. Scores are local to the current game; restart, changing range or leaving the
-mode starts a fresh game. See [Note hunt behavior](docs/note-hunt.md).
+**Note hunt** shows a target note beside the note you play. **My learning path**
+starts with C4/E4/G4, opens each later learning day with a short review, and adds
+white notes one at a time after consistent first-try success across multiple days.
+You can also choose C/E/G, C–G or C–C manually. There is no deadline or speed score.
+A first-, second-, or third-try find earns three, two or one heart points; every
+find celebrates. Higher/lower cues help after a guess. Matched cards linger while
+keys are held and for 1.6 seconds after release. MIDI, touch and computer keys work.
+See [Note hunt behavior](docs/note-hunt.md).
+
+**Learners & rewards** lets families add, rename and switch learners. Each learner
+keeps their own history, lifetime hearts, level and spendable heart balance. A free
+fox keeps them company; hearts buy permanent pet friends and charms. Spending never
+reduces level or learning progress. Profiles and completed rounds persist locally
+in IndexedDB; device settings and the Explore recording library stay separate.
+A failed progress save offers retry and retains the pending award in that tab.
+There are no accounts, sign-in or cross-device sync yet. See
+[learning policy and hosted-account direction](docs/learners-and-curriculum.md).
 
 Rhythm is approximate, with no inferred tempo, meter or hand independence.
 There is no audio transcription or automatic MIDI-file/photo import.
-Song/game progress resets on refresh; Explore recordings persist locally.
+Song position and current game rounds reset on refresh; learner progress, hearts,
+rewards and Explore recordings persist locally.
 There are no analytics, uploads, or external page assets. The first local install
 requires the network.
 
@@ -158,7 +180,7 @@ requires the network.
 ```sh
 npm run typecheck
 npm test
-npm run check
+npm run check # Biome, Stylelint, CSS scope/usage and exact typings
 npm run build
 npx playwright install chromium # first time only
 npm run test:browser
@@ -167,6 +189,11 @@ npm run test:browser
 Keep the full Node test suite (`npm test`) under about 10 seconds on a normal
 development machine or cached CI runner. Use deterministic inputs and fake clocks
 instead of real-time waits where possible, and keep regression coverage focused.
+
+After changing stylesheet classes, run `npm run styles:write` to refresh tracked
+exact module typings. `npm run check` rejects unused or missing classes, unscoped
+selectors, stale typings and CSS errors; `npm run typecheck` also checks the style
+contract. Document sizing/reset is scoped to an explicitly mounted document class.
 
 Browser checks use Playwright's separate Chromium and simulated MIDI messages.
 They cover real staff rendering/cursor progression, repeated notes, unplugging,

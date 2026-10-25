@@ -170,6 +170,7 @@ test('rewards are idempotent, spendable and separate from permanent level and cu
   for (let i = 0; i < 3; i++) state = withEncounter(state, encounter());
   assert.equal(progress(state).level, 2);
   state = withPurchase(state, 'bow', 'buy', 0);
+  assert.equal(state.learner.charm, 'bow');
   assert.equal(progress(state).balance, 0);
   assert.equal(progress(state).earned, 12);
   assert.equal(progress(state).level, 2);

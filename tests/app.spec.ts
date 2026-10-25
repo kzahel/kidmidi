@@ -70,6 +70,10 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
   await expect(page.getByText('Test Casio')).toBeVisible();
   await expect(page.locator('[class*="__score__"] svg')).toBeVisible();
   const cursor = page.locator('[class*="__score__"] [id^="cursorImg"]');
+  await openSettings(page);
+  await page.clock.fastForward(10000);
+  await expect(cursor).toBeHidden();
+  await closeSettings(page);
   await expect(cursor).toBeHidden();
   await page.clock.fastForward(1800);
   await expect(cursor).toBeVisible();
@@ -882,6 +886,9 @@ test('piano zoom fits full MIDI ranges and remembers calibrated endpoints per ke
     .selectOption('other');
   await closeSettings(page);
   await expect(keys).toHaveCount(61);
+  await page
+    .getByRole('button', { name: 'Set keyboard range', exact: true })
+    .click();
   await page
     .getByRole('combobox', { name: 'Keyboard range', exact: true })
     .selectOption('21:108');

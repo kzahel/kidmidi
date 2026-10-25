@@ -1,7 +1,7 @@
 # Piano range and zoom
 
-The initial close view shows C3–C5, centered around middle C. The full view shows
-every semitone in the configured keyboard range, using narrower keys. Both views
+The initial close view shows C3–C5 on desktop and C4–C5 on small touch layouts,
+centered around middle C. The full view shows every semitone in the configured keyboard range, using narrower keys. Both views
 fit within the viewport without horizontal scrolling. Middle C has a distinct
 label, and phone full views omit non-C labels to limit crowding. Compact/Kid size
 still sets the maximum key width; the layout preserves white/black proportions.
@@ -27,8 +27,8 @@ An ordinary MIDI attack outside the range expands its lower/upper bounds. This
 is evidence of another playable pitch, not proof of the physical endpoints;
 transposition may change the emitted range. Pointer/computer input never changes
 a physical keyboard's range. Zooming preserves held MIDI notes and highlights.
-Close view remains centered even when MIDI notes arrive outside C3–C5; switching
-to full view reveals those keys, and the score/readout still receives all notes.
+Close view remains centered even when MIDI notes arrive outside its displayed
+octave(s); switching to full view reveals those keys, and the score/readout still receives all notes.
 
 ## Storage and validation
 
@@ -39,8 +39,8 @@ profile. The disconnected on-screen keyboard has its own profile. Invalid or
 unavailable local storage falls back to the default; input remains usable.
 
 `src/keyboard.ts` owns parsing, profile matching and key geometry. `useKeyboard`
-owns range observation and endpoint capture; `App` routes only MIDI attacks into
-it, before practice/explore/game processing. Node tests check pitch/count/geometry
+owns range observation and endpoint capture; `usePianoSession` routes only MIDI
+attacks into it, before practice/explore/game processing. Node tests check pitch/count/geometry
 for close, full, 88-key, black-endpoint and MIDI-wide ranges, plus persistence and
 identity matching. One browser boundary test checks held notes across zoom,
 calibration isolation, range expansion, multiple inputs, reload and phone fit.

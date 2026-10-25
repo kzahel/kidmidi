@@ -64,6 +64,8 @@ export function App() {
                 return;
               }
               session.releaseAll();
+              session.keyboard.cancelLearning();
+              session.setRangeOpen(false);
               setSettingsOpen(true);
             }}
           >
@@ -79,6 +81,8 @@ export function App() {
             disabled={!learners.snapshot}
             onClick={() => {
               session.releaseAll();
+              session.keyboard.cancelLearning();
+              session.setRangeOpen(false);
               setLearnersOpen(true);
             }}
           >
@@ -102,8 +106,14 @@ export function App() {
       )}
       {learners.error && (
         <div className={styles['save-warning']} role="alert">
-          {learners.error} Progress stays in this tab until saved.{' '}
-          <button type="button" onClick={() => void learners.retry()}>
+          {learners.error}{' '}
+          {learners.pendingCount > 0 &&
+            'New hearts stay in this tab until saved.'}{' '}
+          <button
+            type="button"
+            disabled={learners.busy}
+            onClick={() => void learners.retry()}
+          >
             Retry saving
           </button>
         </div>

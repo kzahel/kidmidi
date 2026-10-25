@@ -121,7 +121,13 @@ export function usePianoSession(
         feedback.release(id);
         recorder.noteOff(id, atMs);
       } else {
-        if (current.current.blocked) return;
+        if (
+          current.current.blocked ||
+          (!current.current.active &&
+            !current.current.freePlay &&
+            !current.current.hunting)
+        )
+          return;
         if (held.current.has(id)) return;
         held.current.set(id, event.note);
         setLastNote(event.note);
@@ -177,6 +183,7 @@ export function usePianoSession(
   useEffect(() => {
     idleHint.update(
       !hints ||
+        blocked ||
         !active ||
         freePlay ||
         hunting ||
@@ -187,6 +194,7 @@ export function usePianoSession(
     );
     return () => idleHint.dispose();
   }, [
+    blocked,
     active,
     hints,
     freePlay,

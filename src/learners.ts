@@ -139,6 +139,7 @@ export function withPurchase(
     throw new Error('Keep collecting hearts for this reward.');
   return {
     ...snapshot,
+    learner: { ...snapshot.learner, [item.slot]: item.id },
     purchases: [
       ...snapshot.purchases,
       { id, learnerId: snapshot.learner.id, itemId, cost: item.cost, at },

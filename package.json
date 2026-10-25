@@ -25,7 +25,7 @@
     "vexflow": "1.2.93"
   },
   "devDependencies": {
-    "@babel/parser": "^8.0.8",
+    "@babel/parser": "^7.29.11",
     "@biomejs/biome": "^2.6.3",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",

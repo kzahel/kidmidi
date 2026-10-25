@@ -43,6 +43,9 @@ test('activity menu and profile controls have touch targets on desktop, phone an
     await page.setViewportSize(viewport);
     const target = page.getByRole('region', { name: 'Find this', exact: true });
     await expect(target.locator('svg')).toBeVisible();
+    await expect
+      .poll(async () => (await target.boundingBox())?.height ?? 0)
+      .toBeGreaterThan(100);
     const geometry = await target.evaluate((card) => {
       const bounds = card.getBoundingClientRect();
       return {
@@ -92,6 +95,9 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
   ).toContainText('Lv 2 · ♥ 12');
+  await page
+    .getByRole('combobox', { name: 'Note range' })
+    .selectOption('octave');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   const bow = page.getByRole('button', {
     name: 'Get Party bow for 12 hearts',
@@ -122,6 +128,9 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
   ).toBeVisible();
   await page.keyboard.press('a'); // Profile forms never play or award notes.
   await closeLearners(page);
+  await expect(page.getByRole('combobox', { name: 'Note range' })).toHaveValue(
+    'adaptive',
+  );
   await solve(page);
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await expect(
@@ -270,3 +279,71 @@ async function encounters(page: Page) {
     }
   });
 }
+
+test('the final qualifying review unlocks one new note through the stored curriculum', async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date('2026-10-25T12:00:00Z') });
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Note hunt', exact: true }),
+  ).toBeEnabled();
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open('kidmidi-learners', 1);
+      request.onsuccess = () => resolve(request.result);
+    });
+    try {
+      const tx = db.transaction(['learners', 'encounters'], 'readwrite');
+      const done = new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onabort = () => reject(tx.error);
+      });
+      const people = tx.objectStore('learners').getAll();
+      people.onsuccess = () => {
+        const learnerId = people.result[0].id;
+        for (const day of ['2026-10-23', '2026-10-24', '2026-10-25']) {
+          for (const target of [60, 64, 67]) {
+            const count = day === '2026-10-25' && target === 67 ? 1 : 2;
+            for (let i = 0; i < count; i++)
+              tx.objectStore('encounters').add({
+                id: `seed-${day}-${target}-${i}`,
+                learnerId,
+                day,
+                target,
+                guesses: [target],
+                startedAt: Date.parse(`${day}T09:00:00Z`) + target * 10 + i,
+                spelling: `${target}`,
+                firstResponseMs: 1000,
+                durationMs: 1000,
+                assistance: 'note-name',
+                input: 'midi',
+                reward: 3,
+                reason:
+                  day === '2026-10-25' && target !== 67 ? 'review' : 'practice',
+              });
+          }
+        }
+      };
+      await done;
+    } finally {
+      db.close();
+    }
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  const target = page.getByRole('region', { name: 'Find this', exact: true });
+  await expect(target).toContainText('G4');
+  await expect(
+    page.getByText('A little review to start today', { exact: true }),
+  ).toBeVisible();
+  await solve(page);
+  await expect(target).toContainText('D4');
+  await expect(
+    page.getByText('Meet a new note', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await expect(target).toContainText('D4');
+});
