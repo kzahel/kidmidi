@@ -8,8 +8,10 @@ declare const styles: {
   readonly 'header': string;
   readonly 'header-actions': string;
   readonly 'home-button': string;
+  readonly 'hunting': string;
   readonly 'learner-button': string;
   readonly 'learner-label': string;
+  readonly 'lessons-button': string;
   readonly 'midi-status': string;
   readonly 'route-label': string;
   readonly 'save-warning': string;

@@ -228,7 +228,7 @@ export function NoteHunt({
             ↺
           </button>
           <button type="button" onClick={onMap} aria-label="Learning map">
-            Lessons →
+            All lessons →
           </button>
         </div>
       </section>
@@ -263,9 +263,6 @@ export function NoteHunt({
           styles['hunt-controls']
         }
       >
-        <button type="button" onClick={onMap} aria-label="Learning map">
-          Lessons
-        </button>
         {lesson ? (
           <span
             className={styles['lesson-count']}

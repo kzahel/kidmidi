@@ -24,7 +24,9 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     .click();
   await expect(target(page).locator('svg')).toBeVisible();
   await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Learning map', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Back to lessons', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Coming soon', exact: true }).click();
   await expect(
     page.getByText('Discover bass clef', { exact: true }),
@@ -61,7 +63,7 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
       page.getByRole('region', { name: 'Lesson complete' }),
     ).toContainText('💎 +1');
     await page
-      .getByRole('button', { name: 'Learning map', exact: true })
+      .getByRole('button', { name: 'Back to lessons', exact: true })
       .click();
     await expect(
       page.getByRole('button', {
@@ -116,6 +118,10 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     page.getByRole('region', { name: 'Lesson complete' }),
   ).not.toContainText('💎');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Next rewards', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Preview Puppy friend', exact: true })
+    .click();
   await page
     .getByRole('button', { name: 'Get Puppy friend for 3 gems', exact: true })
     .click();
@@ -183,6 +189,7 @@ test('help and guesses survive settings; switching learner discards the old less
   expect(encounter.guesses).toEqual([62, note]);
   expect(encounter.durationMs).toBeNull();
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Learners', exact: true }).click();
   await page.getByRole('textbox', { name: 'New learner name' }).fill('Sibling');
   await page.getByRole('button', { name: 'Add learner', exact: true }).click();
   await expect(
@@ -262,7 +269,9 @@ test('a failed final badge save can be retried without blocking experimentation 
   await expect(page.getByRole('alert')).toContainText(
     'Test badge save interruption',
   );
-  await page.getByRole('button', { name: 'Learning map', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Back to lessons', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Treehouse: 8 notes', exact: true }),

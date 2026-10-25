@@ -79,6 +79,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
   await page.clock.install({ time: new Date('2026-10-25T12:00:00Z') });
   await page.goto('/');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Learners', exact: true }).click();
   await page
     .getByRole('textbox', { name: 'Learner name', exact: true })
     .fill('Ada');
@@ -99,6 +100,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
     .getByRole('combobox', { name: 'Note range' })
     .selectOption('octave');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
   const bow = page.getByRole('button', {
     name: 'Get Party bow for 12 hearts',
     exact: true,
@@ -108,14 +110,15 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
   await expect(
     page.getByText('0 badges · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Choose Party bow', exact: true })
-    .click();
+  await expect(
+    page.getByRole('button', { name: 'Party bow equipped', exact: true }),
+  ).toBeDisabled();
   await expect(
     page
       .getByRole('img', { name: 'Fox friend with party bow', exact: true })
       .last(),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Learners', exact: true }).click();
   await page
     .getByRole('textbox', { name: 'New learner name', exact: true })
     .fill('Ben');
@@ -136,6 +139,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
   await expect(
     page.getByText('3 hearts earned, forever', { exact: true }),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Learners', exact: true }).click();
   await expect(
     page.getByRole('combobox', { name: 'Current learner' }),
   ).toBeEnabled();

@@ -49,7 +49,9 @@ export function App() {
   }
   return (
     <main className={styles['app']}>
-      <header className={styles['header']}>
+      <header
+        className={`${styles['header']} ${mode === 'hunt' ? styles['hunting'] : ''}`}
+      >
         <button
           type="button"
           className={styles['home-button']}
@@ -60,17 +62,24 @@ export function App() {
             ? '‹ Home'
             : '♫ Kidmidi'}
         </button>
-        <span className={styles['activity-title']}>
-          {mode === 'practice'
-            ? session.song.title
-            : mode === 'hunt'
-              ? hunt.lesson?.patterns
-                ? 'Pattern hunt'
-                : 'Note hunt'
+        {mode === 'hunt' ? (
+          <button
+            type="button"
+            className={styles['lessons-button']}
+            aria-label="Back to lessons"
+            onClick={() => navigate('path')}
+          >
+            ← Lessons
+          </button>
+        ) : (
+          <span className={styles['activity-title']}>
+            {mode === 'practice'
+              ? session.song.title
               : mode === 'explore'
                 ? 'Free play'
                 : ''}
-        </span>
+          </span>
+        )}
         <div className={styles['header-actions']}>
           <button
             type="button"
@@ -173,7 +182,6 @@ export function App() {
       )}
       {learnersOpen && (
         <LearnerMenu
-          key={learners.snapshot?.learner.id}
           controller={learners}
           onClose={() => setLearnersOpen(false)}
         />

@@ -37,6 +37,34 @@ The initial fox is free; pets and charms are fixed-price, permanent cosmetics,
 equipped immediately when bought. No random purchases, expiring rewards, streak
 loss, or paid currency.
 
+## Rewards and collection
+
+The Learners & rewards dialog is fitted to the viewport. Rewards, Learners, and
+Progress tabs separate the collection from profile forms and learning evidence.
+The shop has Friends/Dress up categories, two preview cards per page, and explicit
+Back/More buttons. The stage shows the selected friend wearing the selected
+accessory. Previews never call purchase/equip or alter saved state. The action
+button buys once or equips an owned item; the equipped item is labelled With you.
+Unavailable prices show the remaining hearts/gems. Take off removes equipment,
+not ownership. Profile switching resets the shop to that learner's equipment.
+
+Fox, cat, bunny and puppy share original vector artwork across the stage,
+collection, home menu and header. Accessories are drawn in the same coordinate
+space, so previews match the worn outfit. Blinking and the short equipment
+entrance respect reduced motion. The original vector art is MIT-licensed.
+
+| Accessory             | Hearts |
+| --------------------- | ------ |
+| Party bow             | 12     |
+| Star charm (necklace) | 24     |
+| Cosy scarf            | 18     |
+| Daisy crown           | 24     |
+| Golden crown          | 48     |
+
+Existing stable IDs, prices, purchases and equipment remain valid. Cat costs
+18 hearts, bunny 30 hearts, puppy 3 gems. There are no changes to earning rules.
+The Progress tab pages through recent single-note evidence or lesson badges.
+
 ## Lessons and progress
 
 Note Hunt opens **Lessons**. Labelled group buttons switch Find notes (Garden),
@@ -44,7 +72,8 @@ Read notes (Treehouse), Patterns (River), and Coming soon. Cards show the concre
 skill/range, assistance, set length, and Ready to play or Badge earned. No playable
 card is disabled by curriculum order. The catalog order suggests a progression,
 while learners can skip ahead or experiment freely. Pets do not select levels.
-The labelled Lessons button returns to the active lesson's group.
+The prominent ← Lessons button in the main header returns to the active
+lesson's group; Home remains available alongside it.
 
 The browser displays at most four cards per page, with Back/More buttons as
 needed. It fills the available viewport without scrolling, on tablets in either

@@ -14,7 +14,8 @@ Treehouse hides names until 💡 or a match. See the [lesson catalog and assessm
   Cards show range/support, length and Ready to play/Badge earned. Groups contain
   at most four visible cards per page, with explicit Back/More controls when
   needed. The complete browser fits the viewport without scrollbars, including
-  tablet portrait/landscape and phones. Returning from a lesson selects its group.
+  tablet portrait/landscape and phones. The prominent ← Lessons header button returns to the active group, on
+  desktop and phones. Home stays available.
   Future topics are noninteractive Coming soon previews, not locked lessons.
   Existing badges and earlier gate purchases stay saved. New badges grant gems
   once; replays still earn hearts. The puppy costs three gems.

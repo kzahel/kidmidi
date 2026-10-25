@@ -10,12 +10,14 @@ Kidmidi is a long-term open platform for playful family music-making, with
 experiences that grow from toddler co-play into independent learning. The focus
 is folk and public-domain repertoire, informed by family use and experienced
 piano-teacher advice. Original software and documentation are [MIT-licensed](LICENSE);
-music and artwork have separate rights. Accounts will remain optional if added.
+music and third-party artwork have separate rights. The original vector
+companion and accessory artwork in `src/Pet.tsx` is included under MIT. Accounts will remain optional if added.
 See [product direction](docs/product-direction.md) for age-specific design,
 extensibility, portability and possible voluntary support.
 
 The home menu has large activity cards for **Play a song**, **Free play**, and
-**Note hunt**. Songs have their own selection screen. **Home** returns to the menu;
+**Note hunt**. Songs have their own selection screen. **Home** returns to the menu; **← Lessons** stays in the main header during
+Note Hunt and Pattern Hunt, including on phones, and returns to the selected group;
 the learner button opens profiles, hearts and rewards, and the persistent
 sound/gear button opens **Sound and settings** from every activity, including
 without a MIDI keyboard. **Sounds**, **Make**, **Output**, and **Keyboard** tabs
@@ -216,19 +218,29 @@ also be selected manually. This adaptive practice suggestion does not restrict
 lesson access. Practice earns the usual hearts indefinitely. Practice and
 single-note lessons show the target beside the played note, give higher/lower
 cues, and preserve their existing held-key/1.6-second feedback pacing. The
-labelled **Lessons** button returns to the overview. MIDI, touch and computer
+prominent **← Lessons** header button returns to the overview. MIDI, touch and computer
 keys work. See [Note hunt behavior](docs/note-hunt.md).
 
-**Learners & rewards** lets families add, rename and switch learners. Each learner
-keeps their own history, lifetime hearts, worlds, badges and separate heart/gem
-wallets. A free fox keeps them company; hearts buy permanent pet friends and
-charms, while **3 gems** buy the puppy. Spending never removes badges. Earlier
-world purchases remain saved; lessons now open without purchases. Existing
-hearts, friends and recordings are preserved. Profiles and completed rounds persist locally
-in IndexedDB; device settings and the Explore recording library stay separate.
-A failed progress save offers retry and retains the pending award in that tab.
-There are no accounts, sign-in or cross-device sync yet. See
-[learning policy and hosted-account direction](docs/learners-and-curriculum.md).
+**Learners & rewards** opens a fitted, paged collection with **Rewards**,
+**Learners**, and **Progress** tabs. Rewards has **Friends** and **Dress up**:
+preview companions and outfits without spending, then explicitly buy or choose.
+Original illustrated fox, cat, bunny and puppy companions wear their accessories
+on the home screen and in the header. A bow, star necklace, teal scarf, daisy and
+golden crown offer different outfits. The preview, collection cards and equipped
+companion use the same artwork. New equipment gives a small greeting; reduced
+motion disables movement and blinking. Pages show two rewards with Back/More
+controls, keeping the shop and profile/progress tabs within one screen.
+
+Each learner keeps their own history, lifetime hearts, badges, purchases, and
+separate heart/gem wallets. The fox is free. Hearts buy permanent friends and
+accessories; **3 gems** buy the puppy. The shop shows what is owned/equipped,
+prices and how much currency is still needed. Trying something on never equips
+it or changes the wallet. Existing friends, accessories and earlier world
+purchases stay saved. Spending never removes badges. Profiles and completed
+rounds persist in local IndexedDB; device settings and the Explore recording
+library stay separate. A failed progress save offers retry and retains the
+pending award in that tab. There are no accounts, sign-in or cross-device sync.
+See [learning policy and hosted-account direction](docs/learners-and-curriculum.md).
 
 Rhythm is approximate, with no inferred tempo, meter or hand independence.
 There is no audio transcription or automatic MIDI-file/photo import.

@@ -116,3 +116,22 @@
   color: #756341;
   margin: 0 4px;
 }
+
+.lessons-button {
+  background: #dfedd8;
+  border: 2px solid #648a67;
+  font-weight: 750;
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+@media (width <= 640px) {
+  .lessons-button {
+    padding-inline: 10px;
+    font-size: 15px;
+  }
+  .hunting .learner-button > span:last-child,
+  .hunting .route-label {
+    display: none;
+  }
+}
