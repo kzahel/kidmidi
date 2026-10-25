@@ -2,7 +2,7 @@
 
 A small piano playground for children and parents. Follow a familiar melody at
 your own pace: the staff waits until you press the next note. An early experiment,
-with Twinkle, Twinkle, Hot Cross Buns, Räge-Rägetröpfli, and free play.
+with Twinkle, Twinkle, Hot Cross Buns, Räge-Rägetröpfli, free play, and Note hunt.
 
 **Play:** https://kzahel.github.io/kidmidi/
 
@@ -82,6 +82,7 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
   practice progression. Durations are displayed, but rhythm is not scored.
 - `src/feedback.ts`: note-length/held-key feedback and delayed idle hints, independent of recognition.
 - `src/explore.ts`: raw MIDI capture, loose note/chord grouping and live MusicXML.
+- `src/hunt.ts` / `src/NoteHunt.tsx`: note-finding rounds, heart rewards and paired staff cards.
 - `src/view.ts`: Compact/Kid sizing and saved multiline settings.
 - `src/rain.ts`: manually checked songbook transcription and source illustration.
 - `src/useMidi.ts`: automatic permission request/reconnect and connection lifecycle.
@@ -104,6 +105,15 @@ latest two bars (four with Multiline), while **MusicXML** downloads the full tak
 Use **Clear recording** (↺) to start again. Captures stay in memory when switching
 songs, and reset on reload. A take holds up to 512 attacks and then asks you to
 download or clear it. See [live notation behavior](docs/explore-transcription.md).
+
+**Note hunt** shows a single target note beside the note you play. Start with
+middle C, E and G, or choose C–G or C–C for more white notes. A first-, second-, or
+third-try find earns three, two or one heart points. Later finds still celebrate
+with confetti; points never decrease. Higher/lower cues help after a guess.
+Matched cards linger while keys are held and for 1.6 seconds after release, then
+the next card appears. There is no time limit. MIDI, touch and computer keys all
+work. Scores are local to the current game; restart, changing range or leaving the
+mode starts a fresh game. See [Note hunt behavior](docs/note-hunt.md).
 
 Rhythm is approximate, with no inferred tempo, meter or hand independence.
 There is no audio transcription or automatic MIDI-file/photo import.

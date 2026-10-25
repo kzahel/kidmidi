@@ -68,6 +68,7 @@ export function Score({
   hint,
   size,
   scoreXml,
+  flashcard = false,
 }: {
   notes: Note[];
   active: number;
@@ -80,6 +81,7 @@ export function Score({
   hint: boolean;
   size: ScoreSize;
   scoreXml?: string;
+  flashcard?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const renderer = useRef<OpenSheetMusicDisplay | null>(null);
@@ -109,7 +111,10 @@ export function Score({
       previousWidth = width;
       previousHeight = height;
       mount.style.transform = 'none';
-      const baseWidth = Math.max(width, size === 'kid' ? 640 : 480);
+      const baseWidth = Math.max(
+        width,
+        flashcard ? 240 : size === 'kid' ? 640 : 480,
+      );
       const availableWidth = Math.max(1, width - 4);
       const availableHeight = Math.max(1, height - 4);
       let best = { width: baseWidth, scale: 0, fittedWidth: 0 };
@@ -121,7 +126,7 @@ export function Score({
         const upperBound = Math.min(1, availableWidth / candidateWidth);
         if (upperBound < best.scale) break;
         mount.style.width = `${candidateWidth}px`;
-        instance.Zoom = scoreZoom[size];
+        instance.Zoom = flashcard ? 3 : scoreZoom[size];
         instance.render();
         renderedWidth = candidateWidth;
         const contentWidth = Math.max(candidateWidth, mount.scrollWidth);
@@ -168,6 +173,7 @@ export function Score({
             { type: 0, color: '#71bfa4', alpha: 0.35, follow: false },
           ],
         });
+        if (flashcard) instance.EngravingRules.RenderTimeSignatures = false;
         instance.EngravingRules.PageLeftMargin = scoreXml ? 3 : 1;
         instance.EngravingRules.PageRightMargin = 1;
         instance.EngravingRules.MinimumDistanceBetweenSystems = 3;
@@ -225,7 +231,16 @@ export function Score({
       mount.remove();
       renderer.current = null;
     };
-  }, [notes, song, wholeSong, phraseIndex, endPhrase, size, scoreXml]);
+  }, [
+    notes,
+    song,
+    wholeSong,
+    phraseIndex,
+    endPhrase,
+    size,
+    scoreXml,
+    flashcard,
+  ]);
 
   useEffect(() => {
     if (renderer.current && host.current)

@@ -659,3 +659,178 @@ button:hover:not(:disabled) {
     margin-block: 0;
   }
 }
+
+.note-hunt {
+  position: relative;
+  background: #fbfaf5;
+}
+.hunt-controls {
+  gap: 14px;
+}
+.hunt-points {
+  color: #b64e70;
+  font-size: 22px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.hunt-cards {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(8px, 2vw, 24px);
+  padding: 8px clamp(8px, 2vw, 24px);
+}
+.hunt-card {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #fffefa;
+  border: 2px solid #d6dfcb;
+  border-radius: 18px;
+  padding: 12px 6px;
+  overflow: clip;
+  transition:
+    background-color 180ms,
+    border-color 180ms;
+}
+.hunt-card.played-card {
+  border-color: #e6d7b9;
+  background: #fffaf0;
+}
+.hunt-card.matched {
+  border-color: #75b88a;
+  background: #eff7e9;
+}
+.hunt-card-title,
+.hunt-note-name {
+  flex-shrink: 0;
+  text-align: center;
+  font-weight: 650;
+  font-size: clamp(13px, 2.4vw, 22px);
+}
+.hunt-card-title {
+  color: #65745b;
+  padding-bottom: 4px;
+}
+.hunt-note-name {
+  min-height: 30px;
+}
+.hunt-card .score {
+  margin-block: auto;
+  flex: 0 1 250px;
+  min-height: 0;
+}
+.hunt-card.matched .score svg path {
+  fill: #198559;
+}
+.hunt-empty {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-content: center;
+  font-family: serif;
+  font-size: clamp(32px, 10vh, 80px);
+  color: #d4c5a4;
+}
+.hunt-feedback {
+  flex-shrink: 0;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(16px, 2.6vw, 24px);
+  font-weight: 650;
+  gap: 2px;
+  padding: 4px;
+}
+.hunt-hearts {
+  display: flex;
+  gap: 10px;
+  color: #e3ddd4;
+  font-size: 32px;
+  line-height: 1;
+}
+.hunt-hearts .earned {
+  color: #d46b8b;
+}
+.hunt-found .hunt-hearts .earned {
+  animation: hunt-heart-pop 450ms ease-out;
+}
+.hunt-bonus {
+  color: #b64e70;
+  font-size: 17px;
+  line-height: 1;
+}
+.hunt-confetti {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+}
+.hunt-confetti i {
+  position: absolute;
+  top: 20%;
+  width: 9px;
+  height: 14px;
+  opacity: 0;
+  animation: hunt-confetti-fall 1300ms ease-out both;
+}
+@keyframes hunt-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, -20px) rotate(0);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), 260px) rotate(var(--turn));
+  }
+}
+@keyframes hunt-heart-pop {
+  0% {
+    transform: scale(0.75);
+  }
+  55% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (max-height: 600px) {
+  .hunt-feedback {
+    min-height: 68px;
+    font-size: 16px;
+    gap: 0;
+  }
+  .hunt-hearts {
+    font-size: 24px;
+  }
+  .hunt-card {
+    padding-block: 5px;
+  }
+  .hunt-note-name {
+    min-height: 20px;
+    font-size: 14px;
+  }
+  .hunt-card-title {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hunt-card {
+    transition: none;
+  }
+  .hunt-found .hunt-hearts .earned {
+    animation: none;
+  }
+  .hunt-confetti {
+    display: none;
+  }
+}

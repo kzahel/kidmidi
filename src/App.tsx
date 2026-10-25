@@ -10,6 +10,7 @@ import {
   type PlayedNote,
 } from './explore';
 import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
+import { guessHunt, nextHunt, startHunt } from './hunt';
 import {
   advance,
   type NoteEvent,
@@ -18,6 +19,7 @@ import {
   songs,
   startPosition,
 } from './music';
+import { NoteHunt } from './NoteHunt';
 import { Score } from './Score';
 import { useMidi } from './useMidi';
 import {
@@ -46,7 +48,10 @@ export function App() {
   const [songId, setSongId] = useState(songs[0].id);
   const song = songs.find((candidate) => candidate.id === songId) ?? songs[0];
   const [position, setPosition] = useState(startPosition);
-  const [freePlay, setFreePlay] = useState(false);
+  const [mode, setMode] = useState<'practice' | 'explore' | 'hunt'>('practice');
+  const freePlay = mode === 'explore';
+  const hunting = mode === 'hunt';
+  const [hunt, setHunt] = useState(startHunt);
   const [take, setTake] = useState<PlayedNote[]>([]);
   const [recorder] = useState(() => new ExploreRecorder(setTake));
   const [view, setView] = useState(loadViewSettings);
@@ -89,8 +94,8 @@ export function App() {
   );
   const held = useRef(new Map<string, number>());
   const audio = useRef(new PianoAudio());
-  const current = useRef({ song, position, freePlay });
-  current.current = { song, position, freePlay };
+  const current = useRef({ song, position, freePlay, hunting, hunt });
+  current.current = { song, position, freePlay, hunting, hunt };
 
   const releaseAll = useCallback(() => {
     held.current.clear();
@@ -114,7 +119,11 @@ export function App() {
         setLastNote(event.note);
         if (source !== 'midi') audio.current.play(id, event.note);
         const state = current.current;
-        if (state.freePlay) {
+        if (state.hunting) {
+          const next = guessHunt(state.hunt, event.note);
+          current.current = { ...state, hunt: next };
+          setHunt(next);
+        } else if (state.freePlay) {
           recorder.noteOn(id, event.note, atMs, event.velocity);
         } else {
           const next = advance(state.song, state.position, event.note);
@@ -140,13 +149,25 @@ export function App() {
     idleHint.update(
       !hints ||
         freePlay ||
+        hunting ||
         Boolean(hit) ||
         position.complete ||
         pressed.size > 0 ||
         document.hidden,
     );
     return () => idleHint.dispose();
-  }, [hints, freePlay, hit, position.complete, pressed, idleHint]);
+  }, [hints, freePlay, hunting, hit, position.complete, pressed, idleHint]);
+
+  // Keep the matched card visible through a held key and a short celebration.
+  useEffect(() => {
+    if (!hunting || !hunt.found || pressed.size > 0) return;
+    const timer = window.setTimeout(() => {
+      const next = nextHunt(current.current.hunt);
+      current.current = { ...current.current, hunt: next };
+      setHunt(next);
+    }, 1600);
+    return () => window.clearTimeout(timer);
+  }, [hunting, hunt, pressed]);
 
   useEffect(() => saveViewSettings(view), [view]);
 
@@ -200,6 +221,9 @@ export function App() {
     setPosition(startPosition());
     setLastNote(null);
     setRequestedPage(null);
+    const next = startHunt(hunt.level);
+    current.current = { ...current.current, hunt: next };
+    setHunt(next);
   }
   function clearTake() {
     releaseAll();
@@ -244,12 +268,12 @@ export function App() {
             <button
               type="button"
               key={item.id}
-              className={`song-button ${!freePlay && songId === item.id ? 'selected' : ''}`}
-              aria-pressed={!freePlay && songId === item.id}
+              className={`song-button ${mode === 'practice' && songId === item.id ? 'selected' : ''}`}
+              aria-pressed={mode === 'practice' && songId === item.id}
               onClick={() => {
                 reset();
                 setSongId(item.id);
-                setFreePlay(false);
+                setMode('practice');
               }}
             >
               {item.title}
@@ -261,20 +285,34 @@ export function App() {
             aria-pressed={freePlay}
             onClick={() => {
               reset();
-              setFreePlay(true);
+              setMode('explore');
             }}
           >
             Just explore
+          </button>
+          <button
+            type="button"
+            className={`song-button ${hunting ? 'selected' : ''}`}
+            aria-pressed={hunting}
+            onClick={() => {
+              reset();
+              setMode('hunt');
+            }}
+          >
+            Note hunt
           </button>
         </nav>
         <select
           className="song-select"
           aria-label="Song"
-          value={freePlay ? 'explore' : songId}
+          value={mode === 'practice' ? songId : mode}
           onChange={(event) => {
             reset();
-            setFreePlay(event.target.value === 'explore');
-            if (event.target.value !== 'explore') setSongId(event.target.value);
+            const value = event.target.value;
+            setMode(
+              value === 'explore' || value === 'hunt' ? value : 'practice',
+            );
+            if (value !== 'explore' && value !== 'hunt') setSongId(value);
           }}
         >
           {songs.map((item) => (
@@ -283,6 +321,7 @@ export function App() {
             </option>
           ))}
           <option value="explore">Just explore</option>
+          <option value="hunt">Note hunt</option>
         </select>
         <section className="connection" aria-label="MIDI connection">
           {midi.inputs.length > 1 && (
@@ -323,238 +362,253 @@ export function App() {
             : 'MIDI needs Chrome and HTTPS or localhost.'}
         </p>
       )}
-      <section className="practice" aria-label="Piano practice">
-        <div className="practice-controls">
-          {freePlay ? (
-            <span className="phrase-count">{take.length} notes · 4/4</span>
-          ) : (
-            <>
-              <span className="phrase-count">
-                Phrase {shownPosition.phrase + 1} of {song.phrases.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => audio.current.hear(pageNotes)}
-              >
-                <span aria-hidden="true">▷</span> Hear this phrase
-              </button>
-            </>
-          )}
-          <select
-            aria-label="Score size"
-            value={view.size}
-            onChange={(event) =>
-              setView((previous) => ({
-                ...previous,
-                size: event.target.value as ScoreSize,
-              }))
-            }
-          >
-            <option value="compact">Compact</option>
-            <option value="kid">Kid</option>
-          </select>
-          <label className="hint-toggle">
-            <input
-              type="checkbox"
-              checked={view.multiline}
+      {hunting ? (
+        <NoteHunt
+          state={hunt}
+          onReset={reset}
+          onLevel={(level) => {
+            releaseAll();
+            const next = startHunt(level);
+            current.current = { ...current.current, hunt: next };
+            setHunt(next);
+          }}
+        />
+      ) : (
+        <section className="practice" aria-label="Piano practice">
+          <div className="practice-controls">
+            {freePlay ? (
+              <span className="phrase-count">{take.length} notes · 4/4</span>
+            ) : (
+              <>
+                <span className="phrase-count">
+                  Phrase {shownPosition.phrase + 1} of {song.phrases.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => audio.current.hear(pageNotes)}
+                >
+                  <span aria-hidden="true">▷</span> Hear this phrase
+                </button>
+              </>
+            )}
+            <select
+              aria-label="Score size"
+              value={view.size}
               onChange={(event) =>
                 setView((previous) => ({
                   ...previous,
-                  multiline: event.target.checked,
+                  size: event.target.value as ScoreSize,
                 }))
               }
-            />
-            Multiline
-          </label>
-          {!freePlay && view.multiline && page.count > 1 && (
-            <span className="page-controls" aria-label="Score pages">
-              <button
-                type="button"
-                aria-label="Previous score page"
-                disabled={page.index === 0}
-                onClick={() => setRequestedPage(page.index - 1)}
-              >
-                ‹
-              </button>
-              <span>
-                Page {page.index + 1} of {page.count}
-              </span>
-              <button
-                type="button"
-                aria-label="Next score page"
-                disabled={page.index + 1 === page.count}
-                onClick={() => setRequestedPage(page.index + 1)}
-              >
-                ›
-              </button>
-            </span>
-          )}
-          {!freePlay && song.source && (
-            <a
-              className="source-link"
-              href={assetUrl(song.source.image)}
-              target="_blank"
-              rel="noreferrer"
             >
-              Book photo ↗
-            </a>
-          )}
-          {!freePlay && (
+              <option value="compact">Compact</option>
+              <option value="kid">Kid</option>
+            </select>
             <label className="hint-toggle">
               <input
                 type="checkbox"
-                checked={hints}
-                onChange={(event) => setHints(event.target.checked)}
+                checked={view.multiline}
+                onChange={(event) =>
+                  setView((previous) => ({
+                    ...previous,
+                    multiline: event.target.checked,
+                  }))
+                }
               />
-              Idle hints
+              Multiline
             </label>
-          )}
-          {freePlay && take.length > 0 && (
-            <a
-              className="source-link"
-              download="just-explore.musicxml"
-              href={`data:application/vnd.recordare.musicxml+xml;charset=utf-8,${encodeURIComponent(liveScore.downloadXml)}`}
-            >
-              MusicXML ↓
-            </a>
-          )}
-          <button
-            type="button"
-            className="restart"
-            onClick={freePlay ? clearTake : reset}
-            aria-label={freePlay ? 'Clear recording' : 'Start again'}
-            title={freePlay ? 'Clear recording' : 'Start again'}
-          >
-            ↺
-          </button>
-        </div>
-        {freePlay && (
-          <>
-            <Score
-              notes={emptyNotes}
-              active={liveScore.active}
-              complete={false}
-              song={exploreSong}
-              hit={liveScore.hit}
-              hint={false}
-              size={view.size}
-              wholeSong={view.multiline}
-              scoreXml={liveScore.xml}
-            />
-            {take.length >= maxExploreNotes && (
-              <p className="recording-full" role="status">
-                Page full · Download or clear to keep writing.
-              </p>
-            )}
-          </>
-        )}
-        {!freePlay && (
-          <>
-            <div className={`score-layout ${song.source ? 'illustrated' : ''}`}>
-              <Score
-                notes={pageNotes}
-                active={Math.max(0, shownCount - pageOffset)}
-                complete={shownPosition.complete}
-                song={song}
-                wholeSong={wholeSong}
-                phraseIndex={page.start}
-                endPhrase={page.end}
-                hit={pageContainsCurrent ? hit : null}
-                hint={pageContainsCurrent && hintReady}
-                size={view.size}
-              />
-              {song.source && (
-                <svg
-                  className="book-illustration"
-                  viewBox={song.source.illustrationViewBox}
-                  role="img"
-                  aria-label={song.source.illustrationAlt}
+            {!freePlay && view.multiline && page.count > 1 && (
+              <span className="page-controls" aria-label="Score pages">
+                <button
+                  type="button"
+                  aria-label="Previous score page"
+                  disabled={page.index === 0}
+                  onClick={() => setRequestedPage(page.index - 1)}
                 >
-                  <title>{song.source.illustrationAlt}</title>
-                  <defs>
-                    <clipPath id="song-illustration-crop">
-                      <rect
-                        x={artBounds?.[0]}
-                        y={artBounds?.[1]}
-                        width={artBounds?.[2]}
-                        height={artBounds?.[3]}
-                      />
-                    </clipPath>
-                  </defs>
-                  <image
-                    clipPath="url(#song-illustration-crop)"
-                    href={assetUrl(song.source.image)}
-                    width="1505"
-                    height="2000"
-                  />
-                </svg>
-              )}
-            </div>
-            {song.source && (
-              <div className="score-credit">
-                <span>{song.source.credit}</span>
-                <a
-                  href={assetUrl('/scores/raege-raegetroepfli.musicxml')}
-                  download
-                >
-                  MusicXML ↓
-                </a>
-              </div>
-            )}
-            <div
-              className="progress-track"
-              role="progressbar"
-              aria-label="Song progress"
-              aria-valuenow={playedCount}
-              aria-valuemin={0}
-              aria-valuemax={total}
-            >
-              <div style={{ width: `${(playedCount / total) * 100}%` }} />
-            </div>
-          </>
-        )}
-        <div
-          className={`play-status ${hit ? 'has-hit' : hintReady ? 'has-hint' : ''}`}
-        >
-          <span aria-live="polite">
-            {freePlay ? (
-              lastNote === null ? (
-                '—'
-              ) : (
-                `You played ${noteName(lastNote)}${octave(lastNote)}`
-              )
-            ) : hit ? (
-              <span className="hit-badge">
-                {noteName(hit.midi)}
-                {octave(hit.midi)} ✓
-                <span className="hit-duration" aria-hidden="true">
-                  <i
-                    key={hit.id}
-                    style={{ animationDuration: `${hit.durationMs}ms` }}
-                  />
+                  ‹
+                </button>
+                <span>
+                  Page {page.index + 1} of {page.count}
                 </span>
+                <button
+                  type="button"
+                  aria-label="Next score page"
+                  disabled={page.index + 1 === page.count}
+                  onClick={() => setRequestedPage(page.index + 1)}
+                >
+                  ›
+                </button>
               </span>
-            ) : shownPosition.complete ? (
-              'You played the whole song!'
-            ) : hintReady ? (
-              `Find ${noteName(expected)}${expected === 60 ? ' · middle C' : ` · octave ${octave(expected)}`}`
-            ) : (
-              '\u00a0'
             )}
-          </span>
-          {shownPosition.complete && !freePlay && (
-            <button type="button" onClick={reset}>
-              Play again
+            {!freePlay && song.source && (
+              <a
+                className="source-link"
+                href={assetUrl(song.source.image)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Book photo ↗
+              </a>
+            )}
+            {!freePlay && (
+              <label className="hint-toggle">
+                <input
+                  type="checkbox"
+                  checked={hints}
+                  onChange={(event) => setHints(event.target.checked)}
+                />
+                Idle hints
+              </label>
+            )}
+            {freePlay && take.length > 0 && (
+              <a
+                className="source-link"
+                download="just-explore.musicxml"
+                href={`data:application/vnd.recordare.musicxml+xml;charset=utf-8,${encodeURIComponent(liveScore.downloadXml)}`}
+              >
+                MusicXML ↓
+              </a>
+            )}
+            <button
+              type="button"
+              className="restart"
+              onClick={freePlay ? clearTake : reset}
+              aria-label={freePlay ? 'Clear recording' : 'Start again'}
+              title={freePlay ? 'Clear recording' : 'Start again'}
+            >
+              ↺
             </button>
+          </div>
+          {freePlay && (
+            <>
+              <Score
+                notes={emptyNotes}
+                active={liveScore.active}
+                complete={false}
+                song={exploreSong}
+                hit={liveScore.hit}
+                hint={false}
+                size={view.size}
+                wholeSong={view.multiline}
+                scoreXml={liveScore.xml}
+              />
+              {take.length >= maxExploreNotes && (
+                <p className="recording-full" role="status">
+                  Page full · Download or clear to keep writing.
+                </p>
+              )}
+            </>
           )}
-          {lastNote !== null && !freePlay && (
-            <span className="last-note">
-              Played: {noteName(lastNote)}
-              {octave(lastNote)}
+          {!freePlay && (
+            <>
+              <div
+                className={`score-layout ${song.source ? 'illustrated' : ''}`}
+              >
+                <Score
+                  notes={pageNotes}
+                  active={Math.max(0, shownCount - pageOffset)}
+                  complete={shownPosition.complete}
+                  song={song}
+                  wholeSong={wholeSong}
+                  phraseIndex={page.start}
+                  endPhrase={page.end}
+                  hit={pageContainsCurrent ? hit : null}
+                  hint={pageContainsCurrent && hintReady}
+                  size={view.size}
+                />
+                {song.source && (
+                  <svg
+                    className="book-illustration"
+                    viewBox={song.source.illustrationViewBox}
+                    role="img"
+                    aria-label={song.source.illustrationAlt}
+                  >
+                    <title>{song.source.illustrationAlt}</title>
+                    <defs>
+                      <clipPath id="song-illustration-crop">
+                        <rect
+                          x={artBounds?.[0]}
+                          y={artBounds?.[1]}
+                          width={artBounds?.[2]}
+                          height={artBounds?.[3]}
+                        />
+                      </clipPath>
+                    </defs>
+                    <image
+                      clipPath="url(#song-illustration-crop)"
+                      href={assetUrl(song.source.image)}
+                      width="1505"
+                      height="2000"
+                    />
+                  </svg>
+                )}
+              </div>
+              {song.source && (
+                <div className="score-credit">
+                  <span>{song.source.credit}</span>
+                  <a
+                    href={assetUrl('/scores/raege-raegetroepfli.musicxml')}
+                    download
+                  >
+                    MusicXML ↓
+                  </a>
+                </div>
+              )}
+              <div
+                className="progress-track"
+                role="progressbar"
+                aria-label="Song progress"
+                aria-valuenow={playedCount}
+                aria-valuemin={0}
+                aria-valuemax={total}
+              >
+                <div style={{ width: `${(playedCount / total) * 100}%` }} />
+              </div>
+            </>
+          )}
+          <div
+            className={`play-status ${hit ? 'has-hit' : hintReady ? 'has-hint' : ''}`}
+          >
+            <span aria-live="polite">
+              {freePlay ? (
+                lastNote === null ? (
+                  '—'
+                ) : (
+                  `You played ${noteName(lastNote)}${octave(lastNote)}`
+                )
+              ) : hit ? (
+                <span className="hit-badge">
+                  {noteName(hit.midi)}
+                  {octave(hit.midi)} ✓
+                  <span className="hit-duration" aria-hidden="true">
+                    <i
+                      key={hit.id}
+                      style={{ animationDuration: `${hit.durationMs}ms` }}
+                    />
+                  </span>
+                </span>
+              ) : shownPosition.complete ? (
+                'You played the whole song!'
+              ) : hintReady ? (
+                `Find ${noteName(expected)}${expected === 60 ? ' · middle C' : ` · octave ${octave(expected)}`}`
+              ) : (
+                '\u00a0'
+              )}
             </span>
-          )}
-        </div>
-      </section>
+            {shownPosition.complete && !freePlay && (
+              <button type="button" onClick={reset}>
+                Play again
+              </button>
+            )}
+            {lastNote !== null && !freePlay && (
+              <span className="last-note">
+                Played: {noteName(lastNote)}
+                {octave(lastNote)}
+              </span>
+            )}
+          </div>
+        </section>
+      )}
       <section className="keyboard-panel" aria-label="Live piano keyboard">
         <div className="keyboard-scroll">
           <div className="keyboard">
@@ -562,10 +616,11 @@ export function App() {
               const black = noteName(note).includes('♯');
               const left = whiteNotes.filter((white) => white < note).length;
               const active = pressed.has(note);
-              const keyHit = freePlay ? liveScore.hit : hit;
+              const keyHit = hunting ? null : freePlay ? liveScore.hit : hit;
               const hint =
                 hintReady &&
                 !freePlay &&
+                !hunting &&
                 !shownPosition.complete &&
                 !hit &&
                 note === expected;
@@ -573,7 +628,7 @@ export function App() {
                 <button
                   type="button"
                   key={note}
-                  className={`piano-key ${black ? 'black' : 'white'} ${active ? 'pressed' : ''} ${hint ? 'expected' : ''} ${freePlay ? (active ? 'hit' : '') : hit?.midi === note ? 'hit' : ''}`}
+                  className={`piano-key ${black ? 'black' : 'white'} ${active ? 'pressed' : ''} ${hint ? 'expected' : ''} ${freePlay || hunting ? (active ? 'hit' : '') : hit?.midi === note ? 'hit' : ''}`}
                   style={
                     black
                       ? { left: `calc(${left} * 100% / 15 - 2%)` }

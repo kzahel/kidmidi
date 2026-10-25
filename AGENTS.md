@@ -17,7 +17,9 @@ adapters can follow later. Practice targets use MusicXML; live MIDI is performan
 input. Just explore also turns that input into loose, local notation. Preserve raw
 attack/release timestamps separately from approximate displayed durations; do not
 introduce audio transcription or a server for this feature. See
-`docs/explore-transcription.md`.
+`docs/explore-transcription.md`. Note hunt is a separate game with attempt-based
+positive rewards; keep its scoring separate from patient song practice. See
+`docs/note-hunt.md`.
 
 Run `npm run typecheck`, `npm test`, `npm run check`, and `npm run build`.
 For browser-dependent changes run `npm run test:browser` using bundled Playwright

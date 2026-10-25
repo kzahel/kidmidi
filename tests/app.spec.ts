@@ -573,3 +573,131 @@ test('raindrop Kid pages fit desktop, phone and landscape without scrolling or c
   await expect(page.locator('.score')).toContainText('tröpf');
   await expect.poll(fits).toBe(true);
 });
+
+test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through held success without scrolling', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.addInitScript(() => {
+    const input = Object.assign(new EventTarget(), {
+      id: 'hunt',
+      name: 'Hunt piano',
+      state: 'connected',
+    });
+    Object.defineProperty(navigator, 'requestMIDIAccess', {
+      value: async () => ({
+        inputs: new Map([['hunt', input]]),
+        onstatechange: null,
+      }),
+    });
+    Object.assign(window, {
+      huntMidi: (data: number[]) =>
+        input.dispatchEvent(
+          Object.assign(new Event('midimessage'), {
+            data: new Uint8Array(data),
+          }),
+        ),
+    });
+  });
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Hunt piano', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  const target = page.getByRole('region', { name: 'Find this', exact: true });
+  const played = page.getByRole('region', { name: 'You played', exact: true });
+  await expect(target).toContainText('C4 · middle C');
+  await expect(target.locator('svg')).toBeVisible();
+  await expect(played).toContainText('Your turn…');
+  const send = (data: number[]) =>
+    page.evaluate(
+      (bytes) =>
+        (window as unknown as { huntMidi(data: number[]): void }).huntMidi(
+          bytes,
+        ),
+      data,
+    );
+  await send([0x90, 60, 100]);
+  await send([0x90, 60, 100]); // Duplicate held message cannot earn extra points.
+  await expect(page.getByLabel('3 points', { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel('3 hearts earned', { exact: true }),
+  ).toBeVisible();
+  await expect(played).toContainText('C4 · middle C');
+  await expect(page.locator('.hunt-confetti i')).toHaveCount(32);
+  await page.clock.fastForward(5000);
+  await expect(target).toContainText('C4 · middle C');
+  await send([0x80, 60, 0]);
+  await page.clock.fastForward(1500);
+  await expect(target).toContainText('C4 · middle C');
+  await page.clock.fastForward(101);
+  await expect(target).toContainText('E4');
+  await expect(played).toContainText('Your turn…');
+  await send([0x90, 76, 100]); // E in the wrong octave.
+  await expect(played).toContainText('E5');
+  await expect(page.getByText('A little lower ↓')).toBeVisible();
+  await send([0x90, 76, 100]);
+  await send([0x80, 76, 0]);
+  await send([0x90, 64, 100]);
+  await expect(
+    page.getByLabel('2 hearts earned', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('5 points', { exact: true })).toBeVisible();
+  await send([0x80, 64, 0]);
+  await page.clock.fastForward(1601);
+  await expect(target).toContainText('C4 · middle C');
+  for (let i = 0; i < 3; i++) {
+    await send([0x90, 62, 100]);
+    await send([0x80, 62, 0]);
+  }
+  await send([0x90, 60, 100]);
+  await send([0x80, 60, 0]);
+  await expect(
+    page.getByLabel('0 hearts earned', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Found it! ✨', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('5 points', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(played.locator('svg')).toBeVisible();
+  expect(
+    await page.evaluate(() => {
+      const bounds = [
+        ...document.querySelectorAll('.hunt-card, .keyboard'),
+      ].map((e) => e.getBoundingClientRect());
+      return (
+        document.documentElement.scrollWidth <= innerWidth &&
+        document.documentElement.scrollHeight <= innerHeight &&
+        bounds.every(
+          (b) =>
+            b.left >= 0 &&
+            b.right <= innerWidth &&
+            b.top >= 0 &&
+            b.bottom <= innerHeight,
+        )
+      );
+    }),
+  ).toBe(true);
+  await page
+    .getByRole('combobox', { name: 'Note range', exact: true })
+    .selectOption('octave');
+  await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
+  await expect(target).toContainText('C4 · middle C');
+  await page.clock.fastForward(3000); // Old success timer must not advance a reset game.
+  await expect(target).toContainText('C4 · middle C');
+  await page.keyboard.press('a');
+  await expect(
+    page.getByLabel('3 hearts earned', { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Restart note hunt', exact: true })
+    .click();
+  await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
+  await page
+    .getByRole('combobox', { name: 'Song', exact: true })
+    .selectOption('twinkle');
+  await page.clock.fastForward(3000);
+  await expect(page.getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  );
+});
