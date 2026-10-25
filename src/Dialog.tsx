@@ -5,10 +5,12 @@ export function Dialog({
   title,
   onClose,
   children,
+  fitted = false,
 }: {
   title: string;
   onClose(): void;
   children: ReactNode;
+  fitted?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -26,7 +28,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className={styles['dialog']}
+      className={`${styles['dialog']} ${fitted ? styles['fitted'] : ''}`}
       aria-label={title}
       onCancel={(event) => {
         event.preventDefault();

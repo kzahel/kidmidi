@@ -35,3 +35,19 @@
     font-size: 20px;
   }
 }
+
+.fitted {
+  width: min(800px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  height: min(620px, calc(100dvh - 24px));
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+.fitted .heading {
+  position: static;
+  flex-shrink: 0;
+  margin: 0;
+}

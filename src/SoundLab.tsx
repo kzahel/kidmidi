@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { SettingsTabs } from './SettingsTabs';
 import styles from './SoundLab.module.css';
 import {
   type SoundVoice,
@@ -39,12 +40,37 @@ function Slider({
   );
 }
 
-export function SoundLab({ session }: { session: PianoSession }) {
+export function SoundLab({
+  session,
+  page,
+  onMake,
+}: {
+  session: PianoSession;
+  page: 'sounds' | 'make' | null;
+  onMake(): void;
+}) {
   const { soundSettings: settings, setSoundSettings, sound } = session;
   const { voice } = settings.sound;
   const canvas = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState('My sound');
   const [savedMessage, setSavedMessage] = useState('');
+  const [bank, setBank] = useState<'presets' | 'saved'>('presets');
+  const [tool, setTool] = useState<'tone' | 'motion' | 'envelope' | 'save'>(
+    'tone',
+  );
+  const [savedPage, setSavedPage] = useState(0);
+  const bankTabs = [
+    { id: 'presets', label: 'Presets' },
+    { id: 'saved', label: 'My sounds' },
+  ] as const;
+  const toolTabs = [
+    { id: 'tone', label: 'Tone' },
+    { id: 'motion', label: 'Motion' },
+    { id: 'envelope', label: 'Envelope' },
+    { id: 'save', label: 'Save' },
+  ] as const;
+  const pageCount = Math.max(1, Math.ceil(settings.saved.length / 4));
+  const currentPage = Math.min(savedPage, pageCount - 1);
   useEffect(() => {
     const context = canvas.current?.getContext('2d');
     if (!context) return;
@@ -81,7 +107,7 @@ export function SoundLab({ session }: { session: PianoSession }) {
     };
     draw();
     return () => cancelAnimationFrame(frame);
-  }, [sound, voice.wave]);
+  }, [sound, voice.wave, page]);
   function edit(patch: Partial<SoundVoice>) {
     setSavedMessage('');
     setSoundSettings((s) => ({
@@ -100,289 +126,385 @@ export function SoundLab({ session }: { session: PianoSession }) {
       'audition',
     );
   }
+  if (!page) return null;
   return (
     <section className={styles['lab']} aria-label="Sound playground">
-      <div className={styles['section-heading']}>
-        <h3>Pick a sound</h3>
-        <span>For Screen sound</span>
-      </div>
-      <div className={styles['presets']}>
-        {soundPresets.map((preset) => (
-          <button
-            type="button"
-            key={preset.id}
-            aria-pressed={settings.sound.id === preset.id}
-            onClick={() => {
-              setSavedMessage('');
-              setSoundSettings((s) => ({ ...s, sound: preset }));
-            }}
-          >
-            <span aria-hidden="true">{preset.emoji}</span>
-            {preset.name}
-          </button>
-        ))}
-      </div>
-      {settings.saved.length > 0 && (
-        <div className={styles['saved']} aria-label="My sounds">
-          {settings.saved.map((preset) => (
-            <div key={preset.id}>
-              <button
-                type="button"
-                aria-pressed={settings.sound.id === preset.id}
-                onClick={() =>
-                  setSoundSettings((s) => ({ ...s, sound: preset }))
-                }
-              >
-                {preset.emoji} {preset.name}
-              </button>
-              <button
-                type="button"
-                aria-label={`Delete sound ${preset.name}`}
-                onClick={() =>
-                  setSoundSettings((s) => ({
-                    ...s,
-                    saved: s.saved.filter((p) => p.id !== preset.id),
-                  }))
-                }
-              >
-                ×
-              </button>
+      <div className={styles['workspace']}>
+        {page === 'sounds' ? (
+          <>
+            <SettingsTabs
+              id="sound-bank"
+              label="Sound shelf"
+              tabs={bankTabs}
+              value={bank}
+              onChange={(next) => setBank(next)}
+            />
+            <div
+              className={styles['tool-panel']}
+              role="tabpanel"
+              id="sound-bank-panel"
+              aria-labelledby={`sound-bank-${bank}`}
+            >
+              {bank === 'presets' ? (
+                <>
+                  <div className={styles['presets']}>
+                    {soundPresets.map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.id}
+                        aria-pressed={settings.sound.id === preset.id}
+                        onClick={() => {
+                          setSavedMessage('');
+                          setSoundSettings((s) => ({ ...s, sound: preset }));
+                        }}
+                      >
+                        <span aria-hidden="true">{preset.emoji}</span>
+                        {preset.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : settings.saved.length ? (
+                <>
+                  <div className={styles['saved']} aria-label="My sounds">
+                    {settings.saved
+                      .slice(currentPage * 4, currentPage * 4 + 4)
+                      .map((preset) => (
+                        <div key={preset.id}>
+                          <button
+                            type="button"
+                            aria-pressed={settings.sound.id === preset.id}
+                            onClick={() =>
+                              setSoundSettings((s) => ({ ...s, sound: preset }))
+                            }
+                          >
+                            {preset.emoji} {preset.name}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Delete sound ${preset.name}`}
+                            onClick={() =>
+                              setSoundSettings((s) => ({
+                                ...s,
+                                saved: s.saved.filter(
+                                  (p) => p.id !== preset.id,
+                                ),
+                              }))
+                            }
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                  <div
+                    className={styles['pagination']}
+                    aria-label="Saved sound pages"
+                  >
+                    <button
+                      type="button"
+                      aria-label="Previous sounds"
+                      disabled={currentPage === 0}
+                      onClick={() => setSavedPage(currentPage - 1)}
+                    >
+                      ‹
+                    </button>
+                    <span>
+                      Page {currentPage + 1} of {pageCount}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Next sounds"
+                      disabled={currentPage + 1 === pageCount}
+                      onClick={() => setSavedPage(currentPage + 1)}
+                    >
+                      ›
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className={styles['empty']}>
+                  <p>Your own sounds will live here.</p>
+                  <button type="button" onClick={onMake}>
+                    Make a sound
+                  </button>
+                </div>
+              )}
             </div>
+          </>
+        ) : (
+          <>
+            <SettingsTabs
+              id="sound-tools"
+              label="Sound editor"
+              tabs={toolTabs}
+              value={tool}
+              onChange={(next) => setTool(next)}
+            />
+            <div
+              className={styles['tool-panel']}
+              role="tabpanel"
+              id="sound-tools-panel"
+              aria-labelledby={`sound-tools-${tool}`}
+            >
+              {tool === 'tone' && (
+                <>
+                  <div
+                    className={styles['shapes']}
+                    role="group"
+                    aria-label="Wave shape"
+                  >
+                    {(
+                      ['sine', 'triangle', 'square', 'sawtooth'] as WaveShape[]
+                    ).map((wave) => (
+                      <button
+                        type="button"
+                        key={wave}
+                        aria-pressed={voice.wave === wave}
+                        onClick={() => edit({ wave })}
+                      >
+                        <svg viewBox="0 0 80 32" aria-hidden="true">
+                          <path
+                            d={Array.from(
+                              { length: 81 },
+                              (_, i) =>
+                                `${i ? 'L' : 'M'}${i},${16 - waveValue(wave, i / 40) * 11}`,
+                            ).join(' ')}
+                          />
+                        </svg>
+                        {wave === 'sawtooth'
+                          ? 'Saw'
+                          : wave[0].toUpperCase() + wave.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <Slider
+                    label="Soft → bright"
+                    value={voice.brightness}
+                    onChange={(brightness) => edit({ brightness })}
+                  />{' '}
+                  <Slider
+                    label="Pluck → hold"
+                    value={voice.sustain}
+                    onChange={(sustain) => edit({ sustain })}
+                  />
+                </>
+              )}
+              {tool === 'motion' && (
+                <>
+                  <Slider
+                    label="Wobble"
+                    value={voice.wobble}
+                    onChange={(wobble) => edit({ wobble })}
+                  />{' '}
+                  <Slider
+                    label="Room · reverb"
+                    value={voice.reverb}
+                    onChange={(reverb) => edit({ reverb })}
+                  />{' '}
+                  <Slider
+                    label="Pitch swoop"
+                    value={voice.swoop}
+                    min={-400}
+                    max={400}
+                    step={10}
+                    onChange={(swoop) => edit({ swoop })}
+                  />
+                </>
+              )}
+              {tool === 'envelope' && (
+                <>
+                  <div className={styles['envelope']}>
+                    <svg
+                      viewBox="0 0 300 65"
+                      role="img"
+                      aria-label="Sound envelope: rise, body, and release"
+                    >
+                      <path
+                        d={`M5,60 L${10 + voice.attack * 65},5 L110,${58 - voice.sustain * 45} L200,${58 - voice.sustain * 45} Q${210 + voice.release * 30},60 295,60`}
+                      />
+                    </svg>
+                    <span>Rise → body → tail</span>
+                  </div>
+                  <Slider
+                    label="Rise · attack"
+                    value={voice.attack}
+                    min={0.005}
+                    max={1}
+                    step={0.005}
+                    onChange={(attack) => edit({ attack })}
+                  />{' '}
+                  <Slider
+                    label="Tail · release"
+                    value={voice.release}
+                    min={0.03}
+                    max={2}
+                    onChange={(release) => edit({ release })}
+                  />
+                </>
+              )}
+              {tool === 'save' && (
+                <>
+                  <div className={styles['save-form']}>
+                    <label>
+                      Emoji
+                      <select
+                        aria-label="Sound emoji"
+                        value={settings.sound.emoji}
+                        onChange={(e) =>
+                          setSoundSettings((s) => ({
+                            ...s,
+                            sound: {
+                              ...s.sound,
+                              id: 'custom',
+                              emoji: e.target.value,
+                            },
+                          }))
+                        }
+                      >
+                        {[
+                          '🎹',
+                          '🫧',
+                          '🤖',
+                          '👻',
+                          '🚀',
+                          '🔔',
+                          '🎮',
+                          '🐱',
+                          '👽',
+                          '🌈',
+                          '🐸',
+                        ].map((emoji) => (
+                          <option key={emoji}>{emoji}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Name
+                      <input
+                        aria-label="Sound name"
+                        maxLength={32}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      disabled={settings.saved.length >= 12}
+                      onClick={() => {
+                        const saved = {
+                          ...settings.sound,
+                          id: crypto.randomUUID(),
+                          name: name.trim() || 'My sound',
+                        };
+                        setSoundSettings((s) => ({
+                          ...s,
+                          sound: saved,
+                          saved: [...s.saved, saved],
+                        }));
+                        setSavedMessage('Sound saved on this device.');
+                      }}
+                    >
+                      Save sound
+                    </button>
+                  </div>
+                  <p className={styles['hint']} role="status">
+                    {settings.saved.length >= 12
+                      ? 'Your shelf is full. Delete a saved sound to make room.'
+                      : savedMessage ||
+                        'Your sound and settings stay in this browser.'}
+                  </p>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      <div className={styles['audition']}>
+        <div className={styles['scope']}>
+          <div>
+            <strong>
+              {settings.sound.emoji} {settings.sound.name}
+            </strong>
+            <span>Wave shape · {voice.wave}</span>
+          </div>
+          <canvas
+            ref={canvas}
+            width="560"
+            height="100"
+            role="img"
+            aria-label={`${voice.wave} wave, showing Screen audio while playing`}
+          />
+        </div>
+        <div className={styles['try-keys']} aria-label="Try your sound">
+          {[60, 62, 64, 65, 67, 69, 71, 72].map((midi, i) => (
+            <button
+              type="button"
+              key={midi}
+              aria-label={`Try ${['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'][i]}`}
+              aria-pressed={session.pressed.has(midi)}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.currentTarget.setPointerCapture(e.pointerId);
+                note(midi, true);
+              }}
+              onPointerUp={() => note(midi, false)}
+              onPointerCancel={() => note(midi, false)}
+              onLostPointerCapture={() => note(midi, false)}
+              onKeyDown={(e) => {
+                if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+                  e.preventDefault();
+                  note(midi, true);
+                }
+              }}
+              onKeyUp={(e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault();
+                  note(midi, false);
+                }
+              }}
+              onBlur={() => note(midi, false)}
+            >
+              {['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'][i]}
+            </button>
           ))}
         </div>
-      )}
-      <div className={styles['scope']}>
-        <div>
-          <strong>
-            {settings.sound.emoji} {settings.sound.name}
-          </strong>
-          <span>Wave shape · {voice.wave}</span>
-        </div>
-        <canvas
-          ref={canvas}
-          width="560"
-          height="100"
-          role="img"
-          aria-label={`${voice.wave} wave, showing Screen audio while playing`}
-        />
-      </div>
-      <div className={styles['try-keys']} aria-label="Try your sound">
-        {[60, 62, 64, 65, 67, 69, 71, 72].map((midi, i) => (
-          <button
-            type="button"
-            key={midi}
-            aria-label={`Try ${['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'][i]}`}
-            aria-pressed={session.pressed.has(midi)}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.currentTarget.setPointerCapture(e.pointerId);
-              note(midi, true);
-            }}
-            onPointerUp={() => note(midi, false)}
-            onPointerCancel={() => note(midi, false)}
-            onLostPointerCapture={() => note(midi, false)}
-            onKeyDown={(e) => {
-              if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
-                e.preventDefault();
-                note(midi, true);
-              }
-            }}
-            onKeyUp={(e) => {
-              if (e.key === ' ' || e.key === 'Enter') {
-                e.preventDefault();
-                note(midi, false);
-              }
-            }}
-            onBlur={() => note(midi, false)}
-          >
-            {['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'][i]}
-          </button>
-        ))}
-      </div>
-      <p className={styles['hint']}>
-        Try these keys or your connected piano. This won’t record or count as
-        practice. Choose Screen or Both to hear your creations.
-      </p>
-      <details className={styles['editor']}>
-        <summary>✎ Make a sound</summary>
-        <div className={styles['shapes']} role="group" aria-label="Wave shape">
-          {(['sine', 'triangle', 'square', 'sawtooth'] as WaveShape[]).map(
-            (wave) => (
+
+        {page === 'make' && (
+          <>
+            <div className={styles['actions']}>
               <button
                 type="button"
-                key={wave}
-                aria-pressed={voice.wave === wave}
-                onClick={() => edit({ wave })}
+                onClick={() =>
+                  edit({
+                    wave: (['sine', 'triangle', 'square', 'sawtooth'] as const)[
+                      Math.floor(Math.random() * 4)
+                    ],
+                    brightness: 0.2 + Math.random() * 0.8,
+                    sustain: Math.random(),
+                    attack: 0.005 + Math.random() * 0.25,
+                    release: 0.05 + Math.random(),
+                    wobble: Math.random(),
+                    swoop: Math.round((Math.random() - 0.5) * 600),
+                    reverb: Math.random() * 0.6,
+                  })
+                }
               >
-                <svg viewBox="0 0 80 32" aria-hidden="true">
-                  <path
-                    d={Array.from(
-                      { length: 81 },
-                      (_, i) =>
-                        `${i ? 'L' : 'M'}${i},${16 - waveValue(wave, i / 40) * 11}`,
-                    ).join(' ')}
-                  />
-                </svg>
-                {wave === 'sawtooth'
-                  ? 'Saw'
-                  : wave[0].toUpperCase() + wave.slice(1)}
+                🎲 Surprise me
               </button>
-            ),
-          )}
-        </div>
-        <Slider
-          label="Soft → bright"
-          value={voice.brightness}
-          onChange={(brightness) => edit({ brightness })}
-        />
-        <Slider
-          label="Pluck → hold"
-          value={voice.sustain}
-          onChange={(sustain) => edit({ sustain })}
-        />
-        <Slider
-          label="Wobble"
-          value={voice.wobble}
-          onChange={(wobble) => edit({ wobble })}
-        />
-        <Slider
-          label="Room · reverb"
-          value={voice.reverb}
-          onChange={(reverb) => edit({ reverb })}
-        />
-        <details className={styles['more']}>
-          <summary>More sound shapes</summary>
-          <div className={styles['envelope']}>
-            <svg
-              viewBox="0 0 300 65"
-              role="img"
-              aria-label="Sound envelope: rise, body, and release"
-            >
-              <path
-                d={`M5,60 L${10 + voice.attack * 65},5 L110,${58 - voice.sustain * 45} L200,${58 - voice.sustain * 45} Q${210 + voice.release * 30},60 295,60`}
-              />
-            </svg>
-            <span>Rise → body → tail</span>
-          </div>
-          <Slider
-            label="Rise · attack"
-            value={voice.attack}
-            min={0.005}
-            max={1}
-            step={0.005}
-            onChange={(attack) => edit({ attack })}
-          />
-          <Slider
-            label="Tail · release"
-            value={voice.release}
-            min={0.03}
-            max={2}
-            onChange={(release) => edit({ release })}
-          />
-          <Slider
-            label="Pitch swoop"
-            value={voice.swoop}
-            min={-400}
-            max={400}
-            step={10}
-            onChange={(swoop) => edit({ swoop })}
-          />
-        </details>
-        <div className={styles['actions']}>
-          <button
-            type="button"
-            onClick={() =>
-              edit({
-                wave: (['sine', 'triangle', 'square', 'sawtooth'] as const)[
-                  Math.floor(Math.random() * 4)
-                ],
-                brightness: 0.2 + Math.random() * 0.8,
-                sustain: Math.random(),
-                attack: 0.005 + Math.random() * 0.25,
-                release: 0.05 + Math.random(),
-                wobble: Math.random(),
-                swoop: Math.round((Math.random() - 0.5) * 600),
-                reverb: Math.random() * 0.6,
-              })
-            }
-          >
-            🎲 Surprise me
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              session.releaseAll();
-              setSoundSettings((s) => ({ ...s, sound: soundPresets[0] }));
-            }}
-          >
-            Reset sound
-          </button>
-        </div>
-        <div className={styles['save-form']}>
-          <label>
-            Emoji
-            <select
-              aria-label="Sound emoji"
-              value={settings.sound.emoji}
-              onChange={(e) =>
-                setSoundSettings((s) => ({
-                  ...s,
-                  sound: { ...s.sound, id: 'custom', emoji: e.target.value },
-                }))
-              }
-            >
-              {[
-                '🎹',
-                '🫧',
-                '🤖',
-                '👻',
-                '🚀',
-                '🔔',
-                '🎮',
-                '🐱',
-                '👽',
-                '🌈',
-                '🐸',
-              ].map((emoji) => (
-                <option key={emoji}>{emoji}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Name
-            <input
-              aria-label="Sound name"
-              maxLength={32}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <button
-            type="button"
-            disabled={settings.saved.length >= 12}
-            onClick={() => {
-              const saved = {
-                ...settings.sound,
-                id: crypto.randomUUID(),
-                name: name.trim() || 'My sound',
-              };
-              setSoundSettings((s) => ({
-                ...s,
-                sound: saved,
-                saved: [...s.saved, saved],
-              }));
-              setSavedMessage('Sound saved on this device.');
-            }}
-          >
-            Save sound
-          </button>
-        </div>
-        <p className={styles['hint']} role="status">
-          {settings.saved.length >= 12
-            ? 'Your shelf is full. Delete a saved sound to make room.'
-            : savedMessage || 'Your sound and settings stay in this browser.'}
-        </p>
-      </details>
+              <button
+                type="button"
+                onClick={() => {
+                  session.releaseAll();
+                  setSoundSettings((s) => ({ ...s, sound: soundPresets[0] }));
+                }}
+              >
+                Reset sound
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }

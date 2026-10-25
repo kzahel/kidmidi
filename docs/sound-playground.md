@@ -2,9 +2,20 @@
 
 The header’s Sound and settings button is available on Home and every activity,
 even when Web MIDI is unsupported or permission is denied. It shows the chosen
-route and Screen sound emoji. The dialog keeps its Done button visible while
-scrolling; Escape closes it and returns focus to its opener. Only the settings
-dialog scrolls; the practice score and piano retain their viewport fit.
+route and Screen sound emoji. Its fitted dialog uses Sounds, Make, Output and
+Keyboard tabs instead of a scrolling settings sheet. Escape closes it and returns
+focus to the opener. Tab lists support Left/Right arrows, Home and End, with one
+selected tab in the keyboard tab order. Switching the main tab releases held
+audition notes while keeping the current voice and unfinished save-form name.
+
+Sounds has Presets and My sounds shelves. Saved sounds use four-item pages, so
+all twelve remain reachable without growing the panel. Deleting a final-page
+sound clamps the page to the remaining collection. Make separates Tone, Motion,
+Envelope and Save into smaller tabs. The live waveform and audition keys remain
+visible on Sounds and Make; wide/landscape views place them beside the controls.
+Screen routing and volume live under Output; MIDI setup lives under Keyboard.
+The dialog, its panels and their controls fit desktop, portrait phones down to
+320×568, and 844×390 landscape without scrolling, clipping or overlapping controls.
 
 ## Destinations
 
@@ -23,7 +34,7 @@ quiet playing. Presets and Screen volume do not alter its instrument or volume.
 Incoming MIDI is never sent back to an output; Keyboard uses the instrument’s
 local sound for those physical keys. This also avoids doubling physical attacks.
 
-The Keyboard connection disclosure contains input/output selectors and permission
+The Keyboard tab contains input/output selectors and permission
 retry. Output matching and reconnect identities retain the existing rules from
 [midi-phrase-playback.md](midi-phrase-playback.md). Screen keys and playback fall
 back to Screen if no output is available. Open/send failure reports a Screen
@@ -47,8 +58,8 @@ Bell and Arcade. The browser generates their oscillators and a small local rever
 impulse; there are no sample downloads, microphones, uploads or external assets.
 Wave shape is sine, triangle, square or sawtooth. Brightness controls a low-pass
 filter; pluck/hold controls the body level; wobble modulates pitch gently. Reverb
-adds a room tail. More sound shapes exposes attack, release and a brief pitch
-swoop that settles onto the played note. Pitch recognition always uses the
+adds a room tail. Envelope exposes attack and release; Motion includes a brief
+pitch swoop that settles onto the played note. Pitch recognition always uses the
 original input pitch, independent of these audible effects.
 
 The canvas shows a schematic repeating wave while idle and actual Screen audio
@@ -77,7 +88,11 @@ MIDI pitches, duration release, cancelled opens, failures, echo expiry and saved
 settings migration/validation. Browser tests cover unsupported MIDI, pointer and
 keyboard audition, waveform selection, custom sound persistence/deletion, practice
 isolation, actual live and recording routing with synchronous MIDI loopback, and
-phone/desktop fit. Offline browser audio rendering checks audible, distinct presets,
+phone/desktop fit. A full twelve-sound shelf and every editor/output/keyboard
+panel are checked for both horizontal and vertical overflow, clipped controls and
+overlap at desktop, phone, 320×568 and landscape sizes. Tab keyboard navigation,
+draft preservation, held-key release and focus restoration are covered too.
+Offline browser audio rendering checks audible, distinct presets,
 true zero volume and long phrase completeness. Desktop and phone layouts are
 visually inspected using bundled Playwright Chromium. Mock outputs and offline
 audio do not establish physical keyboard output compatibility; that needs an

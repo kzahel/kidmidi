@@ -18,7 +18,7 @@ and Quiet for live playing, phrase previews and recording playback. The former
 Phrase sound selector has been removed. Its saved Speakers override migrates to
 global Screen on first use. See [global sound behavior](sound-playground.md).
 
-The Keyboard connection section selects an automatic or explicit MIDI output.
+The Keyboard tab selects an automatic or explicit MIDI output.
 `kidmidi.midi-output.v1` remembers the explicit identity. Exact output ID wins; a
 unique name/manufacturer match handles changed IDs. If a saved output is unavailable,
 the menu labels that state and Auto/Screen supplies the fallback. Choosing an output

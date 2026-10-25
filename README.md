@@ -10,7 +10,8 @@ The home menu has large activity cards for **Play a song**, **Free play**, and
 **Note hunt**. Songs have their own selection screen. **Home** returns to the menu;
 the learner button opens profiles, hearts and rewards, and the persistent
 sound/gear button opens **Sound and settings** from every activity, including
-without a MIDI keyboard. Activity **Options** contains notation size, Multiline
+without a MIDI keyboard. **Sounds**, **Make**, **Output**, and **Keyboard** tabs
+keep settings on one screen without scrolling, including on phones. Activity **Options** contains notation size, Multiline
 and idle hints. Navigation and utility controls have at least 48px
 touch targets. Piano keys retain their musical proportions; **Close** shows one
 octave on small screens for wider touch keys, and two octaves on desktop.
@@ -87,12 +88,12 @@ Auto uses these defaults: physical keys sound on the piano, screen keys on this
 device, and playback uses a matching MIDI output when available.
 
 Pick **🎹 Soft keys, 🫧 Bubble, 🤖 Robot, 👻 Ghost, 🚀 Space, 🔔 Bell, or 🎮 Arcade**
-for Screen sound. **Make a sound** offers sine/triangle/square/saw waves, brightness,
+for Screen sound. The **Make** tab offers sine/triangle/square/saw waves, brightness,
 pluck/hold, wobble, reverb, attack/release and a pitch swoop, with a live waveform,
 envelope picture, randomizer and reset. Try the small piano or connected keys inside
 settings without recording or advancing practice. Save up to twelve named emoji
 sounds locally. Sound, volume and routing choices persist across activities/reloads;
-keyboard output selection lives under **Keyboard connection**. Presets change the
+keyboard output selection lives in the **Keyboard** tab. Presets change the
 browser synth; the physical piano keeps its own instrument/volume. See
 [global sound and sound playground](docs/sound-playground.md).
 

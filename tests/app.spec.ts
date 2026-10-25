@@ -1272,7 +1272,7 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
       (window as unknown as { previewSpeakers(): number }).previewSpeakers(),
     );
   await openPractice(page);
-  await openSettings(page);
+  await openSettings(page, 'Output');
   await expect(
     page.getByRole('button', { name: 'Auto', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
@@ -1308,7 +1308,7 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
       .every((event) => event.data?.[0] === 0x80),
   ).toBe(true);
   const sent = (await messages()).length;
-  await openSettings(page);
+  await openSettings(page, 'Output');
   await page.getByRole('button', { name: 'Screen', exact: true }).click();
   await closeSettings(page);
   await page
@@ -1319,12 +1319,12 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
   await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
   await page.reload();
   await enterSong(page);
-  await openSettings(page);
+  await openSettings(page, 'Output');
   await expect(
     page.getByRole('button', { name: 'Screen', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
   await closeSettings(page);
-  await openSettings(page);
+  await openSettings(page, 'Output');
   await page.getByRole('button', { name: 'Auto', exact: true }).click();
   await closeSettings(page);
   await page
@@ -1394,11 +1394,14 @@ async function closeOptions(page: Page) {
   if (await details.getAttribute('open').then((v) => v !== null))
     await details.locator('summary').click();
 }
-async function openSettings(page: Page) {
+async function openSettings(
+  page: Page,
+  tab: 'Keyboard' | 'Output' = 'Keyboard',
+) {
   await page
     .getByRole('button', { name: 'Sound and settings', exact: true })
     .click();
-  await page.getByText('⌨ Keyboard connection', { exact: true }).click();
+  await page.getByRole('tab', { name: tab, exact: true }).click();
 }
 async function closeSettings(page: Page) {
   await page

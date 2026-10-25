@@ -30,6 +30,7 @@ async function done(page: Page) {
 }
 async function route(page: Page, name: string) {
   await settings(page);
+  await page.getByRole('tab', { name: 'Output', exact: true }).click();
   await page.getByRole('button', { name, exact: true }).click();
   await done(page);
 }
@@ -87,32 +88,36 @@ async function installProbe(page: Page) {
   });
 }
 
-test('sound settings work without MIDI, show wave shapes, save creations and fit desktop and phone', async ({
+test('sound tabs work without MIDI and preserve custom sounds and drafts across panels', async ({
   page,
-}, info) => {
+}) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript(() =>
     Object.defineProperty(navigator, 'requestMIDIAccess', { value: undefined }),
   );
   await page.goto('/');
+  await route(page, 'Screen');
   await settings(page);
-  await page.getByRole('button', { name: 'Screen', exact: true }).click();
   await page.getByRole('button', { name: 'Robot', exact: true }).click();
-  await expect(
-    page.getByRole('img', {
-      name: 'square wave, showing Screen audio while playing',
-    }),
-  ).toBeVisible();
-  await page.getByText('✎ Make a sound', { exact: true }).click();
+  await page.getByRole('tab', { name: 'Make', exact: true }).click();
   await page.getByRole('button', { name: 'Sine', exact: true }).click();
+  await page.getByRole('tab', { name: 'Motion', exact: true }).click();
   await page.getByRole('slider', { name: 'Wobble', exact: true }).fill('0.35');
   await page
     .getByRole('slider', { name: 'Room · reverb', exact: true })
     .fill('0.5');
+  await page.getByRole('tab', { name: 'Save', exact: true }).click();
   await page.getByRole('combobox', { name: 'Sound emoji' }).selectOption('👽');
   await page.getByRole('textbox', { name: 'Sound name' }).fill('Moon friend');
+  await page.getByRole('tab', { name: 'Output', exact: true }).click();
+  await page.getByRole('tab', { name: 'Make', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Sound name' })).toHaveValue(
+    'Moon friend',
+  );
   await page.getByRole('button', { name: 'Save sound', exact: true }).click();
+  await page.getByRole('tab', { name: 'Sounds', exact: true }).click();
+  await page.getByRole('tab', { name: 'My sounds', exact: true }).click();
   await expect(
     page.getByRole('button', { name: '👽 Moon friend', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
@@ -121,54 +126,48 @@ test('sound settings work without MIDI, show wave shapes, save creations and fit
   await expect(
     page.getByRole('button', { name: 'Try C4', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
+  // Changing the main tab releases a held audition key.
+  await page.getByRole('tab', { name: 'Output', exact: true }).click();
   await page.keyboard.up('Space');
-  await page.getByText('✎ Make a sound', { exact: true }).click();
-  await page
-    .getByRole('dialog', { name: 'Sound and settings' })
-    .evaluate((element) => {
-      element.scrollTop = 0;
-    });
-  await page.screenshot({ path: info.outputPath('sound-desktop.png') });
-  await page.setViewportSize({ width: 390, height: 844 });
-  const dialog = page.getByRole('dialog', { name: 'Sound and settings' });
-  await expect(dialog).toBeVisible();
-  const bounds = await dialog.boundingBox();
-  expect(bounds!.x).toBeGreaterThanOrEqual(0);
-  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
-  expect(
-    await dialog.evaluate(
-      (element) => element.scrollWidth <= element.clientWidth,
-    ),
-  ).toBe(true);
-  await dialog.evaluate((element) => {
-    element.scrollTop = 0;
-  });
-  await page.screenshot({ path: info.outputPath('sound-phone.png') });
-  await page.getByText('✎ Make a sound', { exact: true }).click();
-  await page
-    .getByRole('slider', { name: 'Wobble', exact: true })
-    .scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath('sound-editor-phone.png') });
+  await page.getByRole('tab', { name: 'Sounds', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Try C4', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'false');
   await done(page);
   await page.reload();
   await settings(page);
-  await expect(
-    page.getByRole('button', { name: 'Screen', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('tab', { name: 'My sounds', exact: true }).click();
   await expect(
     page.getByRole('button', { name: '👽 Moon friend', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
-  await page.getByText('✎ Make a sound', { exact: true }).click();
+  await page.getByRole('tab', { name: 'Make', exact: true }).click();
+  await page.getByRole('tab', { name: 'Motion', exact: true }).click();
   await expect(
     page.getByRole('slider', { name: 'Wobble', exact: true }),
   ).toHaveValue('0.35');
+  await page.getByRole('tab', { name: 'Sounds', exact: true }).click();
   await page
     .getByRole('button', { name: 'Delete sound Moon friend', exact: true })
     .click();
   await expect(
     page.getByRole('button', { name: '👽 Moon friend', exact: true }),
   ).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Sounds', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(
+    page.getByRole('tab', { name: 'Make', exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole('tab', { name: 'Make', exact: true }),
+  ).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('End');
+  await expect(
+    page.getByRole('tab', { name: 'Keyboard', exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('button', { name: 'Sound and settings', exact: true }),
+  ).toBeFocused();
   expect(errors).toEqual([]);
 });
 
@@ -379,4 +378,148 @@ test('browser synth renders distinct presets, true zero volume, and complete pre
   expect(results.silentEnergy).toBe(0);
   expect(results.firstNoteEnergy).toBeGreaterThan(0.01);
   expect(results.stoppedEnergy).toBeLessThan(0.000001);
+});
+
+test('every settings panel and a full saved shelf fit without scrolling or overlapping on desktop and phones', async ({
+  page,
+}, info) => {
+  await installProbe(page);
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const module = '/src/sound-settings.ts';
+    const { defaultSoundSettings, soundStorageKey } = await import(module);
+    const settings = defaultSoundSettings();
+    settings.route = 'both';
+    settings.saved = Array.from({ length: 12 }, (_, i) => ({
+      ...settings.sound,
+      id: `saved-${i}`,
+      name: `My very long sound number ${i + 1}`,
+      emoji: '👽',
+    }));
+    localStorage.setItem(soundStorageKey, JSON.stringify(settings));
+  });
+  await page.reload();
+  await settings(page);
+  const dialog = page.getByRole('dialog', { name: 'Sound and settings' });
+  async function fits(label: string) {
+    const problems = await dialog.evaluate((element) => {
+      const failures: string[] = [];
+      const box = element.getBoundingClientRect();
+      if (
+        box.left < 0 ||
+        box.top < 0 ||
+        box.right > innerWidth ||
+        box.bottom > innerHeight
+      )
+        failures.push('dialog outside viewport');
+      for (const panel of [
+        element,
+        ...element.querySelectorAll<HTMLElement>('[role="tabpanel"], section'),
+      ]) {
+        if (
+          panel.scrollHeight > panel.clientHeight + 1 ||
+          panel.scrollWidth > panel.clientWidth + 1
+        )
+          failures.push(
+            `overflow: ${panel.id || panel.getAttribute('aria-label') || panel.tagName} (${panel.scrollWidth}/${panel.clientWidth} wide, ${panel.scrollHeight}/${panel.clientHeight} tall)`,
+          );
+      }
+      for (const control of element.querySelectorAll<HTMLElement>(
+        'button, input, select, canvas, [role="tabpanel"]',
+      )) {
+        const rect = control.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) continue;
+        if (
+          rect.left < box.left ||
+          rect.top < box.top ||
+          rect.right > box.right ||
+          rect.bottom > box.bottom
+        )
+          failures.push(
+            `clipped: ${control.getAttribute('aria-label') || control.textContent?.trim()}`,
+          );
+      }
+      const work = element
+        .querySelector('[id="sound-tools-panel"], [id="sound-bank-panel"]')
+        ?.getBoundingClientRect();
+      const keys = element
+        .querySelector('[aria-label="Try your sound"]')
+        ?.getBoundingClientRect();
+      if (
+        work &&
+        keys &&
+        work.left < keys.right &&
+        work.right > keys.left &&
+        work.bottom > keys.top
+      )
+        failures.push('controls overlap try keys');
+      return failures;
+    });
+    if (problems.length)
+      await page.screenshot({ path: info.outputPath('layout-failure.png') });
+    expect(problems, label).toEqual([]);
+  }
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 390, height: 844 },
+    { width: 320, height: 568 },
+    { width: 844, height: 390 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const size = `${viewport.width}x${viewport.height}`;
+    await page.getByRole('tab', { name: 'Sounds', exact: true }).click();
+    await page.getByRole('tab', { name: 'Presets', exact: true }).click();
+    await fits(`${size} presets`);
+    await page.getByRole('tab', { name: 'My sounds', exact: true }).click();
+    for (let i = 0; i < 3; i++) {
+      await expect(
+        page.getByRole('button', {
+          name: `👽 My very long sound number ${i * 4 + 1}`,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await fits(`${size} saved page ${i + 1}`);
+      if (i < 2)
+        await page
+          .getByRole('button', { name: 'Next sounds', exact: true })
+          .click();
+    }
+    // Return to the first page for the next viewport.
+    await page
+      .getByRole('button', { name: 'Previous sounds', exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: 'Previous sounds', exact: true })
+      .click();
+    await page.getByRole('tab', { name: 'Make', exact: true }).click();
+    for (const tab of ['Tone', 'Motion', 'Envelope', 'Save']) {
+      await page.getByRole('tab', { name: tab, exact: true }).click();
+      await fits(`${size} ${tab}`);
+      if (tab === 'Save')
+        await expect(
+          page.getByRole('button', { name: 'Save sound', exact: true }),
+        ).toBeDisabled();
+      if (tab === 'Tone' && viewport.width !== 320)
+        await page.screenshot({ path: info.outputPath(`make-${size}.png`) });
+    }
+    await page.getByRole('tab', { name: 'Output', exact: true }).click();
+    await fits(`${size} Output`);
+    await page.getByRole('tab', { name: 'Keyboard', exact: true }).click();
+    await fits(`${size} Keyboard`);
+    if (viewport.width === 390)
+      await page.screenshot({ path: info.outputPath('keyboard-phone.png') });
+  }
+  await page.getByRole('tab', { name: 'Sounds', exact: true }).click();
+  await page.getByRole('button', { name: 'Next sounds', exact: true }).click();
+  await page.getByRole('button', { name: 'Next sounds', exact: true }).click();
+  for (let i = 0; i < 4; i++)
+    await page
+      .getByRole('button', { name: /^Delete sound / })
+      .first()
+      .click();
+  await expect(page.getByText('Page 2 of 2', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Next sounds', exact: true }),
+  ).toBeDisabled();
+  await fits('shelf after deleting its last page');
 });
