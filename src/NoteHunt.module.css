@@ -4,7 +4,40 @@
 }
 
 .hunt-controls {
-  gap: 14px;
+  gap: 8px;
+}
+.lesson-count {
+  font-size: 20px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.hunt-controls .note-help {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 2px 12px;
+  font-size: 22px;
+}
+.lesson-result {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.result-icon {
+  font-size: clamp(48px, 12vh, 100px);
+}
+.lesson-result p {
+  font-size: 28px;
+  font-weight: 700;
+  color: #a1526b;
+  margin: 0;
+}
+.lesson-result > div {
+  display: flex;
+  gap: 16px;
+}
+.lesson-result button {
+  min-width: 80px;
+  font-size: 26px;
 }
 
 .hunt-points {
@@ -227,8 +260,8 @@
 @media (height <= 500px) and (width >= 641px) {
   .note-hunt {
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    grid-template-rows: 48px 20px minmax(0, 1fr);
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
   }
   .note-hunt .hunt-controls {
     grid-column: 1;
@@ -238,11 +271,8 @@
     padding: 2px 4px;
   }
   .note-hunt .hunt-controls select {
-    width: 168px;
+    width: 142px;
     min-width: 0;
-  }
-  .note-hunt .hunt-controls > span:nth-of-type(2) {
-    display: none;
   }
   .learning-reason {
     grid-column: 1;
@@ -267,5 +297,11 @@
   }
   .hunt-note-name {
     min-height: 20px;
+  }
+  .lesson-result {
+    gap: 6px;
+  }
+  .lesson-result p {
+    font-size: 22px;
   }
 }

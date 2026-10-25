@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { journeyProgress, lessonById, worlds } from './curriculum';
 import { Dialog } from './Dialog';
 import styles from './LearnerMenu.module.css';
 import { progress, rewards } from './learners';
@@ -20,6 +21,7 @@ export function LearnerMenu({
   if (!snapshot) return null;
   const { learner, purchases } = snapshot;
   const stats = progress(snapshot);
+  const journey = journeyProgress(snapshot);
   const disabled = busy || pendingCount > 0;
   return (
     <Dialog title="Learners & rewards" onClose={onClose}>
@@ -28,7 +30,7 @@ export function LearnerMenu({
         <div>
           <h3>{learner.name}</h3>
           <p>
-            Level {stats.level} · ♥ {stats.balance} to spend
+            World {journey.world} · ♥ {stats.balance} · 💎 {journey.gemBalance}
           </p>
           <p>{stats.earned} hearts earned, forever</p>
         </div>
@@ -91,7 +93,7 @@ export function LearnerMenu({
       </form>
       <h3>Friends & little treasures</h3>
       <p className={styles['quiet']}>
-        Spend hearts on a friend or a charm. Your level keeps growing.
+        ♥ for practice. 💎 for new badges. Yours forever.
       </p>
       <div className={styles['shop']}>
         <button
@@ -115,9 +117,15 @@ export function LearnerMenu({
             <button
               type="button"
               key={item.id}
-              disabled={disabled || (!owned && stats.balance < item.cost)}
+              disabled={
+                disabled ||
+                (!owned &&
+                  (item.currency === 'gems'
+                    ? journey.gemBalance
+                    : stats.balance) < item.cost)
+              }
               aria-pressed={equipped}
-              aria-label={`${owned ? 'Choose' : 'Get'} ${item.name}${owned ? '' : ` for ${item.cost} hearts`}`}
+              aria-label={`${owned ? 'Choose' : 'Get'} ${item.name}${owned ? '' : ` for ${item.cost} ${item.currency}`}`}
               onClick={() =>
                 void (owned
                   ? controller.equip(item.slot, item.id)
@@ -131,7 +139,7 @@ export function LearnerMenu({
                   ? 'With you'
                   : owned
                     ? 'Choose · yours'
-                    : `♥ ${item.cost}`}
+                    : `${item.currency === 'gems' ? '💎' : '♥'} ${item.cost}`}
               </small>
             </button>
           );
@@ -149,9 +157,32 @@ export function LearnerMenu({
       <details className={styles['learning-details']}>
         <summary>Learning notes · for grown-ups</summary>
         <p>
-          Note finding with names to help. Accuracy is from the last 12 finds
-          for each note. Speed never changes hearts.
+          Garden lessons show note names. Treehouse lessons hide them until 💡
+          or a match; using help is saved and does not count toward a reading
+          badge. Badges require a complete, balanced set: 80% first-try finds
+          and at least one for every note. Each badge gives gems once. The
+          optional Quick badge also needs those finds within four seconds; there
+          is no countdown or deadline.
         </p>
+        <p>
+          Treehouse costs 60 hearts after the Garden rainbow badge. Earlier
+          games stay open. Worlds 3–8 are previews. Hearts buy friends and
+          gates; gems buy the puppy. Spending never removes badges or closes a
+          gate.
+        </p>
+        <ul>
+          {(learner.badges ?? []).map((badge) => {
+            const lesson = lessonById(badge.lessonId);
+            const world = worlds.find((world) => world.id === lesson?.world);
+            return (
+              <li key={badge.lessonId}>
+                {lesson?.icon ?? '🏅'} {world?.name} ·{' '}
+                {lesson?.name ?? badge.lessonId}
+              </li>
+            );
+          })}
+        </ul>
+        <p>Recent finds across modes, including help: last 12 per note.</p>
         <ul>
           {curriculum.slice(0, learner.unlocked).map((note) => {
             const evidence = noteEvidence(snapshot.encounters, note);

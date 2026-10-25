@@ -1383,6 +1383,10 @@ async function openActivity(page: Page, activity: 'explore' | 'hunt') {
       exact: true,
     })
     .click();
+  if (activity === 'hunt')
+    await page
+      .getByRole('button', { name: 'Practice note hunt', exact: true })
+      .click();
 }
 async function openOptions(page: Page) {
   const details = page.locator('[class*="__options__"]');

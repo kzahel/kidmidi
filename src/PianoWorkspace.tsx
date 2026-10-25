@@ -7,7 +7,13 @@ import { PlayStatus } from './PlayStatus';
 import { PracticeScore } from './PracticeScore';
 import { RecordingDialog } from './RecordingDialog';
 import { type PianoSession } from './usePianoSession';
-export function PianoWorkspace({ session }: { session: PianoSession }) {
+export function PianoWorkspace({
+  session,
+  onMap,
+}: {
+  session: PianoSession;
+  onMap(): void;
+}) {
   const {
     hunting,
     hunt,
@@ -28,6 +34,11 @@ export function PianoWorkspace({ session }: { session: PianoSession }) {
           roundId={huntSession.roundId}
           detail={huntSession.choice.detail}
           onReady={huntSession.ready}
+          lesson={huntSession.lesson}
+          result={huntSession.result}
+          helped={huntSession.helped}
+          onHelp={huntSession.help}
+          onMap={onMap}
           onReset={() => {
             session.releaseAll();
             huntSession.reset();

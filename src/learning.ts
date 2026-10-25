@@ -11,10 +11,11 @@ export type Encounter = {
   guesses: number[];
   firstResponseMs: number | null;
   durationMs: number | null;
-  assistance: 'note-name';
+  assistance: 'note-name' | 'none';
   input: 'midi' | 'pointer' | 'computer' | 'mixed';
   reason: LearningReason;
   reward: number;
+  lesson?: { id: string; revision: number; runId: string; index: number };
 };
 export type LearningClock = {
   now(): number;

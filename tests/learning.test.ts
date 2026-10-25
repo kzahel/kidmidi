@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { journeyProgress } from '../src/curriculum';
 import {
   type LearnerSnapshot,
   progress,
@@ -168,12 +169,12 @@ test('rewards are idempotent, spendable and separate from permanent level and cu
   assert.throws(() => withEquipment(state, 'charm', 'bow'));
   assert.throws(() => withPurchase(state, 'bow', 'buy', 0));
   for (let i = 0; i < 3; i++) state = withEncounter(state, encounter());
-  assert.equal(progress(state).level, 2);
+  assert.equal(journeyProgress(state).world, 1);
   state = withPurchase(state, 'bow', 'buy', 0);
   assert.equal(state.learner.charm, 'bow');
   assert.equal(progress(state).balance, 0);
   assert.equal(progress(state).earned, 12);
-  assert.equal(progress(state).level, 2);
+  assert.equal(journeyProgress(state).world, 1);
   assert.equal(withPurchase(state, 'bow', 'retry', 0), state);
   state = withEquipment(state, 'charm', 'bow');
   assert.equal(state.learner.charm, 'bow');
@@ -207,9 +208,9 @@ test('a deterministic multi-day journey gradually adds notes and retains progres
     }
   }
   assert.equal(state.learner.unlocked, 8);
-  const level = progress(state).level;
+  const level = journeyProgress(state).world;
   for (let i = 0; i < 15; i++)
     state = withEncounter(state, encounter(72, '2026-10-21', [61, 62, 63, 72]));
   assert.equal(state.learner.unlocked, 8);
-  assert.equal(progress(state).level, level);
+  assert.equal(journeyProgress(state).world, level);
 });

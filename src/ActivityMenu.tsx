@@ -1,5 +1,6 @@
 import styles from './ActivityMenu.module.css';
-import { type LearnerSnapshot, progress } from './learners';
+import { journeyProgress } from './curriculum';
+import type { LearnerSnapshot } from './learners';
 import { songs } from './music';
 import { Pet } from './Pet';
 import type { Activity } from './usePianoSession';
@@ -15,7 +16,7 @@ export function ActivityMenu({
   onChoose(activity: Activity): void;
   onSong(id: string): void;
 }) {
-  const stats = snapshot ? progress(snapshot) : null;
+  const journey = snapshot ? journeyProgress(snapshot) : null;
   return (
     <section
       className={styles['menu']}
@@ -34,17 +35,14 @@ export function ActivityMenu({
               ? 'Play together, one note at a time.'
               : 'What shall we play today?'}
           </p>
-          {stats && (
+          {journey && (
             <div className={styles['level']}>
-              <span>
-                Level {stats.level} <span aria-hidden="true">✦</span>{' '}
-                {stats.next - stats.earned} hearts to the next level
+              <span
+                aria-label={`World ${journey.world}, ${journey.badges} badges, ${journey.gemBalance} gems`}
+              >
+                {journey.world} ✦ · 🏅 {journey.badges} · 💎{' '}
+                {journey.gemBalance}
               </span>
-              <progress
-                aria-label="Player level progress"
-                max={stats.levelSize}
-                value={stats.intoLevel}
-              />
             </div>
           )}
         </div>
@@ -107,7 +105,7 @@ export function ActivityMenu({
                 ♥
               </span>
               <strong>Note hunt</strong>
-              <span>Find notes. Collect little joys.</span>
+              <span>🗺️ ♥ 💎</span>
               <b aria-hidden="true">↗</b>
             </button>
           </>

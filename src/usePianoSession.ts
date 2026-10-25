@@ -22,7 +22,13 @@ const shortcuts: Record<string, number> = {
   k: 72,
 };
 
-export type Activity = 'home' | 'songs' | 'practice' | 'explore' | 'hunt';
+export type Activity =
+  | 'home'
+  | 'songs'
+  | 'practice'
+  | 'explore'
+  | 'hunt'
+  | 'path';
 
 export function usePianoSession(
   mode: Activity,

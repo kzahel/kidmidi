@@ -1,4 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  assessLesson,
+  hasBadge,
+  lessonById,
+  lessonDeck,
+  lessonOpen,
+} from './curriculum';
 import { guessHunt, type HuntLevel, nextHunt, startHunt } from './hunt';
 import type { LearnerSnapshot } from './learners';
 import {
@@ -11,6 +18,14 @@ import {
 } from './learning';
 import { noteName, octave } from './music';
 
+export type LessonResult = {
+  hearts: number;
+  gems: number;
+  badge: boolean;
+  successes: number;
+  length: number;
+};
+
 export function useHuntSession(
   snapshot: LearnerSnapshot | null,
   record: (event: Encounter) => void,
@@ -19,6 +34,17 @@ export function useHuntSession(
   const [state, setState] = useState(startHunt);
   const [roundId, setRoundId] = useState('');
   const [adaptive, setAdaptive] = useState(true);
+  const [lessonId, setLessonId] = useState<string | null>(null);
+  const [result, setResult] = useState<LessonResult | null>(null);
+  const [helped, setHelped] = useState(false);
+  const run = useRef<{
+    lessonId: string;
+    id: string;
+    deck: number[];
+    completed: number;
+    points: number;
+    result: LessonResult | null;
+  } | null>(null);
   const [choice, setChoice] = useState<LearningChoice>({
     target: 60,
     reason: 'introduce',
@@ -39,7 +65,9 @@ export function useHuntSession(
     guesses: number[];
     firstResponseMs: number | null;
     input: Encounter['input'] | null;
+    assistance: Encounter['assistance'];
   } | null>(null);
+  const suspended = useRef<(typeof round)['current']>(null);
 
   function begin(
     next = startHunt(model.current.level),
@@ -50,21 +78,46 @@ export function useHuntSession(
       round.current = null;
       return;
     }
+    const activeRun = run.current;
+    const lesson = activeRun ? lessonById(activeRun.lessonId) : undefined;
+    if (activeRun && lesson) {
+      if (!lessonOpen(profile, lesson)) {
+        run.current = null;
+        setLessonId(null);
+      } else if (activeRun.completed >= activeRun.deck.length) {
+        round.current = null;
+        setResult(activeRun.result);
+        return;
+      }
+    }
     const now = browserClock.now();
     const day = learningDay(now, profile.learner.timeZone);
-    const plan: LearningChoice = auto.current
-      ? chooseExercise(
-          profile.encounters,
-          profile.learner.unlocked,
-          day,
-          previous,
-        )
-      : {
-          target: next.target,
-          reason: 'chosen',
-          detail: 'Your choice of notes',
-        };
-    const updated = { ...next, target: plan.target };
+    const plan: LearningChoice =
+      run.current && lesson
+        ? {
+            target: run.current.deck[run.current.completed],
+            reason: 'chosen',
+            detail: lesson.name,
+          }
+        : auto.current
+          ? chooseExercise(
+              profile.encounters,
+              profile.learner.unlocked,
+              day,
+              previous,
+            )
+          : {
+              target: next.target,
+              reason: 'chosen',
+              detail: 'Your choice of notes',
+            };
+    const updated = {
+      ...next,
+      target: plan.target,
+      ...(run.current
+        ? { points: run.current.points, solved: run.current.completed }
+        : {}),
+    };
     round.current = {
       id: crypto.randomUUID(),
       learnerId: profile.learner.id,
@@ -75,20 +128,35 @@ export function useHuntSession(
       guesses: [],
       firstResponseMs: null,
       input: null,
+      assistance:
+        run.current && lesson?.support === 'on-request' ? 'none' : 'note-name',
     };
     setRoundId(round.current.id);
     model.current = updated;
     setState(updated);
     setChoice(plan);
+    setHelped(false);
   }
   useLayoutEffect(() => {
     if (snapshot && owner.current !== snapshot.learner.id) {
       owner.current = snapshot.learner.id;
       auto.current = true;
       setAdaptive(true);
+      run.current = null;
+      suspended.current = null;
+      setLessonId(null);
+      setResult(null);
     }
-    begin();
+    if (enabled && run.current && suspended.current) {
+      round.current = suspended.current;
+      suspended.current = null;
+      round.current.timer.resume();
+    } else begin();
     return () => {
+      if (run.current && round.current) {
+        round.current.timer.pause();
+        suspended.current = round.current;
+      }
       round.current = null;
     };
   }, [enabled, snapshot?.learner.id]);
@@ -122,11 +190,13 @@ export function useHuntSession(
       active.input = input;
     } else if (active.input !== input) active.input = 'mixed';
     active.guesses.push(midi);
-    const next = guessHunt(model.current, midi);
+    const activeRun = run.current;
+    const lesson = activeRun ? lessonById(activeRun.lessonId) : undefined;
+    const next = guessHunt(model.current, midi, lesson?.heartMultiplier ?? 1);
     model.current = next;
     setState(next);
-    if (next.found)
-      latest.current.record({
+    if (next.found) {
+      const event: Encounter = {
         id: active.id,
         learnerId: active.learnerId,
         startedAt: active.startedAt,
@@ -136,24 +206,91 @@ export function useHuntSession(
         guesses: [...active.guesses],
         firstResponseMs: active.firstResponseMs,
         durationMs: active.timer.read(),
-        assistance: 'note-name',
+        assistance: active.assistance,
         input: active.input ?? input,
         reason: active.choice.reason,
         reward: next.reward,
-      });
+        ...(activeRun && lesson
+          ? {
+              lesson: {
+                id: lesson.id,
+                revision: lesson.revision,
+                runId: activeRun.id,
+                index: activeRun.completed,
+              },
+            }
+          : {}),
+      };
+      if (activeRun && lesson) {
+        activeRun.completed++;
+        activeRun.points += next.reward;
+        if (activeRun.completed === activeRun.deck.length) {
+          const profile = latest.current.snapshot!;
+          const assessment = assessLesson(
+            lesson,
+            [...profile.encounters, event],
+            activeRun.id,
+          );
+          activeRun.result = {
+            hearts: activeRun.points,
+            gems:
+              assessment.earned && !hasBadge(profile, lesson.id)
+                ? lesson.gems
+                : 0,
+            badge: assessment.earned,
+            successes: assessment.successes,
+            length: assessment.length,
+          };
+        }
+      }
+      latest.current.record(event);
+    }
+  }
+  function chooseLesson(id: string) {
+    const lesson = lessonById(id);
+    const profile = latest.current.snapshot;
+    if (!lesson || !profile || !lessonOpen(profile, lesson)) return;
+    suspended.current = null;
+    run.current = {
+      lessonId: id,
+      id: crypto.randomUUID(),
+      deck: lessonDeck(lesson),
+      completed: 0,
+      points: 0,
+      result: null,
+    };
+    setLessonId(id);
+    setResult(null);
+    begin();
   }
   return {
     state,
     roundId,
     adaptive,
     choice,
+    lesson: lessonId ? lessonById(lessonId) : undefined,
+    result,
+    helped,
+    chooseLesson,
+    help: () => {
+      if (!round.current || model.current.found) return;
+      round.current.assistance = 'note-name';
+      setHelped(true);
+    },
     guess,
-    reset: () => begin(),
+    reset: () => {
+      if (run.current) chooseLesson(run.current.lessonId);
+      else begin();
+    },
     next: () => {
       if (model.current.found)
         begin(nextHunt(model.current), model.current.target);
     },
     chooseRange: (level: HuntLevel | 'adaptive') => {
+      run.current = null;
+      suspended.current = null;
+      setLessonId(null);
+      setResult(null);
       auto.current = level === 'adaptive';
       setAdaptive(auto.current);
       begin(startHunt(level === 'adaptive' ? 'first' : level));

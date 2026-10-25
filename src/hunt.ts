@@ -29,11 +29,15 @@ export function startHunt(level: HuntLevel = 'first'): HuntState {
 }
 
 // Transport owns fresh attacks; held/repeated note-on messages never reach here.
-export function guessHunt(state: HuntState, midi: number): HuntState {
+export function guessHunt(
+  state: HuntState,
+  midi: number,
+  multiplier = 1,
+): HuntState {
   if (state.found) return state;
   const attempts = state.attempts + 1;
   const found = midi === state.target;
-  const reward = found ? Math.max(0, 4 - attempts) : 0;
+  const reward = found ? Math.max(0, 4 - attempts) * multiplier : 0;
   return {
     ...state,
     played: midi,

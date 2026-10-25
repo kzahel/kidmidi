@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { ActivityMenu } from './ActivityMenu';
 import styles from './App.module.css';
+import { journeyProgress } from './curriculum';
 import { DeviceSettings } from './DeviceSettings';
 import { LearnerMenu } from './LearnerMenu';
+import { LearningMap } from './LearningMap';
 import { progress } from './learners';
 import { Pet } from './Pet';
 import { PianoWorkspace } from './PianoWorkspace';
@@ -54,7 +56,9 @@ export function App() {
           onClick={() => navigate('home')}
           aria-label="Home"
         >
-          {playing || mode === 'songs' ? '‹ Home' : '♫ Kidmidi'}
+          {playing || mode === 'songs' || mode === 'path'
+            ? '‹ Home'
+            : '♫ Kidmidi'}
         </button>
         <span className={styles['activity-title']}>
           {mode === 'practice'
@@ -106,7 +110,11 @@ export function App() {
             <span className={styles['learner-label']}>
               {learners.snapshot?.learner.name ?? 'Loading…'}
             </span>
-            <span>{stats ? `Lv ${stats.level} · ♥ ${stats.balance}` : ''}</span>
+            <span>
+              {stats && learners.snapshot
+                ? `${journeyProgress(learners.snapshot).world} ✦ · ♥ ${stats.balance}`
+                : ''}
+            </span>
           </button>
         </div>
       </header>
@@ -133,12 +141,27 @@ export function App() {
         </div>
       )}
       {playing ? (
-        <PianoWorkspace session={session} />
+        <PianoWorkspace session={session} onMap={() => navigate('path')} />
+      ) : mode === 'path' ? (
+        <LearningMap
+          key={learners.snapshot?.learner.id}
+          controller={learners}
+          onLesson={(id) => {
+            navigate('hunt');
+            hunt.chooseLesson(id);
+          }}
+          onPractice={() => {
+            navigate('hunt');
+            hunt.chooseRange('adaptive');
+          }}
+        />
       ) : (
         <ActivityMenu
           snapshot={learners.snapshot}
           choosingSong={mode === 'songs'}
-          onChoose={navigate}
+          onChoose={(activity) =>
+            navigate(activity === 'hunt' ? 'path' : activity)
+          }
           onSong={(id) => {
             session.setSongId(id);
             navigate('practice');

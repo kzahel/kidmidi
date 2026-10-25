@@ -34,7 +34,7 @@ test('activity menu and profile controls have touch targets on desktop, phone an
       ),
     ).toBe(true);
   }
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   for (const viewport of [
     { width: 1280, height: 800 },
     { width: 390, height: 844 },
@@ -73,7 +73,7 @@ test('activity menu and profile controls have touch targets on desktop, phone an
   ).toBeFocused();
 });
 
-test('learners keep separate hearts, levels and cosmetics across switches, reloads and a new review day', async ({
+test('learners keep separate hearts, worlds and cosmetics across switches, reloads and a new review day', async ({
   page,
 }) => {
   await page.clock.install({ time: new Date('2026-10-25T12:00:00Z') });
@@ -87,14 +87,14 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
     page.getByRole('heading', { name: 'Ada', exact: true }),
   ).toBeVisible();
   await closeLearners(page);
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   await expect(page.getByRole('combobox', { name: 'Note range' })).toHaveValue(
     'adaptive',
   );
   for (let round = 0; round < 4; round++) await solve(page);
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
-  ).toContainText('Lv 2 · ♥ 12');
+  ).toContainText('1 ✦ · ♥ 12');
   await page
     .getByRole('combobox', { name: 'Note range' })
     .selectOption('octave');
@@ -106,7 +106,7 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
   await expect(bow).toBeEnabled();
   await bow.click();
   await expect(
-    page.getByText('Level 2 · ♥ 0 to spend', { exact: true }),
+    page.getByText('World 1 · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await page
     .getByRole('button', { name: 'Choose Party bow', exact: true })
@@ -124,7 +124,7 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
     page.getByRole('heading', { name: 'Ben', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText('Level 1 · ♥ 0 to spend', { exact: true }),
+    page.getByText('World 1 · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await page.keyboard.press('a'); // Profile forms never play or award notes.
   await closeLearners(page);
@@ -152,7 +152,7 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
   ).toContainText('Ada');
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
-  ).toContainText('Lv 2 · ♥ 0');
+  ).toContainText('1 ✦ · ♥ 0');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await expect(
     page
@@ -165,13 +165,13 @@ test('learners keep separate hearts, levels and cosmetics across switches, reloa
   await closeLearners(page);
 
   await page.clock.setSystemTime(new Date('2026-11-01T12:00:00Z'));
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   await expect(
     page.getByText('A little review to start today', { exact: true }),
   ).toBeVisible();
   await solve(page);
   await page.reload();
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   await expect(
     page.getByText('A little review to start today', { exact: true }),
   ).toBeVisible();
@@ -207,7 +207,7 @@ test('a failed learner save is visible and retry saves the same award once; inte
     };
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   await expect(
     page.getByRole('region', { name: 'Find this', exact: true }).locator('svg'),
   ).toBeVisible();
@@ -331,7 +331,7 @@ test('the final qualifying review unlocks one new note through the stored curric
     }
   });
   await page.reload();
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   const target = page.getByRole('region', { name: 'Find this', exact: true });
   await expect(target).toContainText('G4');
   await expect(
@@ -344,6 +344,13 @@ test('the final qualifying review unlocks one new note through the stored curric
   ).toBeVisible();
   await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.reload();
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openHuntPractice(page);
   await expect(target).toContainText('D4');
 });
+
+async function openHuntPractice(page: Page) {
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Practice note hunt', exact: true })
+    .click();
+}

@@ -14,8 +14,12 @@ declare const styles: {
   readonly 'hunt-note-name': string;
   readonly 'hunt-points': string;
   readonly 'learning-reason': string;
+  readonly 'lesson-count': string;
+  readonly 'lesson-result': string;
   readonly 'matched': string;
+  readonly 'note-help': string;
   readonly 'note-hunt': string;
   readonly 'played-card': string;
+  readonly 'result-icon': string;
 };
 export default styles;
