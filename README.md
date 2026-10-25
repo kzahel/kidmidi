@@ -278,3 +278,6 @@ origin needs its own first-use MIDI permission and keeps separate local settings
 from localhost. Physical keyboard checks still need the actual device.
 
 Next experiment: play a song together, then decide what feels fun enough to keep.
+
+For product context, see the [piano-learning landscape and competitive overview](docs/piano-learning-landscape.md)
+(platforms, pricing and open-source alternatives; researched October 2026).
