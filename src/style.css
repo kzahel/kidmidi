@@ -977,3 +977,11 @@ button:hover:not(:disabled) {
   color: #6e796b;
   margin: 14px 0 0;
 }
+
+.practice-controls select[aria-label="Phrase sound"] {
+  max-width: 200px;
+}
+.preview-status {
+  color: #756341;
+  font-size: 11px;
+}

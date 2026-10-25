@@ -104,3 +104,73 @@ export function chooseMidiInput<T extends MidiIdentity>(
   if (current && midiInputPriority(current) === best) return current;
   return inputs.find((input) => midiInputPriority(input) === best);
 }
+
+export type MidiOutputPreference = 'auto' | 'speakers' | MidiIdentity;
+export const midiOutputStorageKey = 'kidmidi.midi-output.v1';
+
+export function loadMidiOutputPreference(): MidiOutputPreference {
+  try {
+    const raw = localStorage.getItem(midiOutputStorageKey);
+    return raw === 'speakers'
+      ? 'speakers'
+      : (parseMidiPreference(raw) ?? 'auto');
+  } catch {
+    return 'auto';
+  }
+}
+export function saveMidiOutputPreference(preference: MidiOutputPreference) {
+  try {
+    localStorage.setItem(
+      midiOutputStorageKey,
+      typeof preference === 'string' ? preference : JSON.stringify(preference),
+    );
+  } catch {
+    /* Output selection still works without local storage. */
+  }
+}
+function portName(name: string | null) {
+  return (name ?? '')
+    .toLowerCase()
+    .replace(/\b(?:input|output|in|out)\b/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+export function chooseMidiOutput<T extends MidiIdentity>(
+  outputs: readonly T[],
+  input: MidiIdentity | undefined,
+  preference: MidiOutputPreference,
+): T | undefined {
+  if (preference === 'speakers') return;
+  if (typeof preference === 'object') {
+    const exact = outputs.find((output) => output.id === preference.id);
+    if (exact) return exact;
+    const matches = preference.name
+      ? outputs.filter(
+          (output) =>
+            output.name === preference.name &&
+            output.manufacturer === preference.manufacturer,
+        )
+      : [];
+    if (matches.length === 1) return matches[0];
+  }
+  if (!input) return;
+  const available = outputs.filter((output) => midiInputPriority(output) > 0);
+  const manufacturer = input.manufacturer?.trim().toLowerCase();
+  const named = portName(input.name)
+    ? available.filter(
+        (output) =>
+          portName(output.name) === portName(input.name) &&
+          (!manufacturer ||
+            !output.manufacturer?.trim() ||
+            output.manufacturer.trim().toLowerCase() === manufacturer),
+      )
+    : [];
+  if (named.length === 1) return named[0];
+  if (named.length > 1) return;
+  const matching = manufacturer
+    ? available.filter(
+        (output) => output.manufacturer?.trim().toLowerCase() === manufacturer,
+      )
+    : [];
+  return matching.length === 1 ? matching[0] : undefined;
+}

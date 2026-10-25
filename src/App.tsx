@@ -15,6 +15,7 @@ import {
   startPosition,
 } from './music';
 import { NoteHunt } from './NoteHunt';
+import { PhrasePreview, type PreviewState } from './phrase-preview';
 import { emptyPlayback, RecordingPlayer } from './playback';
 import { downloadMusicXml, RecordingMenu } from './RecordingMenu';
 import { emptyLibrary, RecordingLibrary } from './recordings';
@@ -117,6 +118,11 @@ export function App() {
         cancel: (timer) => window.clearTimeout(timer),
       }),
   );
+  const [previewState, setPreviewState] = useState<PreviewState>({
+    playing: false,
+    error: '',
+  });
+  const [preview] = useState(() => new PhrasePreview(setPreviewState));
   const held = useRef(new Map<string, number>());
   const audio = useRef(new PianoAudio());
   const current = useRef({ song, position, freePlay, hunting, hunt });
@@ -124,12 +130,13 @@ export function App() {
 
   const releaseAll = useCallback(() => {
     player.stop();
+    preview.stop();
     held.current.clear();
     setPressed(new Set());
     audio.current.stopAll();
     feedback.cancel();
     recorder.releaseAll(performance.now());
-  }, [feedback, recorder, player]);
+  }, [feedback, recorder, player, preview]);
   const play = useCallback(
     (event: NoteEvent, source: string) => {
       const id = `${source}:${event.channel}:${event.note}`;
@@ -171,9 +178,14 @@ export function App() {
     [feedback, recorder, player],
   );
   const midi = useMidi((event) => {
+    if (preview.midiPlaying && event.type === 'on') return;
     if (event.type === 'on' && keyboard.observe(event.note)) return;
     play(event, 'midi');
   }, releaseAll);
+  useEffect(() => {
+    preview.stop();
+    return () => preview.stop();
+  }, [midi.output, preview]);
   const connected = midi.inputs.find((input) => input.id === midi.selected);
   const keyboard = useKeyboard(connected ?? screenKeyboard);
   const keyLayout = useMemo(
@@ -250,8 +262,9 @@ export function App() {
       feedback.dispose();
       audio.current.close();
       player.dispose();
+      preview.dispose();
     };
-  }, [play, releaseAll, feedback, player]);
+  }, [play, releaseAll, feedback, player, preview]);
 
   function reset() {
     releaseAll();
@@ -439,10 +452,53 @@ export function App() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => audio.current.hear(pageNotes)}
+                  onClick={() => {
+                    if (previewState.playing) preview.stop();
+                    else {
+                      void preview.hear(pageNotes, midi.output);
+                    }
+                  }}
                 >
-                  <span aria-hidden="true">▷</span> Hear this phrase
+                  <span aria-hidden="true">
+                    {previewState.playing ? '◼' : '▷'}
+                  </span>{' '}
+                  {previewState.playing ? 'Stop preview' : 'Hear this phrase'}
                 </button>
+                {(midi.outputs.length > 0 || midi.outputChoice !== 'auto') && (
+                  <select
+                    aria-label="Phrase sound"
+                    value={midi.outputChoice}
+                    title="Phrase playback sound"
+                    onChange={(event) => {
+                      preview.stop();
+                      midi.setOutput(event.target.value);
+                    }}
+                  >
+                    <option value="auto">
+                      Auto · {midi.automaticOutput?.name || 'Speakers'}
+                    </option>
+                    <option value="speakers">Speakers</option>
+                    {midi.outputs.map((output) => (
+                      <option key={output.id} value={output.id}>
+                        {output.name || output.id}
+                      </option>
+                    ))}
+                    {!['auto', 'speakers'].includes(midi.outputChoice) &&
+                      !midi.outputs.some(
+                        (output) => output.id === midi.outputChoice,
+                      ) && (
+                        <option value={midi.outputChoice}>
+                          Saved output unavailable ·{' '}
+                          {midi.output?.name || 'Speakers'}
+                        </option>
+                      )}
+                  </select>
+                )}
+                {previewState.error && (
+                  <span className="preview-status" role="status">
+                    {previewState.error}
+                  </span>
+                )}
               </>
             )}
             <select
@@ -477,7 +533,10 @@ export function App() {
                   type="button"
                   aria-label="Previous score page"
                   disabled={page.index === 0}
-                  onClick={() => setRequestedPage(page.index - 1)}
+                  onClick={() => {
+                    preview.stop();
+                    setRequestedPage(page.index - 1);
+                  }}
                 >
                   ‹
                 </button>
@@ -488,7 +547,10 @@ export function App() {
                   type="button"
                   aria-label="Next score page"
                   disabled={page.index + 1 === page.count}
-                  onClick={() => setRequestedPage(page.index + 1)}
+                  onClick={() => {
+                    preview.stop();
+                    setRequestedPage(page.index + 1);
+                  }}
                 >
                   ›
                 </button>

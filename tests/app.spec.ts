@@ -887,6 +887,7 @@ test('Explore keeps a fixed grid, saves every page, restores sessions and plays 
   const score = page.locator('.explore-score');
   await expect(score.locator('svg')).toBeVisible();
   await expect(score).toHaveAttribute('data-measures', '2');
+  await expect(score.locator('svg')).toHaveAttribute('viewBox', '0 0 640 240');
   const bounds = await score.locator('svg').boundingBox();
   await score
     .locator('svg')
@@ -904,14 +905,27 @@ test('Explore keeps a fixed grid, saves every page, restores sessions and plays 
     await send([0x80, note, 0], at + 200);
   };
   await attack(60, 0);
+  await expect(score.locator('[data-slot="0"] .vf-notehead')).toBeVisible();
   const first = await score
     .locator('[data-slot="0"] .vf-notehead')
     .boundingBox();
   for (const [index, note] of [64, 67, 48, 50, 62, 65, 69].entries())
     await attack(note, (index + 1) * 500);
-  expect(
-    await score.locator('[data-slot="0"] .vf-notehead').boundingBox(),
-  ).toEqual(first);
+  await expect(score.locator('[data-slot]')).toHaveCount(8);
+  const later = await score
+    .locator('[data-slot="0"] .vf-notehead')
+    .boundingBox();
+  expect(first).not.toBeNull();
+  expect(later).not.toBeNull();
+  // Highlight ink can change its extent; the note's center must stay fixed.
+  expect(later!.x + later!.width / 2).toBeCloseTo(
+    first!.x + first!.width / 2,
+    2,
+  );
+  expect(later!.y + later!.height / 2).toBeCloseTo(
+    first!.y + first!.height / 2,
+    2,
+  );
   expect(await score.locator('svg').boundingBox()).toEqual(bounds);
   await expect(score.locator('svg')).toHaveAttribute('data-stable-grid', 'yes');
   await expect(score.locator('[data-slot]')).toHaveCount(8);
@@ -1086,4 +1100,176 @@ test('MIDI auto selection upgrades a legacy Through default on hotplug and respe
   await expect(
     page.getByRole('combobox', { name: 'MIDI input', exact: true }),
   ).toHaveValue('through');
+});
+
+test('phrase previews use matching MIDI output, stop safely and retain a speaker override', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.addInitScript(() => {
+    const log: { port: string; type: string; data?: number[]; at?: number }[] =
+      [];
+    let speakers = 0;
+    const NativeContext = window.AudioContext;
+    class ProbeContext extends NativeContext {
+      createOscillator() {
+        speakers++;
+        return super.createOscillator();
+      }
+    }
+    Object.defineProperty(window, 'AudioContext', { value: ProbeContext });
+    const input = Object.assign(new EventTarget(), {
+      id: 'casio-in',
+      name: 'CASIO USB-MIDI Input',
+      manufacturer: 'Casio',
+      state: 'connected',
+    });
+    const makeOutput = (id: string, name: string, manufacturer: string) => ({
+      id,
+      name,
+      manufacturer,
+      state: 'connected',
+      open: async function () {
+        access.onstatechange?.();
+        return this;
+      },
+      send: function (data: number[], at?: number) {
+        if (this.state !== 'connected') throw new Error('disconnected');
+        log.push({ port: id, type: 'send', data: [...data], at });
+      },
+      clear: () => log.push({ port: id, type: 'clear' }),
+    });
+    const keyboard = makeOutput('casio-out', 'CASIO USB-MIDI Output', 'Casio');
+    const through = makeOutput('through', 'Midi Through Port-0', 'ALSA');
+    const other = makeOutput('other', 'Other synth', 'Other');
+    const access = {
+      inputs: new Map([[input.id, input]]),
+      outputs: new Map([
+        ['through', through],
+        ['other', other],
+        ['casio-out', keyboard],
+      ]),
+      onstatechange: null as (() => void) | null,
+    };
+    Object.defineProperty(navigator, 'requestMIDIAccess', {
+      value: async () => access,
+    });
+    Object.assign(window, {
+      previewLog: () => log,
+      previewSpeakers: () => speakers,
+      echoPreview: () =>
+        input.dispatchEvent(
+          Object.assign(new Event('midimessage'), {
+            data: new Uint8Array([0x90, 60, 100]),
+          }),
+        ),
+      unplugOutput: () => {
+        keyboard.state = 'disconnected';
+        access.outputs.delete('casio-out');
+        access.onstatechange?.();
+      },
+    });
+  });
+  const messages = () =>
+    page.evaluate(() =>
+      (
+        window as unknown as {
+          previewLog(): {
+            port: string;
+            type: string;
+            data?: number[];
+            at?: number;
+          }[];
+        }
+      ).previewLog(),
+    );
+  const speakers = () =>
+    page.evaluate(() =>
+      (window as unknown as { previewSpeakers(): number }).previewSpeakers(),
+    );
+  await page.goto('/');
+  await expect(
+    page.getByRole('combobox', { name: 'Phrase sound', exact: true }),
+  ).toHaveValue('auto');
+  await page
+    .getByRole('button', { name: 'Hear this phrase', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Stop preview', exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await messages()).filter((event) => event.type === 'send').length,
+    )
+    .toBe(14);
+  expect((await messages()).every((event) => event.port === 'casio-out')).toBe(
+    true,
+  );
+  expect(await speakers()).toBe(0);
+  await page.evaluate(() =>
+    (window as unknown as { echoPreview(): void }).echoPreview(),
+  );
+  await expect(page.getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  );
+  await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
+  expect((await messages()).some((event) => event.type === 'clear')).toBe(true);
+  expect(
+    (await messages())
+      .filter((event) => event.type === 'send' && event.at === undefined)
+      .every((event) => event.data?.[0] === 0x80),
+  ).toBe(true);
+  const sent = (await messages()).length;
+  await page
+    .getByRole('combobox', { name: 'Phrase sound', exact: true })
+    .selectOption('speakers');
+  await page
+    .getByRole('button', { name: 'Hear this phrase', exact: true })
+    .click();
+  expect(await speakers()).toBe(7);
+  expect((await messages()).length).toBe(sent);
+  await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
+  await page.reload();
+  await expect(
+    page.getByRole('combobox', { name: 'Phrase sound', exact: true }),
+  ).toHaveValue('speakers');
+  await page
+    .getByRole('combobox', { name: 'Phrase sound', exact: true })
+    .selectOption('auto');
+  await page
+    .getByRole('button', { name: 'Hear this phrase', exact: true })
+    .click();
+  await expect
+    .poll(
+      async () =>
+        (await messages()).filter((event) => event.type === 'send').length,
+    )
+    .toBe(14);
+  await page.evaluate(() =>
+    (window as unknown as { unplugOutput(): void }).unplugOutput(),
+  );
+  await expect(
+    page.getByRole('button', { name: 'Hear this phrase', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Hear this phrase', exact: true })
+    .click();
+  expect(await speakers()).toBe(7);
+  expect(
+    (await messages()).some(
+      (event) => event.port === 'other' || event.port === 'through',
+    ),
+  ).toBe(false);
+  await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.score svg')).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollHeight <= innerHeight &&
+        document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   chooseMidiInput,
+  chooseMidiOutput,
+  loadMidiOutputPreference,
   loadMidiPreference,
   midiInputPriority,
+  saveMidiOutputPreference,
   saveMidiPreference,
 } from './midi-device';
 import { type NoteEvent, parseMidi } from './music';
@@ -12,6 +15,10 @@ export function useMidi(
   onReset: () => void,
 ) {
   const [inputs, setInputs] = useState<MIDIInput[]>([]);
+  const [outputs, setOutputs] = useState<MIDIOutput[]>([]);
+  const [outputPreference, setOutputPreference] = useState(
+    loadMidiOutputPreference,
+  );
   const [selected, setSelectedId] = useState('');
   const [status, setStatus] = useState('');
   const [requesting, setRequesting] = useState(false);
@@ -25,6 +32,8 @@ export function useMidi(
   callbacks.current = { onNote, onReset };
   const supported = typeof navigator.requestMIDIAccess === 'function';
   const selectedInput = inputs.find((input) => input.id === selected);
+
+  const output = chooseMidiOutput(outputs, selectedInput, outputPreference);
 
   const connect = useCallback(
     async (automatic = false) => {
@@ -65,6 +74,11 @@ export function useMidi(
           selectedId.current = chosen?.id ?? '';
           setSelectedId(selectedId.current);
           setInputs(available);
+          setOutputs(
+            [...(granted.outputs?.values() ?? [])].filter(
+              (output) => output.state === 'connected',
+            ),
+          );
           setStatus(
             available.length
               ? ''
@@ -129,7 +143,37 @@ export function useMidi(
     setSelectedId(id);
   }
 
+  function setOutput(value: string) {
+    const preference =
+      value === 'auto' || value === 'speakers'
+        ? value
+        : outputs.find((output) => output.id === value);
+    if (!preference) return;
+    const saved =
+      typeof preference === 'string'
+        ? preference
+        : {
+            id: preference.id,
+            name: preference.name,
+            manufacturer: preference.manufacturer,
+          };
+    setOutputPreference(saved);
+    saveMidiOutputPreference(saved);
+  }
+
   return {
+    outputs,
+    automaticOutput: chooseMidiOutput(outputs, selectedInput, 'auto'),
+    output,
+    outputChoice:
+      typeof outputPreference === 'string'
+        ? outputPreference
+        : output &&
+            output.name === outputPreference.name &&
+            output.manufacturer === outputPreference.manufacturer
+          ? output.id
+          : outputPreference.id,
+    setOutput,
     inputs,
     selected,
     setSelected,

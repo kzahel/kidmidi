@@ -68,7 +68,16 @@ port list does not clear held notes. The physical keyboard produces its own soun
 MIDI carries notes, not audio. There is no microphone capture.
 
 You can also tap/click the on-screen piano or use A S D F G H J K for C4 through C5.
-On-screen keys and **Hear this phrase** use a simple synthesized preview voice.
+**Hear this phrase** automatically uses the MIDI output matching the selected
+keyboard when one is available. **Phrase sound** selects Auto, Speakers, or a
+specific MIDI output; explicit choices are remembered. **Stop preview**, changing
+songs/outputs, losing focus or unplugging cancels the demonstration. Without a
+matching output (or if it cannot open/send), it uses the speaker preview voice.
+MIDI input is paused during a keyboard demonstration so echoed notes cannot
+advance the song. Playback uses MIDI channel 1 and the keyboard's current sound;
+its volume and receive settings still apply. On-screen keys and saved Explore
+recording playback continue to use the speaker preview voice. See
+[MIDI phrase playback](docs/midi-phrase-playback.md).
 The piano has proportioned keys and stays centered instead of stretching across
 a wide screen. **Close · middle C** starts with C3–C5 and larger touch targets.
 **All keys** fits the complete keyboard range on screen, using smaller keys.
@@ -103,7 +112,8 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/useMidi.ts`: automatic permission request/reconnect and connection lifecycle.
 - `src/midi-device.ts`: saved input preference and deterministic device selection.
 - `src/keyboard.ts` / `src/useKeyboard.ts`: close/full piano layout and per-input key ranges.
-- `src/audio.ts`: local preview voice. It never sends notes to the physical piano.
+- `src/audio.ts`: local preview voice.
+- `src/phrase-preview.ts`: phrase demonstrations through matched MIDI output or speakers.
 - `src/App.tsx`: practice UI and shared input handling for MIDI, pointer and keys.
 
 The Räge-Rägetröpfli song is manually transcribed from the supplied book photo:
