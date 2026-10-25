@@ -1,0 +1,574 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #293d37;
+  background: #f8f6ef;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+select,
+input {
+  font: inherit;
+}
+button,
+select,
+label {
+  cursor: pointer;
+}
+button {
+  color: inherit;
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+:focus-visible {
+  outline: 3px solid #278967;
+  outline-offset: 2px;
+}
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 12px;
+}
+.toolbar,
+.song-picker,
+.connection,
+.practice-controls,
+.play-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.song-picker {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+button,
+select {
+  border: 1px solid #dce1d5;
+  border-radius: 6px;
+  background: #fffefa;
+  min-height: 40px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+button:hover:not(:disabled) {
+  background: #edf1e6;
+}
+.song-button.selected {
+  background: #e1ecdb;
+  border-color: #b6c9aa;
+}
+.connection {
+  margin-left: auto;
+  min-width: 0;
+}
+.connection select {
+  max-width: 180px;
+}
+.connection-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+}
+.connection-button.connected {
+  color: #326f56;
+}
+.connection-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4d966e;
+  flex-shrink: 0;
+}
+.midi-status {
+  font-size: 12px;
+  margin: 4px 0 8px;
+  color: #756341;
+}
+.practice {
+  background: #fffefa;
+  border: 1px solid #e5e6dc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.practice-controls {
+  padding: 0 10px;
+  gap: 12px;
+  min-height: 40px;
+}
+.practice-controls button {
+  border: 0;
+  background: transparent;
+  padding: 4px 8px;
+}
+.phrase-count {
+  color: #6e796b;
+  font-size: 12px;
+}
+.hint-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  min-height: 40px;
+}
+.hint-toggle input {
+  accent-color: #628b64;
+  width: 16px;
+  height: 16px;
+}
+.practice-controls .restart {
+  margin-left: auto;
+  font-size: 23px;
+}
+.score {
+  min-height: 120px;
+  overflow: hidden;
+}
+.score > div {
+  min-width: 0;
+}
+.score svg {
+  display: block;
+}
+.score p {
+  margin: 8px 12px;
+  font-size: 13px;
+}
+.progress-track {
+  height: 3px;
+  background: #eeeee6;
+}
+.progress-track > div {
+  background: #90b79d;
+  height: 100%;
+  transition: width 0.2s;
+}
+.play-status {
+  min-height: 40px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+.last-note {
+  margin-left: auto;
+  color: #6e796b;
+  font-size: 12px;
+}
+.keyboard-panel {
+  margin-top: 8px;
+}
+.keyboard-scroll {
+  overflow-x: auto;
+  border-radius: 7px;
+}
+.keyboard {
+  --white-key-width: 38px;
+  width: calc(var(--white-key-width) * 15 + 8px);
+  margin-inline: auto;
+  height: 136px;
+  position: relative;
+  background: #414c42;
+  border: 4px solid #414c42;
+  border-top-width: 7px;
+  border-radius: 7px;
+}
+.piano-key {
+  position: absolute;
+  top: 0;
+  padding: 0;
+  border: 1px solid #d1d3c7;
+  touch-action: none;
+  user-select: none;
+  min-height: 0;
+}
+.piano-key.white {
+  width: calc(100% / 15);
+  background: #fffef8;
+  height: 100%;
+  border-radius: 0 0 5px 5px;
+  box-shadow: inset 0 -4px #e4e4d9;
+}
+.piano-key.white > .key-label {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  font-size: 12px;
+  color: #7c8572;
+}
+.piano-key small {
+  font-size: 9px;
+  margin-left: 2px;
+}
+.piano-key.black {
+  z-index: 1;
+  width: 4%;
+  height: 62%;
+  background: linear-gradient(#414a42, #2f3931);
+  border-color: #29352c;
+  border-radius: 0 0 4px 4px;
+  box-shadow:
+    inset 0 -4px #1f2e25,
+    1px 2px 2px #0002;
+}
+.piano-key.expected.white {
+  background: #e7efdf;
+  box-shadow: inset 0 -4px #c5d8b7;
+}
+.piano-key i {
+  width: 7px;
+  height: 7px;
+  background: #78a469;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 34px;
+  left: calc(50% - 3.5px);
+}
+.piano-key.pressed.white {
+  background: #b5d7be;
+  box-shadow: inset 0 -2px #8fb59b;
+}
+.piano-key.pressed.black {
+  background: #6a9b79;
+}
+@media (max-width: 640px) {
+  .app {
+    padding: 6px;
+  }
+  .toolbar {
+    gap: 4px;
+  }
+  .connection {
+    margin-left: 0;
+  }
+  .song-button {
+    font-size: 12px;
+    padding-inline: 9px;
+  }
+  .practice-controls {
+    padding-inline: 6px;
+    gap: 6px;
+  }
+  .practice-controls button {
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+  .keyboard {
+    height: 128px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-track > div {
+    transition: none;
+  }
+}
+
+.score-layout {
+  min-width: 0;
+}
+.score-layout.illustrated {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  gap: 8px;
+  padding-right: 8px;
+}
+.book-illustration {
+  display: block;
+  width: 94px;
+  max-height: 192px;
+  align-self: start;
+  justify-self: center;
+  border-radius: 6px;
+}
+.source-link,
+.score-credit a {
+  color: #4d795d;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+.score-credit {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  color: #6e796b;
+  font-size: 11px;
+}
+.practice-controls {
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .score-layout.illustrated {
+    grid-template-columns: minmax(0, 1fr) 80px;
+    gap: 0;
+    padding-right: 4px;
+  }
+  .book-illustration {
+    width: 76px;
+    max-height: 160px;
+  }
+  .source-link {
+    font-size: 11px;
+  }
+}
+
+.score .hit-notehead {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: note-hit-bloom 240ms ease-out;
+  filter: drop-shadow(0 0 3px #72c89a);
+}
+.score .hit-notehead,
+.score .hit-notehead path {
+  fill: #198559;
+  stroke: #198559;
+}
+.score .hit-notehead.hit-held {
+  filter: drop-shadow(0 0 5px #50b988);
+}
+.score.hit-active [id^="cursorImg"] {
+  filter: saturate(1.8);
+}
+.piano-key.hit.white {
+  background: #c5e6c8;
+  box-shadow:
+    inset 0 -3px #91bb8b,
+    inset 0 0 20px #faf0ce;
+}
+.piano-key.hit.black {
+  background: #569977;
+  box-shadow:
+    inset 0 -3px #377857,
+    inset 0 0 15px #adcf91;
+}
+.hit-spark {
+  position: absolute;
+  left: calc(50% - 10px);
+  top: 25%;
+  color: #b98b26;
+  font-size: 22px;
+  pointer-events: none;
+  animation: key-hit-spark 580ms ease-out both;
+}
+.play-status.has-hit {
+  background: #eff6e9;
+}
+.hit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #28734c;
+}
+.hit-duration {
+  width: 50px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #d2e4c9;
+}
+.hit-duration i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #6eaa72;
+  transform-origin: left;
+  animation: note-duration linear both;
+}
+@keyframes note-hit-bloom {
+  0% {
+    scale: 1;
+  }
+  40% {
+    scale: 1.4;
+  }
+  100% {
+    scale: 1;
+  }
+}
+@keyframes key-hit-spark {
+  0% {
+    opacity: 0;
+    translate: 0 5px;
+    scale: 0.6;
+  }
+  20% {
+    opacity: 1;
+    scale: 1.15;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -24px;
+    scale: 0.8;
+  }
+}
+@keyframes note-duration {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .score .hit-notehead,
+  .hit-spark,
+  .hit-duration i {
+    animation: none;
+  }
+  .hit-spark {
+    display: none;
+  }
+}
+
+.score.multiline {
+  max-height: min(58dvh, 620px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+.score.hint-active [id^="cursorImg"] {
+  animation: idle-cursor-build 6s ease-in-out both;
+}
+.piano-key.expected.white {
+  background: #f0f3e9;
+  box-shadow: inset 0 -4px #d6dfc8;
+}
+.piano-key.expected i {
+  background: #99b489;
+  opacity: 0.7;
+}
+.kid-view .keyboard {
+  --white-key-width: 44px;
+  height: 158px;
+}
+.kid-view .piano-key.white > .key-label {
+  font-size: 15px;
+}
+.practice-controls select {
+  min-height: 36px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .score.multiline {
+    max-height: 52dvh;
+  }
+  .kid-view .keyboard {
+    height: 140px;
+  }
+}
+
+.score,
+.score.multiline {
+  overflow-x: auto;
+}
+.kid-view .score > div {
+  min-width: 640px;
+}
+.compact-view .score > div {
+  min-width: 480px;
+}
+
+.score .hint-notehead,
+.score .hint-notehead path {
+  animation: idle-note-build 6s ease-in-out both;
+}
+.piano-key.expected.white {
+  animation: idle-white-key-build 6s ease-in-out both;
+}
+.piano-key.expected.black {
+  background-image: none;
+  animation: idle-black-key-build 6s ease-in-out both;
+}
+.piano-key.expected i {
+  animation: idle-dot-build 6s ease-in-out both;
+}
+.play-status.has-hint > span:first-child {
+  animation: idle-label-build 6s ease-in-out both;
+}
+@keyframes idle-cursor-build {
+  from {
+    opacity: 0.32;
+    box-shadow: 0 0 0 transparent;
+  }
+  to {
+    opacity: 1;
+    box-shadow:
+      0 0 0 2px #b68a3180,
+      0 0 14px #d9b35470;
+  }
+}
+@keyframes idle-note-build {
+  from {
+    fill: #293d37;
+    stroke: #293d37;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  to {
+    fill: #a87516;
+    stroke: #a87516;
+    filter: drop-shadow(0 0 4px #d9b35480);
+  }
+}
+@keyframes idle-white-key-build {
+  from {
+    background-color: #f0f3e9;
+  }
+  to {
+    background-color: #f2d38d;
+    box-shadow:
+      inset 0 -4px #ba8c3b,
+      inset 0 0 12px #fff0c2;
+  }
+}
+@keyframes idle-black-key-build {
+  from {
+    background-color: #414a42;
+  }
+  to {
+    background-color: #946c2c;
+  }
+}
+@keyframes idle-dot-build {
+  from {
+    opacity: 0.5;
+    scale: 0.8;
+    background-color: #99b489;
+  }
+  to {
+    opacity: 1;
+    scale: 1.4;
+    background-color: #a8761c;
+  }
+}
+@keyframes idle-label-build {
+  from {
+    color: #6e796b;
+  }
+  to {
+    color: #906216;
+    font-weight: 600;
+  }
+}

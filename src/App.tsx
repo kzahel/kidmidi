@@ -1,0 +1,496 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { assetUrl } from './assets';
+import { PianoAudio } from './audio';
+import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
+import {
+  advance,
+  type NoteEvent,
+  noteName,
+  octave,
+  songs,
+  startPosition,
+} from './music';
+import { Score } from './Score';
+import { useMidi } from './useMidi';
+import { loadViewSettings, type ScoreSize, saveViewSettings } from './view';
+
+const keyboardNotes = Array.from({ length: 25 }, (_, index) => 48 + index);
+const whiteNotes = keyboardNotes.filter(
+  (note) => !noteName(note).includes('♯'),
+);
+const shortcuts: Record<string, number> = {
+  a: 60,
+  s: 62,
+  d: 64,
+  f: 65,
+  g: 67,
+  h: 69,
+  j: 71,
+  k: 72,
+};
+
+export function App() {
+  const [songId, setSongId] = useState(songs[0].id);
+  const song = songs.find((candidate) => candidate.id === songId) ?? songs[0];
+  const [position, setPosition] = useState(startPosition);
+  const [freePlay, setFreePlay] = useState(false);
+  const [view, setView] = useState(loadViewSettings);
+  const wholeNotes = useMemo(() => song.phrases.flat(), [song]);
+  const wholeSong = view.multiline;
+  const [hints, setHints] = useState(true);
+  const [pressed, setPressed] = useState(new Set<number>());
+  const [lastNote, setLastNote] = useState<number | null>(null);
+  const [hit, setHit] = useState<NoteHit | null>(null);
+  const [hintReady, setHintReady] = useState(false);
+  const [idleHint] = useState(
+    () =>
+      new IdleHint(setHintReady, {
+        now: () => performance.now(),
+        schedule: (callback, delay) => window.setTimeout(callback, delay),
+        cancel: (timer) => window.clearTimeout(timer),
+      }),
+  );
+  const [feedback] = useState(
+    () =>
+      new NoteFeedback(setHit, {
+        now: () => performance.now(),
+        schedule: (callback, delay) => window.setTimeout(callback, delay),
+        cancel: (timer) => window.clearTimeout(timer),
+      }),
+  );
+  const held = useRef(new Map<string, number>());
+  const audio = useRef(new PianoAudio());
+  const current = useRef({ song, position, freePlay });
+  current.current = { song, position, freePlay };
+
+  const releaseAll = useCallback(() => {
+    held.current.clear();
+    setPressed(new Set());
+    audio.current.stopAll();
+    feedback.cancel();
+  }, [feedback]);
+  const play = useCallback(
+    (event: NoteEvent, source: string) => {
+      const id = `${source}:${event.channel}:${event.note}`;
+      if (event.type === 'off') {
+        held.current.delete(id);
+        audio.current.stop(id);
+        feedback.release(id);
+      } else {
+        if (held.current.has(id)) return;
+        held.current.set(id, event.note);
+        setLastNote(event.note);
+        if (source !== 'midi') audio.current.play(id, event.note);
+        const state = current.current;
+        if (!state.freePlay) {
+          const next = advance(state.song, state.position, event.note);
+          if (next !== state.position) {
+            feedback.start(
+              state.position,
+              state.song.phrases[state.position.phrase][state.position.note],
+              id,
+            );
+          }
+          current.current = { ...state, position: next };
+          setPosition(next);
+        }
+      }
+      setPressed(new Set(held.current.values()));
+    },
+    [feedback],
+  );
+  const midi = useMidi((event) => play(event, 'midi'), releaseAll);
+
+  useEffect(() => {
+    idleHint.update(
+      !hints ||
+        freePlay ||
+        Boolean(hit) ||
+        position.complete ||
+        pressed.size > 0 ||
+        document.hidden,
+    );
+    return () => idleHint.dispose();
+  }, [hints, freePlay, hit, position.complete, pressed, idleHint]);
+
+  useEffect(() => saveViewSettings(view), [view]);
+
+  useEffect(() => {
+    const handle = (event: KeyboardEvent) => {
+      if (
+        event.type === 'keydown' &&
+        event.target instanceof HTMLElement &&
+        (event.target.closest('input, select, textarea') ||
+          event.target.isContentEditable)
+      )
+        return;
+      const note = shortcuts[event.key.toLowerCase()];
+      if (
+        !note ||
+        event.repeat ||
+        (event.type === 'keydown' &&
+          (event.altKey || event.metaKey || event.ctrlKey))
+      )
+        return;
+      event.preventDefault();
+      play(
+        {
+          type: event.type === 'keydown' ? 'on' : 'off',
+          note,
+          velocity: 90,
+          channel: 0,
+        },
+        'computer',
+      );
+    };
+    window.addEventListener('keydown', handle);
+    window.addEventListener('keyup', handle);
+    window.addEventListener('blur', releaseAll);
+    const hidden = () => {
+      if (document.hidden) releaseAll();
+    };
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      window.removeEventListener('keydown', handle);
+      window.removeEventListener('keyup', handle);
+      window.removeEventListener('blur', releaseAll);
+      document.removeEventListener('visibilitychange', hidden);
+      feedback.dispose();
+      audio.current.close();
+    };
+  }, [play, releaseAll, feedback]);
+
+  function reset() {
+    releaseAll();
+    setPosition(startPosition());
+    setLastNote(null);
+  }
+  const shownPosition = hit?.position ?? position;
+  const notes = song.phrases[shownPosition.phrase];
+  const expected = notes[shownPosition.note].midi;
+  const shownCount =
+    song.phrases.slice(0, shownPosition.phrase).flat().length +
+    shownPosition.note;
+  const playedCount =
+    song.phrases.slice(0, position.phrase).flat().length +
+    position.note +
+    (position.complete ? 1 : 0);
+  const total = song.phrases.flat().length;
+  const connected = midi.inputs.find((input) => input.id === midi.selected);
+
+  return (
+    <main className={`app ${view.size}-view`}>
+      <div className="toolbar">
+        <nav className="song-picker" aria-label="Choose what to play">
+          {songs.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              className={`song-button ${!freePlay && songId === item.id ? 'selected' : ''}`}
+              aria-pressed={!freePlay && songId === item.id}
+              onClick={() => {
+                reset();
+                setSongId(item.id);
+                setFreePlay(false);
+              }}
+            >
+              {item.title}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`song-button ${freePlay ? 'selected' : ''}`}
+            aria-pressed={freePlay}
+            onClick={() => {
+              reset();
+              setFreePlay(true);
+            }}
+          >
+            Just explore
+          </button>
+        </nav>
+        <section className="connection" aria-label="MIDI connection">
+          {midi.inputs.length > 1 && (
+            <select
+              aria-label="MIDI input"
+              value={midi.selected}
+              onChange={(event) => midi.setSelected(event.target.value)}
+            >
+              {midi.inputs.map((input) => (
+                <option key={input.id} value={input.id}>
+                  {input.name || input.id}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            type="button"
+            className={`connection-button ${connected ? 'connected' : ''}`}
+            onClick={() => void midi.connect()}
+            disabled={!midi.supported || midi.requesting}
+            title={connected ? 'Refresh MIDI connection' : undefined}
+          >
+            {connected && (
+              <span className="connection-dot" aria-hidden="true" />
+            )}
+            {midi.requesting
+              ? 'Connecting…'
+              : connected
+                ? connected.name || 'MIDI connected'
+                : 'Connect keyboard'}
+          </button>
+        </section>
+      </div>
+      {(!midi.supported || (!connected && midi.status)) && (
+        <p className="midi-status" role="status">
+          {midi.supported
+            ? midi.status
+            : 'MIDI needs Chrome and HTTPS or localhost.'}
+        </p>
+      )}
+      <section className="practice" aria-label="Piano practice">
+        <div className="practice-controls">
+          {!freePlay && (
+            <>
+              <span className="phrase-count">
+                Phrase {shownPosition.phrase + 1} of {song.phrases.length}
+              </span>
+              <button type="button" onClick={() => audio.current.hear(notes)}>
+                <span aria-hidden="true">▷</span> Hear this phrase
+              </button>
+              <select
+                aria-label="Score size"
+                value={view.size}
+                onChange={(event) =>
+                  setView((previous) => ({
+                    ...previous,
+                    size: event.target.value as ScoreSize,
+                  }))
+                }
+              >
+                <option value="compact">Compact</option>
+                <option value="kid">Kid</option>
+              </select>
+              <label className="hint-toggle">
+                <input
+                  type="checkbox"
+                  checked={view.multiline}
+                  onChange={(event) =>
+                    setView((previous) => ({
+                      ...previous,
+                      multiline: event.target.checked,
+                    }))
+                  }
+                />
+                Multiline
+              </label>
+              {song.source && (
+                <a
+                  className="source-link"
+                  href={assetUrl(song.source.image)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Book photo ↗
+                </a>
+              )}
+              <label className="hint-toggle">
+                <input
+                  type="checkbox"
+                  checked={hints}
+                  onChange={(event) => setHints(event.target.checked)}
+                />
+                Idle hints
+              </label>
+            </>
+          )}
+          <button
+            type="button"
+            className="restart"
+            onClick={reset}
+            aria-label="Start again"
+            title="Start again"
+          >
+            ↺
+          </button>
+        </div>
+        {!freePlay && (
+          <>
+            <div className={`score-layout ${song.source ? 'illustrated' : ''}`}>
+              <Score
+                notes={wholeSong ? wholeNotes : notes}
+                active={wholeSong ? shownCount : shownPosition.note}
+                complete={shownPosition.complete}
+                song={song}
+                wholeSong={wholeSong}
+                phraseIndex={wholeSong ? 0 : shownPosition.phrase}
+                hit={hit}
+                hint={hintReady}
+                size={view.size}
+              />
+              {song.source && (
+                <svg
+                  className="book-illustration"
+                  viewBox={song.source.illustrationViewBox}
+                  role="img"
+                  aria-label={song.source.illustrationAlt}
+                >
+                  <title>{song.source.illustrationAlt}</title>
+                  <image
+                    href={assetUrl(song.source.image)}
+                    width="1505"
+                    height="2000"
+                  />
+                </svg>
+              )}
+            </div>
+            {song.source && (
+              <div className="score-credit">
+                <span>{song.source.credit}</span>
+                <a
+                  href={assetUrl('/scores/raege-raegetroepfli.musicxml')}
+                  download
+                >
+                  MusicXML ↓
+                </a>
+              </div>
+            )}
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-label="Song progress"
+              aria-valuenow={playedCount}
+              aria-valuemin={0}
+              aria-valuemax={total}
+            >
+              <div style={{ width: `${(playedCount / total) * 100}%` }} />
+            </div>
+          </>
+        )}
+        <div
+          className={`play-status ${hit ? 'has-hit' : hintReady ? 'has-hint' : ''}`}
+        >
+          <span aria-live="polite">
+            {freePlay ? (
+              lastNote === null ? (
+                '—'
+              ) : (
+                `You played ${noteName(lastNote)}${octave(lastNote)}`
+              )
+            ) : hit ? (
+              <span className="hit-badge">
+                {noteName(hit.midi)}
+                {octave(hit.midi)} ✓
+                <span className="hit-duration" aria-hidden="true">
+                  <i
+                    key={hit.id}
+                    style={{ animationDuration: `${hit.durationMs}ms` }}
+                  />
+                </span>
+              </span>
+            ) : shownPosition.complete ? (
+              'You played the whole song!'
+            ) : hintReady ? (
+              `Find ${noteName(expected)}${expected === 60 ? ' · middle C' : ` · octave ${octave(expected)}`}`
+            ) : (
+              '\u00a0'
+            )}
+          </span>
+          {shownPosition.complete && !freePlay && (
+            <button type="button" onClick={reset}>
+              Play again
+            </button>
+          )}
+          {lastNote !== null && !freePlay && (
+            <span className="last-note">
+              Played: {noteName(lastNote)}
+              {octave(lastNote)}
+            </span>
+          )}
+        </div>
+      </section>
+      <section className="keyboard-panel" aria-label="Live piano keyboard">
+        <div className="keyboard-scroll">
+          <div className="keyboard">
+            {keyboardNotes.map((note) => {
+              const black = noteName(note).includes('♯');
+              const left = whiteNotes.filter((white) => white < note).length;
+              const active = pressed.has(note);
+              const hint =
+                hintReady &&
+                !freePlay &&
+                !shownPosition.complete &&
+                !hit &&
+                note === expected;
+              return (
+                <button
+                  type="button"
+                  key={note}
+                  className={`piano-key ${black ? 'black' : 'white'} ${active ? 'pressed' : ''} ${hint ? 'expected' : ''} ${hit?.midi === note ? 'hit' : ''}`}
+                  style={
+                    black
+                      ? { left: `calc(${left} * 100% / 15 - 2%)` }
+                      : { left: `calc(${left} * 100% / 15)` }
+                  }
+                  aria-label={`Play ${noteName(note)}${octave(note)}`}
+                  aria-pressed={active}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    play(
+                      { type: 'on', note, velocity: 90, channel: 0 },
+                      `pointer-${event.pointerId}`,
+                    );
+                  }}
+                  onPointerUp={(event) =>
+                    play(
+                      { type: 'off', note, velocity: 0, channel: 0 },
+                      `pointer-${event.pointerId}`,
+                    )
+                  }
+                  onLostPointerCapture={(event) =>
+                    play(
+                      { type: 'off', note, velocity: 0, channel: 0 },
+                      `pointer-${event.pointerId}`,
+                    )
+                  }
+                  onPointerCancel={(event) =>
+                    play(
+                      { type: 'off', note, velocity: 0, channel: 0 },
+                      `pointer-${event.pointerId}`,
+                    )
+                  }
+                  onClick={(event) => {
+                    if (event.detail === 0) {
+                      play(
+                        { type: 'on', note, velocity: 90, channel: 0 },
+                        'accessible',
+                      );
+                      play(
+                        { type: 'off', note, velocity: 0, channel: 0 },
+                        'accessible',
+                      );
+                    }
+                  }}
+                >
+                  {hit?.midi === note && (
+                    <span className="hit-spark" key={hit.id} aria-hidden="true">
+                      ✦
+                    </span>
+                  )}
+                  {!black && (
+                    <span className="key-label">
+                      {noteName(note)}
+                      {note % 12 === 0 && <small>{octave(note)}</small>}
+                    </span>
+                  )}
+                  {hint && <i aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
