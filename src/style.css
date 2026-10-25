@@ -214,8 +214,12 @@ button:hover:not(:disabled) {
 }
 .keyboard {
   --white-key-width: 38px;
-  width: min(100%, calc(var(--white-key-width) * 15 + 8px), calc(20dvh * 4.25));
-  aspect-ratio: 578 / 136;
+  width: min(
+    100%,
+    calc(var(--white-key-width) * var(--key-units) + 8px),
+    calc(20dvh * var(--keyboard-ratio))
+  );
+  aspect-ratio: var(--keyboard-ratio);
   margin-inline: auto;
   height: auto;
   position: relative;
@@ -234,7 +238,6 @@ button:hover:not(:disabled) {
   min-height: 0;
 }
 .piano-key.white {
-  width: calc(100% / 15);
   background: #fffef8;
   height: 100%;
   border-radius: 0 0 5px 5px;
@@ -254,7 +257,6 @@ button:hover:not(:disabled) {
 }
 .piano-key.black {
   z-index: 1;
-  width: 4%;
   height: 62%;
   background: linear-gradient(#414a42, #2f3931);
   border-color: #29352c;
@@ -496,7 +498,7 @@ button:hover:not(:disabled) {
 }
 .kid-view .keyboard {
   --white-key-width: 44px;
-  aspect-ratio: 668 / 158;
+  aspect-ratio: var(--keyboard-ratio);
   height: auto;
 }
 .kid-view .piano-key.white > .key-label {
@@ -832,5 +834,74 @@ button:hover:not(:disabled) {
   }
   .hunt-confetti {
     display: none;
+  }
+}
+
+.keyboard-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.keyboard-controls button,
+.keyboard-range-setup button,
+.keyboard-range-setup select {
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+.keyboard-zoom {
+  display: inline-flex;
+  border: 1px solid #dce1d5;
+  border-radius: 6px;
+  overflow: clip;
+}
+.keyboard-zoom button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.keyboard-zoom button[aria-pressed="true"] {
+  background: #e1ecdb;
+  color: #285c45;
+  font-weight: 650;
+}
+.keyboard-range-button {
+  background: transparent;
+}
+.keyboard-range-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+.keyboard-range-instruction {
+  font-size: 12px;
+  color: #326f56;
+}
+.piano-key .key-label.middle-c {
+  color: #28734c;
+  font-weight: 750;
+}
+.keyboard.all-keys .piano-key.white > .key-label {
+  font-size: 10px;
+}
+@media (max-width: 640px) {
+  .keyboard.all-keys .key-label:not(.middle-c) {
+    visibility: hidden;
+  }
+  .keyboard.all-keys .piano-key:has(small) .key-label {
+    visibility: visible;
+  }
+  .keyboard.all-keys .piano-key.white > .key-label {
+    font-size: 8px;
+    bottom: 3px;
+  }
+  .keyboard.all-keys .piano-key small {
+    margin-left: 0;
+    font-size: 6px;
   }
 }

@@ -701,3 +701,136 @@ test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through h
     '0',
   );
 });
+
+test('piano zoom fits full MIDI ranges and remembers calibrated endpoints per keyboard', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const inputs = ['casio', 'other'].map((id) =>
+      Object.assign(new EventTarget(), {
+        id,
+        name: `${id} keys`,
+        manufacturer: id,
+        state: 'connected',
+      }),
+    );
+    Object.defineProperty(navigator, 'requestMIDIAccess', {
+      value: async () => ({
+        inputs: new Map(inputs.map((input) => [input.id, input])),
+        onstatechange: null,
+      }),
+    });
+    Object.assign(window, {
+      keyMidi: (data: number[]) =>
+        inputs[0].dispatchEvent(
+          Object.assign(new Event('midimessage'), {
+            data: new Uint8Array(data),
+          }),
+        ),
+    });
+  });
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'casio keys', exact: true }),
+  ).toBeVisible();
+  const keys = page.locator('.piano-key');
+  await expect(keys).toHaveCount(25);
+  const send = (data: number[]) =>
+    page.evaluate(
+      (bytes) =>
+        (window as unknown as { keyMidi(data: number[]): void }).keyMidi(bytes),
+      data,
+    );
+  await page.getByRole('button', { name: 'All 61 keys', exact: true }).click();
+  await expect(keys).toHaveCount(61);
+  await expect(
+    page.getByRole('button', { name: 'Play C2', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Play C7', exact: true }),
+  ).toBeVisible();
+  await send([0x90, 36, 100]);
+  await expect(
+    page.getByRole('button', { name: 'Play C2', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page
+    .getByRole('button', { name: 'Close · middle C', exact: true })
+    .click();
+  await expect(keys).toHaveCount(25);
+  await page.getByRole('button', { name: 'All 61 keys', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Play C2', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await send([0x80, 36, 0]);
+  await page
+    .getByRole('button', { name: 'Set keyboard range', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Play end keys to set range', exact: true })
+    .click();
+  await expect(
+    page.getByText('Play the lowest key', { exact: true }),
+  ).toBeVisible();
+  await send([0x90, 60, 100]);
+  await send([0x80, 60, 0]);
+  await expect(
+    page.getByText('Now play the highest key', { exact: true }),
+  ).toBeVisible();
+  await send([0x90, 59, 100]);
+  await send([0x80, 59, 0]);
+  await expect(
+    page.getByText('Play the highest key, above the first one.', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await send([0x90, 84, 100]);
+  await send([0x80, 84, 0]);
+  await expect(keys).toHaveCount(25);
+  await expect(page.getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  );
+  await send([0x90, 36, 100]);
+  await send([0x80, 36, 0]);
+  await expect(
+    page.getByRole('button', { name: 'All 49 keys', exact: true }),
+  ).toBeVisible();
+  await expect(keys).toHaveCount(49);
+  await page
+    .getByRole('combobox', { name: 'MIDI input', exact: true })
+    .selectOption('other');
+  await expect(keys).toHaveCount(61);
+  await page
+    .getByRole('combobox', { name: 'Keyboard range', exact: true })
+    .selectOption('21:108');
+  await expect(keys).toHaveCount(88);
+  await page
+    .getByRole('combobox', { name: 'MIDI input', exact: true })
+    .selectOption('casio');
+  await expect(keys).toHaveCount(49);
+  await page.reload();
+  await expect(keys).toHaveCount(49);
+  await expect(
+    page.getByRole('button', { name: 'All 49 keys', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('.score svg')).toBeVisible();
+  expect(
+    await page.evaluate(() => {
+      const piano = document
+        .querySelector('.keyboard')!
+        .getBoundingClientRect();
+      const keys = [...document.querySelectorAll('.piano-key')].map((key) =>
+        key.getBoundingClientRect(),
+      );
+      return (
+        document.documentElement.scrollHeight <= innerHeight &&
+        document.documentElement.scrollWidth <= innerWidth &&
+        piano.bottom <= innerHeight &&
+        keys.every(
+          (key) => key.left >= piano.left && key.right <= piano.right + 1,
+        )
+      );
+    }),
+  ).toBe(true);
+});

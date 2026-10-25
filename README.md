@@ -64,9 +64,15 @@ MIDI carries notes, not audio. There is no microphone capture.
 You can also tap/click the on-screen piano or use A S D F G H J K for C4 through C5.
 On-screen keys and **Hear this phrase** use a simple synthesized preview voice.
 The piano has proportioned keys and stays centered instead of stretching across
-a wide screen. Kid mode keeps slightly wider touch targets. On small screens the
-entire piano scales to fit the width and available height. Notes outside its visible
-C3–C5 range still arrive from MIDI and appear in the last-played readout.
+a wide screen. **Close · middle C** starts with C3–C5 and larger touch targets.
+**All keys** fits the complete keyboard range on screen, using smaller keys.
+The initial full range is 61 keys, C2–C7, matching the owner's keyboard assumption.
+**Range ⚙** offers 61/88-key presets or **Play end keys to set range**: play the
+physical lowest key, then the highest. These setup notes do not count toward a
+song or game. Ranges are remembered per MIDI input; the zoom choice is remembered
+for this browser. Received MIDI notes beyond a saved range expand it automatically.
+Web MIDI exposes port identity and note events, not the physical key count, so
+normal playing cannot establish the endpoints. See [keyboard range behavior](docs/keyboard-range.md).
 
 Web MIDI needs HTTPS or a trusted loopback origin such as localhost. A plain HTTP
 LAN URL on an Android phone will not provide MIDI. For phone MIDI testing, serve
@@ -87,6 +93,7 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/rain.ts`: manually checked songbook transcription and source illustration.
 - `src/useMidi.ts`: automatic permission request/reconnect and connection lifecycle.
 - `src/midi-device.ts`: saved input preference and deterministic device selection.
+- `src/keyboard.ts` / `src/useKeyboard.ts`: close/full piano layout and per-input key ranges.
 - `src/audio.ts`: local preview voice. It never sends notes to the physical piano.
 - `src/App.tsx`: practice UI and shared input handling for MIDI, pointer and keys.
 

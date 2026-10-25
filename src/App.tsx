@@ -11,6 +11,7 @@ import {
 } from './explore';
 import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
 import { guessHunt, nextHunt, startHunt } from './hunt';
+import { keyboardLayout, screenKeyboard } from './keyboard';
 import {
   advance,
   type NoteEvent,
@@ -21,6 +22,7 @@ import {
 } from './music';
 import { NoteHunt } from './NoteHunt';
 import { Score } from './Score';
+import { useKeyboard } from './useKeyboard';
 import { useMidi } from './useMidi';
 import {
   loadViewSettings,
@@ -29,10 +31,6 @@ import {
   saveViewSettings,
 } from './view';
 
-const keyboardNotes = Array.from({ length: 25 }, (_, index) => 48 + index);
-const whiteNotes = keyboardNotes.filter(
-  (note) => !noteName(note).includes('♯'),
-);
 const shortcuts: Record<string, number> = {
   a: 60,
   s: 62,
@@ -71,6 +69,7 @@ export function App() {
     () => exploreNotation(take, view.multiline),
     [take, view.multiline],
   );
+  const [rangeOpen, setRangeOpen] = useState(false);
   const [hints, setHints] = useState(true);
   const [pressed, setPressed] = useState(new Set<number>());
   const [lastNote, setLastNote] = useState<number | null>(null);
@@ -143,7 +142,16 @@ export function App() {
     },
     [feedback, recorder],
   );
-  const midi = useMidi((event) => play(event, 'midi'), releaseAll);
+  const midi = useMidi((event) => {
+    if (event.type === 'on' && keyboard.observe(event.note)) return;
+    play(event, 'midi');
+  }, releaseAll);
+  const connected = midi.inputs.find((input) => input.id === midi.selected);
+  const keyboard = useKeyboard(connected ?? screenKeyboard);
+  const keyLayout = useMemo(
+    () => keyboardLayout(keyboard.displayRange),
+    [keyboard.displayRange.low, keyboard.displayRange.high],
+  );
 
   useEffect(() => {
     idleHint.update(
@@ -257,7 +265,6 @@ export function App() {
     position.note +
     (position.complete ? 1 : 0);
   const total = song.phrases.flat().length;
-  const connected = midi.inputs.find((input) => input.id === midi.selected);
   const artBounds = song.source?.illustrationViewBox.split(' ').map(Number);
 
   return (
@@ -610,11 +617,100 @@ export function App() {
         </section>
       )}
       <section className="keyboard-panel" aria-label="Live piano keyboard">
+        <div className="keyboard-controls">
+          <div className="keyboard-zoom" role="group" aria-label="Piano zoom">
+            <button
+              type="button"
+              aria-pressed={keyboard.zoom === 'close'}
+              onClick={() => keyboard.setZoom('close')}
+            >
+              Close · middle C
+            </button>
+            <button
+              type="button"
+              aria-pressed={keyboard.zoom === 'all'}
+              onClick={() => keyboard.setZoom('all')}
+            >
+              All {keyboard.range.high - keyboard.range.low + 1} keys
+            </button>
+          </div>
+          <button
+            type="button"
+            className="keyboard-range-button"
+            aria-label="Set keyboard range"
+            aria-expanded={rangeOpen}
+            onClick={() => {
+              if (rangeOpen) keyboard.cancelLearning();
+              setRangeOpen(!rangeOpen);
+            }}
+          >
+            Range ⚙
+          </button>
+        </div>
+        {rangeOpen && (
+          <div
+            className="keyboard-range-setup"
+            aria-label="Keyboard range setup"
+          >
+            <select
+              aria-label="Keyboard range"
+              value={`${keyboard.range.low}:${keyboard.range.high}`}
+              onChange={(event) => {
+                const [low, high] = event.target.value.split(':').map(Number);
+                keyboard.setRange({ low, high });
+              }}
+            >
+              <option value="36:96">61 keys · C2–C7</option>
+              <option value="21:108">88 keys · A0–C8</option>
+              {!['36:96', '21:108'].includes(
+                `${keyboard.range.low}:${keyboard.range.high}`,
+              ) && (
+                <option value={`${keyboard.range.low}:${keyboard.range.high}`}>
+                  {noteName(keyboard.range.low)}
+                  {octave(keyboard.range.low)}–{noteName(keyboard.range.high)}
+                  {octave(keyboard.range.high)}
+                </option>
+              )}
+            </select>
+            {keyboard.calibrating ? (
+              <>
+                <span className="keyboard-range-instruction" role="status">
+                  {keyboard.rangeError ||
+                    (keyboard.learningLow === null
+                      ? 'Play the lowest key'
+                      : 'Now play the highest key')}
+                </span>
+                <button type="button" onClick={keyboard.cancelLearning}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={!connected}
+                onClick={() => {
+                  releaseAll();
+                  keyboard.startLearning();
+                }}
+              >
+                Play end keys to set range
+              </button>
+            )}
+          </div>
+        )}
         <div className="keyboard-scroll">
-          <div className="keyboard">
-            {keyboardNotes.map((note) => {
-              const black = noteName(note).includes('♯');
-              const left = whiteNotes.filter((white) => white < note).length;
+          <div
+            className={`keyboard ${keyboard.zoom === 'all' ? 'all-keys' : ''}`}
+            style={
+              {
+                '--key-units': keyLayout.units,
+                '--keyboard-ratio':
+                  (keyLayout.units * (view.size === 'kid' ? 44 : 38) + 8) /
+                  (view.size === 'kid' ? 158 : 136),
+              } as React.CSSProperties
+            }
+          >
+            {keyLayout.keys.map(({ note, black, left, width }) => {
               const active = pressed.has(note);
               const keyHit = hunting ? null : freePlay ? liveScore.hit : hit;
               const hint =
@@ -629,11 +725,7 @@ export function App() {
                   type="button"
                   key={note}
                   className={`piano-key ${black ? 'black' : 'white'} ${active ? 'pressed' : ''} ${hint ? 'expected' : ''} ${freePlay || hunting ? (active ? 'hit' : '') : hit?.midi === note ? 'hit' : ''}`}
-                  style={
-                    black
-                      ? { left: `calc(${left} * 100% / 15 - 2%)` }
-                      : { left: `calc(${left} * 100% / 15)` }
-                  }
+                  style={{ left: `${left}%`, width: `${width}%` }}
                   aria-label={`Play ${noteName(note)}${octave(note)}`}
                   aria-pressed={active}
                   onPointerDown={(event) => {
@@ -685,7 +777,9 @@ export function App() {
                     </span>
                   )}
                   {!black && (
-                    <span className="key-label">
+                    <span
+                      className={`key-label ${note === 60 ? 'middle-c' : ''}`}
+                    >
                       {noteName(note)}
                       {note % 12 === 0 && <small>{octave(note)}</small>}
                     </span>

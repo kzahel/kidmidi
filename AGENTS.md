@@ -19,7 +19,8 @@ attack/release timestamps separately from approximate displayed durations; do no
 introduce audio transcription or a server for this feature. See
 `docs/explore-transcription.md`. Note hunt is a separate game with attempt-based
 positive rewards; keep its scoring separate from patient song practice. See
-`docs/note-hunt.md`.
+`docs/note-hunt.md`. The piano has close/full views and per-input ranges; MIDI
+port identity does not establish a physical key count. See `docs/keyboard-range.md`.
 
 Run `npm run typecheck`, `npm test`, `npm run check`, and `npm run build`.
 For browser-dependent changes run `npm run test:browser` using bundled Playwright
