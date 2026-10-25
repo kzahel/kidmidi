@@ -1,0 +1,107 @@
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: clip;
+}
+.header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 52px;
+}
+.home-button {
+  background: transparent;
+  border: 0;
+  font-size: 18px;
+  font-weight: 750;
+  white-space: nowrap;
+  padding-inline: 6px;
+}
+.activity-title {
+  font-weight: 650;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.device-button {
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #477659;
+  background: transparent;
+}
+.device-label {
+  font-size: 12px;
+}
+.learner-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+}
+.learner-label {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.save-warning {
+  padding: 8px 12px;
+  background: #fff0cf;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+@media (width <= 640px) {
+  .app {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .header {
+    gap: 4px;
+  }
+  .header-actions {
+    gap: 4px;
+  }
+  .home-button {
+    font-size: 15px;
+  }
+  .activity-title,
+  .device-label,
+  .learner-label {
+    display: none;
+  }
+  .learner-button,
+  .device-button {
+    min-width: 48px;
+    padding-inline: 8px;
+  }
+}
+
+@media (height <= 600px) {
+  .app {
+    padding-block: 4px;
+    gap: 4px;
+  }
+}
+
+.midi-status {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #756341;
+  margin: 0 4px;
+}

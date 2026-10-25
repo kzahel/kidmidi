@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 test('real score renders, waits for correct fresh presses, and can restart', async ({
   page,
 }) => {
-  await page.goto('/');
-  await expect(page.locator('.score svg').first()).toBeVisible();
+  await openPractice(page);
+  await expect(page.locator('[class*="__score__"] svg').first()).toBeVisible();
   await expect(page.getByText('Find C · middle C')).toBeVisible();
   await page.keyboard.press('d');
   await expect(page.getByRole('progressbar')).toHaveAttribute(
@@ -29,7 +29,7 @@ test('real score renders, waits for correct fresh presses, and can restart', asy
     'aria-valuenow',
     '0',
   );
-  await page.getByRole('button', { name: /Just explore/ }).click();
+  await openActivity(page, 'explore');
   await page.getByRole('button', { name: 'Play D4', exact: true }).click();
   await expect(page.getByText('You played D4')).toBeVisible();
 });
@@ -66,10 +66,10 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
       },
     });
   });
-  await page.goto('/');
+  await openPractice(page);
   await expect(page.getByText('Test Casio')).toBeVisible();
-  await expect(page.locator('.score svg')).toBeVisible();
-  const cursor = page.locator('.score [id^="cursorImg"]');
+  await expect(page.locator('[class*="__score__"] svg')).toBeVisible();
+  const cursor = page.locator('[class*="__score__"] [id^="cursorImg"]');
   await expect(cursor).toBeHidden();
   await page.clock.fastForward(1800);
   await expect(cursor).toBeVisible();
@@ -85,7 +85,7 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
   });
   expect(hintOpacity.subtle).toBeLessThan(0.5);
   expect(hintOpacity.prominent).toBeGreaterThan(0.9);
-  await expect(page.locator('.hint-notehead')).toHaveCount(1);
+  await expect(page.locator('[class*="__hint-notehead__"]')).toHaveCount(1);
   const originalX = (await cursor.boundingBox())?.x;
   expect(originalX).toBeDefined();
   const send = (data: number[]) =>
@@ -101,12 +101,16 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
     'aria-valuenow',
     '1',
   );
-  await expect(page.locator('.hit-badge')).toHaveText('C4 ✓');
-  await expect(page.locator('.score .hit-notehead')).toHaveCount(1);
-  await expect(page.locator('.score .hit-held')).toHaveCount(1);
+  await expect(page.locator('[class*="__hit-badge__"]')).toHaveText('C4 ✓');
+  await expect(
+    page.locator('[class*="__score__"] [class*="__hit-notehead__"]'),
+  ).toHaveCount(1);
+  await expect(
+    page.locator('[class*="__score__"] [class*="__hit-held__"]'),
+  ).toHaveCount(1);
   expect((await cursor.boundingBox())?.x).toBe(originalX);
   await page.clock.fastForward(1500);
-  await expect(page.locator('.hit-badge')).toHaveText('C4 ✓');
+  await expect(page.locator('[class*="__hit-badge__"]')).toHaveText('C4 ✓');
   expect((await cursor.boundingBox())?.x).toBe(originalX);
   await send([0x90, 60, 100]);
   await expect(page.getByRole('progressbar')).toHaveAttribute(
@@ -115,7 +119,7 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
   );
   await send([0x90, 60, 0]);
   await page.clock.fastForward(100);
-  await expect(page.locator('.hit-badge')).toHaveCount(0);
+  await expect(page.locator('[class*="__hit-badge__"]')).toHaveCount(0);
   await expect(cursor).toBeHidden();
   await page.clock.fastForward(1000);
   await expect(cursor).toBeHidden();
@@ -134,7 +138,7 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
     (window as unknown as { unplug: () => void }).unplug(),
   );
   await expect(page.getByText(/No MIDI keyboard found/)).toBeVisible();
-  await expect(page.locator('.hit-badge')).toHaveCount(0);
+  await expect(page.locator('[class*="__hit-badge__"]')).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Play C4', exact: true }),
   ).toHaveAttribute('aria-pressed', 'false');
@@ -147,19 +151,17 @@ test('phone layout, touch input, unsupported MIDI and completing a song', async 
   await page.addInitScript(() =>
     Object.defineProperty(navigator, 'requestMIDIAccess', { value: undefined }),
   );
-  await page.goto('/');
+  await openPractice(page);
   await expect(
     page.getByRole('button', { name: 'Connect keyboard' }),
   ).toBeDisabled();
-  await expect(page.locator('.score svg').first()).toBeVisible();
+  await expect(page.locator('[class*="__score__"] svg').first()).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page
-    .getByRole('combobox', { name: 'Song', exact: true })
-    .selectOption('buns');
+  await openSong(page, 'Hot Cross Buns');
   for (const note of [
     64, 62, 60, 64, 62, 60, 60, 60, 60, 60, 62, 62, 62, 62, 64, 62, 60,
   ]) {
@@ -179,26 +181,28 @@ test('phone layout, touch input, unsupported MIDI and completing a song', async 
 test('songbook score includes illustration, symbols, whole-song cursor and download', async ({
   page,
 }) => {
-  await page.goto('/');
-  await page
-    .getByRole('button', { name: 'Räge-Rägetröpfli', exact: true })
-    .click();
+  await openPractice(page);
+  await openSong(page, 'Räge-Rägetröpfli');
   await expect(page.getByText('Find A · octave 4')).toBeVisible();
-  await expect(page.locator('.score svg').first()).toBeVisible();
+  await expect(page.locator('[class*="__score__"] svg').first()).toBeVisible();
   await expect(
     page.getByRole('img', { name: /Rain falling over two houses/ }),
   ).toBeVisible();
-  await expect(page.locator('.score')).toContainText('tröpf');
-  await expect(page.locator('.score')).toContainText('D');
+  await expect(page.locator('[class*="__score__"]')).toContainText('tröpf');
+  await expect(page.locator('[class*="__score__"]')).toContainText('D');
+  await openOptions(page);
   await page.getByLabel('Multiline', { exact: true }).check();
+  await closeOptions(page);
   await page
     .getByRole('button', { name: 'Next score page', exact: true })
     .click();
-  await expect(page.locator('.score')).toContainText('Steind');
-  await expect(page.locator('.score')).toContainText('Gass.');
-  await expect(page.locator('.score svg')).toHaveCount(1);
-  await expect(page.locator('.score')).toContainText('G');
-  await expect(page.locator('.score')).not.toContainText('I. Spühler-Suter');
+  await expect(page.locator('[class*="__score__"]')).toContainText('Steind');
+  await expect(page.locator('[class*="__score__"]')).toContainText('Gass.');
+  await expect(page.locator('[class*="__score__"] svg')).toHaveCount(1);
+  await expect(page.locator('[class*="__score__"]')).toContainText('G');
+  await expect(page.locator('[class*="__score__"]')).not.toContainText(
+    'I. Spühler-Suter',
+  );
   const xmlResponse = await page.request.get(
     '/scores/raege-raegetroepfli.musicxml',
   );
@@ -220,17 +224,22 @@ test('songbook score includes illustration, symbols, whole-song cursor and downl
     '1',
   );
   await page.setViewportSize({ width: 390, height: 844 });
+  await openOptions(page);
   await page
     .getByRole('combobox', { name: 'Score size' })
     .selectOption('compact');
+  await closeOptions(page);
+  await openOptions(page);
   await page.getByLabel('Multiline', { exact: true }).uncheck();
-  await expect(page.locator('.score')).not.toContainText('Gass.');
-  await expect(page.locator('.score')).toContainText('tröpf');
-  await expect(page.locator('.score svg')).toHaveCount(1);
+  await closeOptions(page);
+  await expect(page.locator('[class*="__score__"]')).not.toContainText('Gass.');
+  await expect(page.locator('[class*="__score__"]')).toContainText('tröpf');
+  await expect(page.locator('[class*="__score__"] svg')).toHaveCount(1);
   await expect
     .poll(
       async () =>
-        (await page.locator('.score').boundingBox())?.height ?? Infinity,
+        (await page.locator('[class*="__score__"]').boundingBox())?.height ??
+        Infinity,
     )
     .toBeLessThan(600);
   await expect(
@@ -247,35 +256,52 @@ test('notation sizes and multiline persist, and fitted pages follow a played not
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/');
+  await openPractice(page);
+  await openOptions(page);
   await expect(page.getByRole('combobox', { name: 'Score size' })).toHaveValue(
     'kid',
   );
+  await closeOptions(page);
   await page.keyboard.down('a');
-  await expect(page.locator('.score .hit-notehead')).toHaveCount(1);
+  await expect(
+    page.locator('[class*="__score__"] [class*="__hit-notehead__"]'),
+  ).toHaveCount(1);
   const kidHeight =
-    (await page.locator('.hit-notehead').boundingBox())?.height ?? 0;
+    (await page.locator('[class*="__hit-notehead__"]').boundingBox())?.height ??
+    0;
   expect(kidHeight).toBeGreaterThan(0);
+  await openOptions(page);
   await page
     .getByRole('combobox', { name: 'Score size' })
     .selectOption('compact');
+  await closeOptions(page);
   await expect
     .poll(
       async () =>
-        (await page.locator('.hit-notehead').boundingBox())?.height ?? Infinity,
+        (await page.locator('[class*="__hit-notehead__"]').boundingBox())
+          ?.height ?? Infinity,
     )
     .toBeLessThan(kidHeight * 0.85);
   await page.keyboard.up('a');
+  await openOptions(page);
   await page.getByLabel('Multiline', { exact: true }).check();
-  await expect(page.locator('.score')).toContainText('How');
+  await closeOptions(page);
+  await expect(page.locator('[class*="__score__"]')).toContainText('How');
   await page.reload();
+  await enterSong(page);
+  await openOptions(page);
   await expect(page.getByRole('combobox', { name: 'Score size' })).toHaveValue(
     'compact',
   );
+  await closeOptions(page);
+  await openOptions(page);
   await expect(page.getByLabel('Multiline', { exact: true })).toBeChecked();
+  await closeOptions(page);
+  await openOptions(page);
   await page.getByRole('combobox', { name: 'Score size' }).selectOption('kid');
+  await closeOptions(page);
   await page.setViewportSize({ width: 1280, height: 600 });
-  await expect(page.locator('.score svg')).toHaveCount(1);
+  await expect(page.locator('[class*="__score__"] svg')).toHaveCount(1);
   const tune = [
     'C4',
     'C4',
@@ -298,9 +324,13 @@ test('notation sizes and multiline persist, and fitted pages follow a played not
       .getByRole('button', { name: `Play ${note}`, exact: true })
       .click();
   await expect(page.getByText('Page 3 of 6', { exact: true })).toBeVisible();
-  expect(await page.locator('.score').evaluate((el) => el.scrollTop)).toBe(0);
-  const scoreBox = await page.locator('.score').boundingBox();
-  const headBox = await page.locator('.hit-notehead').boundingBox();
+  expect(
+    await page.locator('[class*="__score__"]').evaluate((el) => el.scrollTop),
+  ).toBe(0);
+  const scoreBox = await page.locator('[class*="__score__"]').boundingBox();
+  const headBox = await page
+    .locator('[class*="__hit-notehead__"]')
+    .boundingBox();
   expect(headBox?.y).toBeGreaterThanOrEqual(scoreBox?.y ?? Infinity);
   expect((headBox?.y ?? Infinity) + (headBox?.height ?? 0)).toBeLessThan(
     (scoreBox?.y ?? 0) + (scoreBox?.height ?? 0),
@@ -362,7 +392,7 @@ test('MIDI requests access on load, retries permission, remembers selection and 
       refreshPorts: () => access.onstatechange?.(),
     });
   });
-  await page.goto('/');
+  await openPractice(page);
   await expect(page.getByRole('status')).toContainText(
     'Click Connect keyboard',
   );
@@ -374,19 +404,26 @@ test('MIDI requests access on load, retries permission, remembers selection and 
   await page
     .getByRole('button', { name: 'Connect keyboard', exact: true })
     .click();
+  await openSettings(page);
   await expect(page.getByRole('combobox', { name: 'MIDI input' })).toHaveValue(
     'other',
   );
+  await closeSettings(page);
+  await openSettings(page);
   await page
     .getByRole('combobox', { name: 'MIDI input' })
     .selectOption('casio');
+  await closeSettings(page);
   await expect(
     page.getByRole('button', { name: 'Saved Casio', exact: true }),
   ).toBeVisible();
   await page.reload();
+  await enterSong(page);
+  await openSettings(page);
   await expect(page.getByRole('combobox', { name: 'MIDI input' })).toHaveValue(
     'casio',
   );
+  await closeSettings(page);
   expect(
     await page.evaluate(() =>
       (window as unknown as { midiRequests(): number }).midiRequests(),
@@ -416,9 +453,11 @@ test('MIDI requests access on load, retries permission, remembers selection and 
   await page.evaluate(() =>
     (window as unknown as { replugCasio(): void }).replugCasio(),
   );
+  await openSettings(page);
   await expect(page.getByRole('combobox', { name: 'MIDI input' })).toHaveValue(
     'casio',
   );
+  await closeSettings(page);
   expect(
     await page.evaluate(() =>
       (window as unknown as { midiRequests(): number }).midiRequests(),
@@ -452,11 +491,11 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
       },
     });
   });
-  await page.goto('/');
+  await openPractice(page);
   await expect(
     page.getByRole('button', { name: 'Explore piano', exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  await openActivity(page, 'explore');
   await expect(
     page
       .getByRole('img', {
@@ -480,9 +519,15 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
   ])
     await send([0x90, pitch, 100], at);
   await expect(page.getByText('3 notes · 4/4')).toBeVisible();
-  await expect(page.locator('.score .hit-notehead')).toHaveCount(3);
-  await expect(page.locator('.explore-score .vf-notehead')).toHaveCount(3);
-  await expect(page.locator('.explore-score [data-slot]')).toHaveCount(1);
+  await expect(
+    page.locator('[class*="__score__"] [class*="__live-hit__"]'),
+  ).toHaveCount(3);
+  await expect(
+    page.locator('[class*="__explore-score__"] .vf-notehead'),
+  ).toHaveCount(3);
+  await expect(
+    page.locator('[class*="__explore-score__"] [data-slot]'),
+  ).toHaveCount(1);
 
   for (const [pitch, at] of [
     [60, 400],
@@ -497,10 +542,14 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
   await send([0x90, 62, 100], 7000);
   await send([0x80, 62, 0], 7250);
   await expect(page.getByText('6 notes · 4/4')).toBeVisible();
-  await expect(page.locator('.explore-score .vf-notehead')).toHaveCount(6);
-  await expect(page.locator('.score svg')).toHaveCount(1);
+  await expect(
+    page.locator('[class*="__explore-score__"] .vf-notehead'),
+  ).toHaveCount(6);
+  await expect(page.locator('[class*="__score__"] svg')).toHaveCount(1);
   const downloadPromise = page.waitForEvent('download');
+  await openOptions(page);
   await page.getByRole('button', { name: 'MusicXML ↓', exact: true }).click();
+  await closeOptions(page);
   const download = await downloadPromise;
   const xml = await readFile((await download.path())!, 'utf8');
   const content = await page.evaluate((xml) => {
@@ -526,33 +575,43 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
     staves: '2',
     beats: '4',
   });
+  await openOptions(page);
   await page
     .getByRole('combobox', { name: 'Score size' })
     .selectOption('compact');
+  await closeOptions(page);
+  await openOptions(page);
   await page.getByLabel('Multiline', { exact: true }).check();
-  await expect(page.locator('.score .hit-notehead')).toHaveCount(1);
+  await closeOptions(page);
+  await expect(
+    page.locator('[class*="__score__"] [class*="__live-hit__"]'),
+  ).toHaveCount(1);
   await page
     .getByRole('button', { name: 'New recording', exact: true })
     .click();
   await expect(page.getByText('0 notes · 4/4')).toBeVisible();
+  await openOptions(page);
   await expect(page.getByRole('button', { name: 'MusicXML ↓' })).toBeDisabled();
-  await expect(page.locator('.score svg')).toHaveCount(1);
+  await closeOptions(page);
+  await expect(page.locator('[class*="__score__"] svg')).toHaveCount(1);
 });
 
 test('raindrop Kid pages fit desktop, phone and landscape without scrolling or clipping', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 600 });
-  await page.goto('/');
-  await page
-    .getByRole('button', { name: 'Räge-Rägetröpfli', exact: true })
-    .click();
+  await openPractice(page);
+  await openSong(page, 'Räge-Rägetröpfli');
+  await openOptions(page);
   await page.getByLabel('Multiline', { exact: true }).check();
+  await closeOptions(page);
   const fits = () =>
     page.evaluate(() => {
-      const score = document.querySelector<HTMLElement>('.score');
+      const score = document.querySelector<HTMLElement>('[class*="__score__"]');
       const svg = score?.querySelector('svg');
-      const piano = document.querySelector<HTMLElement>('.keyboard');
+      const piano = document.querySelector<HTMLElement>(
+        '[class*="__keyboard__"]',
+      );
       if (!score || !svg || !piano) return false;
       const box = score.getBoundingClientRect();
       const music = svg.getBoundingClientRect();
@@ -579,14 +638,16 @@ test('raindrop Kid pages fit desktop, phone and landscape without scrolling or c
   await page
     .getByRole('button', { name: 'Next score page', exact: true })
     .click();
-  await expect(page.locator('.score')).toContainText('Chöpf');
+  await expect(page.locator('[class*="__score__"]')).toContainText('Chöpf');
   await expect.poll(fits).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(fits).toBe(true);
   await page.setViewportSize({ width: 844, height: 390 });
   await expect.poll(fits).toBe(true);
+  await openOptions(page);
   await page.getByLabel('Multiline', { exact: true }).uncheck();
-  await expect(page.locator('.score')).toContainText('tröpf');
+  await closeOptions(page);
+  await expect(page.locator('[class*="__score__"]')).toContainText('tröpf');
   await expect.poll(fits).toBe(true);
 });
 
@@ -615,11 +676,14 @@ test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through h
         ),
     });
   });
-  await page.goto('/');
+  await openPractice(page);
   await expect(
     page.getByRole('button', { name: 'Hunt piano', exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await openActivity(page, 'hunt');
+  await page
+    .getByRole('combobox', { name: 'Note range', exact: true })
+    .selectOption('first');
   const target = page.getByRole('region', { name: 'Find this', exact: true });
   const played = page.getByRole('region', { name: 'You played', exact: true });
   await expect(target).toContainText('C4 · middle C');
@@ -640,7 +704,7 @@ test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through h
     page.getByLabel('3 hearts earned', { exact: true }),
   ).toBeVisible();
   await expect(played).toContainText('C4 · middle C');
-  await expect(page.locator('.hunt-confetti i')).toHaveCount(32);
+  await expect(page.locator('[class*="__hunt-confetti__"] i')).toHaveCount(32);
   await page.clock.fastForward(5000);
   await expect(target).toContainText('C4 · middle C');
   await send([0x80, 60, 0]);
@@ -678,7 +742,9 @@ test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through h
   expect(
     await page.evaluate(() => {
       const bounds = [
-        ...document.querySelectorAll('.hunt-card, .keyboard'),
+        ...document.querySelectorAll(
+          '[class*="__hunt-card__"], [class*="__keyboard__"]',
+        ),
       ].map((e) => e.getBoundingClientRect());
       return (
         document.documentElement.scrollWidth <= innerWidth &&
@@ -708,9 +774,7 @@ test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through h
     .getByRole('button', { name: 'Restart note hunt', exact: true })
     .click();
   await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
-  await page
-    .getByRole('combobox', { name: 'Song', exact: true })
-    .selectOption('twinkle');
+  await openSong(page, 'Twinkle, Twinkle');
   await page.clock.fastForward(3000);
   await expect(page.getByRole('progressbar')).toHaveAttribute(
     'aria-valuenow',
@@ -745,11 +809,11 @@ test('piano zoom fits full MIDI ranges and remembers calibrated endpoints per ke
         ),
     });
   });
-  await page.goto('/');
+  await openPractice(page);
   await expect(
     page.getByRole('button', { name: 'casio keys', exact: true }),
   ).toBeVisible();
-  const keys = page.locator('.piano-key');
+  const keys = page.locator('[class*="__piano-key__"]');
   await expect(keys).toHaveCount(25);
   const send = (data: number[]) =>
     page.evaluate(
@@ -812,33 +876,38 @@ test('piano zoom fits full MIDI ranges and remembers calibrated endpoints per ke
     page.getByRole('button', { name: 'All 49 keys', exact: true }),
   ).toBeVisible();
   await expect(keys).toHaveCount(49);
+  await openSettings(page);
   await page
     .getByRole('combobox', { name: 'MIDI input', exact: true })
     .selectOption('other');
+  await closeSettings(page);
   await expect(keys).toHaveCount(61);
   await page
     .getByRole('combobox', { name: 'Keyboard range', exact: true })
     .selectOption('21:108');
   await expect(keys).toHaveCount(88);
+  await openSettings(page);
   await page
     .getByRole('combobox', { name: 'MIDI input', exact: true })
     .selectOption('casio');
+  await closeSettings(page);
   await expect(keys).toHaveCount(49);
   await page.reload();
+  await enterSong(page);
   await expect(keys).toHaveCount(49);
   await expect(
     page.getByRole('button', { name: 'All 49 keys', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('.score svg')).toBeVisible();
+  await expect(page.locator('[class*="__score__"] svg')).toBeVisible();
   expect(
     await page.evaluate(() => {
       const piano = document
-        .querySelector('.keyboard')!
+        .querySelector('[class*="__keyboard__"]')!
         .getBoundingClientRect();
-      const keys = [...document.querySelectorAll('.piano-key')].map((key) =>
-        key.getBoundingClientRect(),
-      );
+      const keys = [
+        ...document.querySelectorAll('[class*="__piano-key__"]'),
+      ].map((key) => key.getBoundingClientRect());
       return (
         document.documentElement.scrollHeight <= innerHeight &&
         document.documentElement.scrollWidth <= innerWidth &&
@@ -879,12 +948,12 @@ test('Explore keeps a fixed grid, saves every page, restores sessions and plays 
       },
     });
   });
-  await page.goto('/');
+  await openPractice(page);
   await expect(
     page.getByRole('button', { name: 'Session piano', exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
-  const score = page.locator('.explore-score');
+  await openActivity(page, 'explore');
+  const score = page.locator('[class*="__explore-score__"]');
   await expect(score.locator('svg')).toBeVisible();
   await expect(score).toHaveAttribute('data-measures', '2');
   await expect(score.locator('svg')).toHaveAttribute('viewBox', '0 0 640 240');
@@ -940,7 +1009,8 @@ test('Explore keeps a fixed grid, saves every page, restores sessions and plays 
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText('Saved', { exact: true })).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  await enterSong(page);
+  await openActivity(page, 'explore');
   await expect(page.getByText('10 notes · 4/4', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Recordings', exact: true }).click();
   const menu = page.getByRole('dialog', { name: 'Recordings', exact: true });
@@ -1065,14 +1135,16 @@ test('MIDI auto selection upgrades a legacy Through default on hotplug and respe
     page.evaluate(() =>
       (window as unknown as { plugRealKeyboard(): void }).plugRealKeyboard(),
     );
-  await page.goto('/');
+  await openPractice(page);
   await expect(
     page.getByRole('button', { name: 'Midi Through Port-0', exact: true }),
   ).toBeVisible();
   await plug();
+  await openSettings(page);
   await expect(
     page.getByRole('combobox', { name: 'MIDI input', exact: true }),
   ).toHaveValue('casio');
+  await closeSettings(page);
   await page.evaluate(() =>
     (window as unknown as { sendRealKey(): void }).sendRealKey(),
   );
@@ -1088,18 +1160,23 @@ test('MIDI auto selection upgrades a legacy Through default on hotplug and respe
     id: 'casio',
     selection: 'automatic',
   });
+  await openSettings(page);
   await page
     .getByRole('combobox', { name: 'MIDI input', exact: true })
     .selectOption('through');
+  await closeSettings(page);
   expect(await preference()).toMatchObject({
     id: 'through',
     selection: 'manual',
   });
   await page.reload();
+  await enterSong(page);
   await plug();
+  await openSettings(page);
   await expect(
     page.getByRole('combobox', { name: 'MIDI input', exact: true }),
   ).toHaveValue('through');
+  await closeSettings(page);
 });
 
 test('phrase previews use matching MIDI output, stop safely and retain a speaker override', async ({
@@ -1187,10 +1264,12 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
     page.evaluate(() =>
       (window as unknown as { previewSpeakers(): number }).previewSpeakers(),
     );
-  await page.goto('/');
+  await openPractice(page);
+  await openOptions(page);
   await expect(
     page.getByRole('combobox', { name: 'Phrase sound', exact: true }),
   ).toHaveValue('auto');
+  await closeOptions(page);
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
@@ -1222,9 +1301,11 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
       .every((event) => event.data?.[0] === 0x80),
   ).toBe(true);
   const sent = (await messages()).length;
+  await openOptions(page);
   await page
     .getByRole('combobox', { name: 'Phrase sound', exact: true })
     .selectOption('speakers');
+  await closeOptions(page);
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
@@ -1232,12 +1313,17 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
   expect((await messages()).length).toBe(sent);
   await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
   await page.reload();
+  await enterSong(page);
+  await openOptions(page);
   await expect(
     page.getByRole('combobox', { name: 'Phrase sound', exact: true }),
   ).toHaveValue('speakers');
+  await closeOptions(page);
+  await openOptions(page);
   await page
     .getByRole('combobox', { name: 'Phrase sound', exact: true })
     .selectOption('auto');
+  await closeOptions(page);
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
@@ -1264,7 +1350,7 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
   ).toBe(false);
   await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('.score svg')).toBeVisible();
+  await expect(page.locator('[class*="__score__"] svg')).toBeVisible();
   expect(
     await page.evaluate(
       () =>
@@ -1273,3 +1359,43 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
     ),
   ).toBe(true);
 });
+
+async function enterSong(page: Page, title = 'Twinkle, Twinkle') {
+  await page.getByRole('button', { name: 'Play a song', exact: true }).click();
+  await page.getByRole('button', { name: title, exact: true }).click();
+}
+async function openPractice(page: Page) {
+  await page.goto('/');
+  await enterSong(page);
+}
+async function openSong(page: Page, title: string) {
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await enterSong(page, title);
+}
+async function openActivity(page: Page, activity: 'explore' | 'hunt') {
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
+  await page
+    .getByRole('button', {
+      name: activity === 'hunt' ? 'Note hunt' : 'Just explore',
+      exact: true,
+    })
+    .click();
+}
+async function openOptions(page: Page) {
+  const details = page.locator('[class*="__options__"]');
+  if (!(await details.getAttribute('open').then((v) => v !== null)))
+    await details.locator('summary').click();
+}
+async function closeOptions(page: Page) {
+  const details = page.locator('[class*="__options__"]');
+  if (await details.getAttribute('open').then((v) => v !== null))
+    await details.locator('summary').click();
+}
+async function openSettings(page: Page) {
+  await page.getByTitle('Keyboard settings', { exact: true }).click();
+}
+async function closeSettings(page: Page) {
+  await page
+    .getByRole('button', { name: 'Close keyboard settings', exact: true })
+    .click();
+}

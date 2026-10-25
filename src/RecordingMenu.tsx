@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { exploreNotation, type PlayedNote } from './explore';
+import styles from './RecordingMenu.module.css';
 import {
   type LibraryState,
   parseRecordingFile,
@@ -81,12 +82,12 @@ export function RecordingMenu({
   }
   return (
     <dialog
-      className="recordings-menu"
+      className={styles['recordings-menu']}
       ref={dialog}
       aria-label="Recordings"
       onCancel={onClose}
     >
-      <div className="recordings-header">
+      <div className={styles['recordings-header']}>
         <strong>Recordings</strong>
         <button type="button" onClick={onClose} aria-label="Close recordings">
           ✕
@@ -108,7 +109,7 @@ export function RecordingMenu({
           </option>
         ))}
       </select>
-      <div className="recording-actions">
+      <div className={styles['recording-actions']}>
         <button
           type="button"
           disabled={busy || !recording}
@@ -172,7 +173,7 @@ export function RecordingMenu({
         </button>
       </div>
       {deleting && (
-        <div className="recording-delete">
+        <div className={styles['recording-delete']}>
           <span>Delete this saved recording?</span>
           <button
             type="button"
@@ -191,7 +192,7 @@ export function RecordingMenu({
           </button>
         </div>
       )}
-      <p className="recordings-local">
+      <p className={styles['recordings-local']}>
         Saved automatically in this browser. Download to keep a separate copy.
       </p>
       {(error || state.error) && <p role="alert">{error || state.error}</p>}

@@ -1,0 +1,51 @@
+.options {
+  position: relative;
+  margin-left: auto;
+}
+.options summary {
+  list-style: none;
+  font-size: 13px;
+}
+.options summary::-webkit-details-marker {
+  display: none;
+}
+.option-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 8;
+  display: grid;
+  gap: 8px;
+  width: min(280px, 75vw);
+  padding: 16px;
+  border: 1px solid #d0d9c7;
+  border-radius: 16px;
+  background: #fffefa;
+  box-shadow: 0 8px 24px #293d3726;
+}
+.option-panel > label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.option-panel select {
+  width: 100%;
+  max-width: 100%;
+}
+.option-panel .hint-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+.hint-toggle input {
+  accent-color: #628b64;
+  width: 20px;
+  height: 20px;
+}
+.source-link {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}

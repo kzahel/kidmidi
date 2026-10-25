@@ -7,4 +7,5 @@ export default defineConfig(({ command, isPreview }) => ({
       ? (process.env.KIDMIDI_BASE_PATH ?? '/')
       : '/',
   plugins: [react()],
+  css: { modules: { generateScopedName: '[name]__[local]__[hash:base64:5]' } },
 }));

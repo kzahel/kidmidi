@@ -1,0 +1,33 @@
+.dialog {
+  width: min(620px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  border: 1px solid #d0d9c7;
+  border-radius: 24px;
+  background: #fffefa;
+  color: #293d37;
+  padding: 24px;
+}
+.dialog::backdrop {
+  background: #263a3299;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.heading h2 {
+  font-size: 23px;
+  margin: 0;
+}
+
+@media (width <= 640px) {
+  .dialog {
+    padding: 18px;
+  }
+  .heading h2 {
+    font-size: 20px;
+  }
+}

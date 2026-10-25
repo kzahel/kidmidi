@@ -74,3 +74,22 @@ test('keyboard settings recover from invalid storage and retain separate ranges 
     undefined,
   );
 });
+
+test('touch close views enlarge one octave without changing the full physical range', async () => {
+  const { displayKeyRange } = await import('../src/keyboard');
+  const range = { low: 21, high: 108 };
+  assert.deepEqual(displayKeyRange(range, 'close', 1280, 800), {
+    low: 48,
+    high: 72,
+  });
+  assert.deepEqual(displayKeyRange(range, 'close', 390, 844), {
+    low: 60,
+    high: 72,
+  });
+  assert.deepEqual(displayKeyRange(range, 'close', 844, 390), {
+    low: 60,
+    high: 72,
+  });
+  assert.equal(displayKeyRange(range, 'all', 390, 844), range);
+  assert.deepEqual(range, { low: 21, high: 108 });
+});

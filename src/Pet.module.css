@@ -1,0 +1,32 @@
+.pet {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  font-size: 96px;
+  width: 160px;
+  height: 160px;
+  background: #f3e7cd;
+  border-radius: 45% 55% 53% 47%;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.small {
+  background: transparent;
+  font-size: 28px;
+  width: 32px;
+  height: 32px;
+}
+.charm {
+  position: absolute;
+  right: 5%;
+  bottom: 8%;
+  font-size: 40%;
+}
+
+@media (width <= 640px) {
+  .pet:not(.small) {
+    width: 90px;
+    height: 100px;
+    font-size: 64px;
+  }
+}

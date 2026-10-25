@@ -1,0 +1,77 @@
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.profile-summary h3 {
+  font-size: 24px;
+  margin: 0;
+}
+.profile-summary p {
+  font-size: 13px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  min-width: 0;
+}
+.field select {
+  width: 100%;
+}
+.name-form {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  margin: 16px 0;
+}
+.name-form label {
+  flex: 1;
+}
+.name-form button {
+  flex-shrink: 0;
+}
+.quiet {
+  font-size: 13px;
+  color: #6e796b;
+  line-height: 1.5;
+}
+.shop {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+.shop button {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+}
+.shop button > span {
+  font-size: 36px;
+}
+.shop strong {
+  font-size: 13px;
+}
+.shop small {
+  font-size: 11px;
+}
+.learning-details {
+  margin-top: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.learning-details summary {
+  padding-inline: 10px;
+}
+
+@media (width <= 640px) {
+  .shop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .profile-summary {
+    gap: 12px;
+  }
+}

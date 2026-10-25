@@ -1,0 +1,110 @@
+.score {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  overflow: clip;
+}
+
+.score-host {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+}
+
+.score-host > div {
+  position: absolute;
+  top: 0;
+  transform-origin: top left;
+}
+
+.score svg {
+  display: block;
+}
+
+.score p {
+  margin: 8px 12px;
+  font-size: 13px;
+}
+
+.score .hit-notehead {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: note-hit-bloom 240ms ease-out;
+  filter: drop-shadow(0 0 3px #72c89a);
+  fill: #198559;
+  stroke: #198559;
+}
+
+.score .hit-notehead path {
+  fill: #198559;
+  stroke: #198559;
+}
+
+.score .hit-notehead.hit-held {
+  filter: drop-shadow(0 0 5px #50b988);
+}
+
+.score.hit-active [id^="cursorImg"] {
+  filter: saturate(1.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score .hit-notehead {
+    animation: none;
+  }
+}
+
+.score.hint-active [id^="cursorImg"] {
+  animation: idle-cursor-build 6s ease-in-out both;
+}
+
+.score .hint-notehead {
+  animation: idle-note-build 6s ease-in-out both;
+}
+
+.score .hint-notehead path {
+  animation: idle-note-build 6s ease-in-out both;
+}
+
+@keyframes note-hit-bloom {
+  0% {
+    scale: 1;
+  }
+
+  40% {
+    scale: 1.4;
+  }
+
+  100% {
+    scale: 1;
+  }
+}
+
+@keyframes idle-cursor-build {
+  from {
+    opacity: 0.32;
+    box-shadow: 0 0 0 transparent;
+  }
+
+  to {
+    opacity: 1;
+    box-shadow:
+      0 0 0 2px #b68a3180,
+      0 0 14px #d9b35470;
+  }
+}
+
+@keyframes idle-note-build {
+  from {
+    fill: #293d37;
+    stroke: #293d37;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  to {
+    fill: #a87516;
+    stroke: #a87516;
+    filter: drop-shadow(0 0 4px #d9b35480);
+  }
+}

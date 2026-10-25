@@ -7,10 +7,30 @@
       "!node_modules",
       "!test-results",
       "!playwright-report",
-      "!package-lock.json"
+      "!package-lock.json",
+      "!**/*.module.css.d.ts"
     ]
   },
-  "formatter": { "indentStyle": "space", "indentWidth": 2 },
-  "javascript": { "formatter": { "quoteStyle": "single" } },
-  "linter": { "enabled": true, "rules": { "preset": "none" } }
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none",
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "noUnreachable": "error",
+        "noConstAssign": "error"
+      }
+    }
+  }
 }

@@ -2,6 +2,7 @@ import type { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useEffect, useRef, useState } from 'react';
 import type { NoteHit } from './feedback';
 import { musicXml, type Note, type Song } from './music';
+import styles from './Score.module.css';
 import { fitScore, type ScoreSize, scoreZoom } from './view';
 
 type CursorState = {
@@ -32,27 +33,31 @@ function paintCursor(
           return graphic.getNoteheadSVGs?.() ?? [];
         })
       : [];
-  for (const previous of root.querySelectorAll<HTMLElement>('.hint-notehead')) {
+  for (const previous of root.querySelectorAll<HTMLElement>(
+    `.${styles['hint-notehead']}`,
+  )) {
     if (state.hint && !state.hit && heads.includes(previous)) continue;
-    previous.classList.remove('hint-notehead');
+    previous.classList.remove(styles['hint-notehead']);
   }
-  for (const previous of root.querySelectorAll<HTMLElement>('.hit-notehead')) {
+  for (const previous of root.querySelectorAll<HTMLElement>(
+    `.${styles['hit-notehead']}`,
+  )) {
     if (state.hit && heads.includes(previous)) continue;
-    previous.classList.remove('hit-notehead', 'hit-held');
+    previous.classList.remove(styles['hit-notehead'], styles['hit-held']);
     delete previous.dataset.hitId;
   }
   for (const head of heads) {
     if (!state.hit) {
-      head.classList.add('hint-notehead');
+      head.classList.add(styles['hint-notehead']);
       continue;
     }
     if (head.dataset.hitId !== String(state.hit?.id)) {
-      head.classList.remove('hit-notehead');
+      head.classList.remove(styles['hit-notehead']);
       void head.getBoundingClientRect();
       head.dataset.hitId = String(state.hit?.id);
     }
-    head.classList.add('hit-notehead');
-    head.classList.toggle('hit-held', !state.hit?.released);
+    head.classList.add(styles['hit-notehead']);
+    head.classList.toggle(styles['hit-held'], !state.hit?.released);
   }
 }
 
@@ -69,6 +74,7 @@ export function Score({
   size,
   scoreXml,
   flashcard = false,
+  onReady,
 }: {
   notes: Note[];
   active: number;
@@ -82,11 +88,14 @@ export function Score({
   size: ScoreSize;
   scoreXml?: string;
   flashcard?: boolean;
+  onReady?: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const renderer = useRef<OpenSheetMusicDisplay | null>(null);
   const latest = useRef({ active, complete, hit, hint });
   latest.current = { active, complete, hit, hint };
+  const ready = useRef(onReady);
+  ready.current = onReady;
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -203,6 +212,7 @@ export function Score({
         if (disposed) return;
         renderer.current = instance;
         layout();
+        ready.current?.();
         observer = new ResizeObserver(() => {
           if (
             disposed ||
@@ -249,7 +259,11 @@ export function Score({
 
   return (
     <div
-      className={`score ${hit ? 'hit-active' : hint ? 'hint-active' : ''} ${wholeSong ? 'multiline' : ''}`}
+      className={
+        styles['score'] +
+        ' ' +
+        (hit ? styles['hit-active'] : hint ? styles['hint-active'] : '')
+      }
       role="img"
       aria-label={
         scoreXml
@@ -258,7 +272,7 @@ export function Score({
       }
     >
       {error && <p role="alert">{error}</p>}
-      <div className="score-host" ref={host} />
+      <div className={styles['score-host']} ref={host} />
     </div>
   );
 }

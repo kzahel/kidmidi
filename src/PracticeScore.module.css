@@ -1,0 +1,80 @@
+.progress-track {
+  flex-shrink: 0;
+  height: 3px;
+  background: #eeeee6;
+}
+
+.progress-track > div {
+  background: #90b79d;
+  height: 100%;
+  transition: width 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-track > div {
+    transition: none;
+  }
+}
+
+.score-layout {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.score-layout.illustrated {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(40px, 9vw, 100px);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 8px;
+  padding-right: 8px;
+}
+
+.book-illustration {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 94px;
+  max-height: min(100%, 192px);
+  place-self: start center;
+  border-radius: 6px;
+}
+
+.score-credit a {
+  color: #4d795d;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.score-credit {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  color: #6e796b;
+  font-size: 11px;
+}
+
+@media (width <= 640px) {
+  .score-layout.illustrated {
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 0;
+    padding-right: 4px;
+  }
+}
+
+@media (width <= 640px) {
+  .book-illustration {
+    max-width: 48px;
+    max-height: min(100%, 160px);
+  }
+}
+
+@media (height <= 600px) {
+  .score-credit {
+    padding-block: 2px;
+  }
+}

@@ -52,11 +52,15 @@ try {
       errors.push(`${response.status()} ${response.url()}`);
   });
   await page.goto(`${origin}${prefix}`);
-  await expect(page.locator('.score svg')).toBeVisible();
+  await page.getByRole('button', { name: 'Play a song', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Räge-Rägetröpfli', exact: true }),
+  ).toBeVisible();
   await page
     .getByRole('button', { name: 'Räge-Rägetröpfli', exact: true })
     .click();
-  await expect(page.locator('.score')).toContainText('tröpf');
+  await expect(page.locator('[class*="__score__"]')).toContainText('tröpf');
+  await page.locator('[class*="__options__"] summary').click();
   const photoUrl = await page
     .getByRole('link', { name: 'Book photo ↗' })
     .getAttribute('href');
@@ -71,10 +75,13 @@ try {
   const score = await page.request.get(new URL(scoreUrl, origin).href);
   assert.ok(score.ok());
   assert.match(await score.text(), /<fifths>2<\/fifths>/);
+  await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.getByRole('button', { name: 'Just explore', exact: true }).click();
-  await expect(page.locator('.explore-score svg')).toBeVisible();
+  await expect(page.locator('[class*="__explore-score__"] svg')).toBeVisible();
   await page.getByRole('button', { name: 'Play C4', exact: true }).click();
-  await expect(page.locator('.explore-score .hit-notehead')).toHaveCount(1);
+  await expect(
+    page.locator('[class*="__explore-score__"] [class*="__live-hit__"]'),
+  ).toHaveCount(1);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText('Saved', { exact: true })).toBeVisible();
   assert.deepEqual(errors, []);

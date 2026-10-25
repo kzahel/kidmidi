@@ -1,0 +1,15 @@
+.explore-drawing {
+  position: absolute;
+  inset: 0;
+}
+
+.explore-drawing > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.explore-score .live-hit {
+  animation: none;
+  filter: none;
+}

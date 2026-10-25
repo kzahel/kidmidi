@@ -1,0 +1,17 @@
+.recording-save-error {
+  flex-shrink: 0;
+  font-size: 12px;
+  margin: 4px 10px;
+  color: #906216;
+}
+
+:where(.practice) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fffefa;
+  border: 1px solid #e5e6dc;
+  overflow: visible;
+  border-radius: 20px;
+}

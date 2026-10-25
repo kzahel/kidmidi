@@ -9,6 +9,19 @@ export type KeyboardSettings = {
 export const keyboardStorageKey = 'kidmidi.keyboard.v1';
 export const defaultKeyRange: KeyRange = { low: 36, high: 96 };
 export const closeKeyRange: KeyRange = { low: 48, high: 72 };
+export function displayKeyRange(
+  range: KeyRange,
+  zoom: 'close' | 'all',
+  width: number,
+  height: number,
+): KeyRange {
+  if (zoom === 'all') return range;
+  // A single octave gives touch players much wider white keys on small screens.
+  // This changes the view only, never the device's calibrated physical range.
+  return width <= 640 || (width <= 900 && height <= 500)
+    ? { low: 60, high: 72 }
+    : closeKeyRange;
+}
 export const screenKeyboard: MidiIdentity = {
   id: 'on-screen',
   name: null,

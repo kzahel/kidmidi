@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type Vex from 'vexflow';
+import styles from './ExploreScore.module.css';
 import type { PlayedNote } from './explore';
 import { liveGrid, livePage } from './live-score';
 import { noteName, octave } from './music';
+import scoreStyles from './Score.module.css';
 import type { ScoreSize } from './view';
 
 type Flow = typeof Vex.Flow;
@@ -156,7 +158,7 @@ export function ExploreScore({
         if (latest)
           noteGroup
             ?.querySelectorAll('.vf-notehead')
-            .forEach((head) => head.classList.add('hit-notehead'));
+            .forEach((head) => head.classList.add(styles['live-hit']));
         pitches.forEach((note) => {
           if (note.midi < 36 || note.midi > 96) {
             const label = document.createElementNS(
@@ -186,14 +188,14 @@ export function ExploreScore({
   }, [page, ready, grid.columns]);
   return (
     <div
-      className="score explore-score"
+      className={scoreStyles['score'] + ' ' + styles['explore-score']}
       role="img"
       aria-label="Live sheet music of what you played."
       data-page-start={page.start}
       data-measures={grid.columns * grid.rows}
     >
       {error && <p role="alert">{error}</p>}
-      <div ref={host} className="explore-drawing" />
+      <div ref={host} className={styles['explore-drawing']} />
     </div>
   );
 }

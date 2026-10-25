@@ -1,0 +1,320 @@
+.keyboard-panel {
+  flex-shrink: 0;
+}
+
+.keyboard-scroll {
+  overflow: clip;
+  border-radius: 7px;
+}
+
+.piano-key {
+  position: absolute;
+  top: 0;
+  padding: 0;
+  border: 1px solid #d1d3c7;
+  touch-action: none;
+  user-select: none;
+  min-height: 0;
+}
+
+.piano-key.white {
+  background: #fffef8;
+  height: 100%;
+  border-radius: 0 0 5px 5px;
+  box-shadow: inset 0 -4px #e4e4d9;
+}
+
+.piano-key.white > .key-label {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  font-size: 12px;
+  color: #7c8572;
+}
+
+.piano-key small {
+  font-size: 9px;
+  margin-left: 2px;
+}
+
+.piano-key.black {
+  z-index: 1;
+  height: 62%;
+  background: linear-gradient(#414a42, #2f3931);
+  border-color: #29352c;
+  border-radius: 0 0 4px 4px;
+  box-shadow:
+    inset 0 -4px #1f2e25,
+    1px 2px 2px #0002;
+}
+
+.piano-key i {
+  width: 7px;
+  height: 7px;
+  background: #78a469;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 34px;
+  left: calc(50% - 3.5px);
+}
+
+.piano-key.pressed.white {
+  background: #b5d7be;
+  box-shadow: inset 0 -2px #8fb59b;
+}
+
+.piano-key.pressed.black {
+  background: #6a9b79;
+}
+
+.piano-key.hit.white {
+  background: #c5e6c8;
+  box-shadow:
+    inset 0 -3px #91bb8b,
+    inset 0 0 20px #faf0ce;
+}
+
+.piano-key.hit.black {
+  background: #569977;
+  box-shadow:
+    inset 0 -3px #377857,
+    inset 0 0 15px #adcf91;
+}
+
+.hit-spark {
+  position: absolute;
+  left: calc(50% - 10px);
+  top: 25%;
+  color: #b98b26;
+  font-size: 22px;
+  pointer-events: none;
+  animation: key-hit-spark 580ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hit-spark {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hit-spark {
+    display: none;
+  }
+}
+
+.kid-view .keyboard {
+  --white-key-width: 44px;
+
+  aspect-ratio: var(--keyboard-ratio);
+  height: auto;
+}
+
+.kid-view .piano-key.white > .key-label {
+  font-size: 15px;
+}
+
+.piano-key.expected.white {
+  background: #f0f3e9;
+  box-shadow: inset 0 -4px #d6dfc8;
+  animation: idle-white-key-build 6s ease-in-out both;
+}
+
+.piano-key.expected.black {
+  background-image: none;
+  animation: idle-black-key-build 6s ease-in-out both;
+}
+
+.piano-key.expected i {
+  background: #99b489;
+  opacity: 0.7;
+  animation: idle-dot-build 6s ease-in-out both;
+}
+
+.keyboard-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.keyboard-controls button {
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.keyboard-range-setup button {
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.keyboard-range-setup select {
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.keyboard-zoom button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.keyboard-zoom button[aria-pressed="true"] {
+  background: #e1ecdb;
+  color: #285c45;
+  font-weight: 650;
+}
+
+.keyboard-range-button {
+  background: transparent;
+}
+
+.keyboard-range-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.keyboard-range-instruction {
+  font-size: 12px;
+  color: #326f56;
+}
+
+.piano-key .key-label.middle-c {
+  color: #28734c;
+  font-weight: 750;
+}
+
+.keyboard.all-keys .piano-key.white > .key-label {
+  font-size: 10px;
+}
+
+@media (width <= 640px) {
+  .keyboard.all-keys .key-label:not(.middle-c) {
+    visibility: hidden;
+  }
+}
+
+@media (width <= 640px) {
+  .keyboard.all-keys .piano-key:has(small) .key-label {
+    visibility: visible;
+  }
+}
+
+@media (width <= 640px) {
+  .keyboard.all-keys .piano-key.white > .key-label {
+    font-size: 8px;
+    bottom: 3px;
+  }
+}
+
+@media (width <= 640px) {
+  .keyboard.all-keys .piano-key small {
+    margin-left: 0;
+    font-size: 6px;
+  }
+}
+
+@keyframes key-hit-spark {
+  0% {
+    opacity: 0;
+    translate: 0 5px;
+    scale: 0.6;
+  }
+
+  20% {
+    opacity: 1;
+    scale: 1.15;
+  }
+
+  100% {
+    opacity: 0;
+    translate: 0 -24px;
+    scale: 0.8;
+  }
+}
+
+@keyframes idle-white-key-build {
+  from {
+    background-color: #f0f3e9;
+  }
+
+  to {
+    background-color: #f2d38d;
+    box-shadow:
+      inset 0 -4px #ba8c3b,
+      inset 0 0 12px #fff0c2;
+  }
+}
+
+@keyframes idle-black-key-build {
+  from {
+    background-color: #414a42;
+  }
+
+  to {
+    background-color: #946c2c;
+  }
+}
+
+@keyframes idle-dot-build {
+  from {
+    opacity: 0.5;
+    scale: 0.8;
+    background-color: #99b489;
+  }
+
+  to {
+    opacity: 1;
+    scale: 1.4;
+    background-color: #a8761c;
+  }
+}
+.keyboard-controls button,
+.keyboard-range-setup button,
+.keyboard-range-setup select {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.keyboard-zoom {
+  display: inline-flex;
+  border: 1px solid #dce1d5;
+  overflow: clip;
+  border-radius: 12px;
+}
+
+.keyboard {
+  --white-key-width: 38px;
+
+  width: min(
+    100%,
+    calc(var(--white-key-width) * var(--key-units) + 8px),
+    calc(20dvh * var(--keyboard-ratio))
+  );
+  aspect-ratio: var(--keyboard-ratio);
+  margin-inline: auto;
+  height: auto;
+  position: relative;
+  background: #414c42;
+  border: 4px solid #414c42;
+  border-top-width: 7px;
+  border-radius: 7px;
+  min-height: 56px;
+}
+
+@media (width <= 640px), (height <= 500px) {
+  .keyboard:not(.all-keys) {
+    width: min(100%, calc(var(--white-key-width) * var(--key-units) + 8px));
+  }
+}
