@@ -1,5 +1,11 @@
 # Kidmidi
 
+Long-term direction lives in `docs/product-direction.md`: playful experiences
+for toddler co-play and older children, teacher-informed folk/public-domain
+repertoire, an extensible MIT core, optional accounts and portable local data.
+Keep future support payments separate from earned game currency. The code license
+does not establish rights to bundled songs, arrangements or artwork.
+
 Read README.md first. This is a small website-first TypeScript piano playground
 for young children and parent co-play. Preserve the patient, pitch-only practice
 loop: correct fresh note-on is accepted immediately, wrong notes wait, no timed

@@ -4,6 +4,12 @@ The first learning activity is Note Hunt. Recognition, positive heart rewards,
 curriculum decisions, persistence and presentation have separate owners. Song
 practice remains patient and pitch-only; its input does not affect game rewards.
 
+The [long-term product direction](product-direction.md) calls for different
+forms of play and motivation for toddler co-play and older children, reviewed
+through family use and experienced teacher advice. The current Note Hunt
+curriculum is one activity, not a required starting point for every age.
+Age-specific presets and curriculum revisions remain future work.
+
 ## Local foundation
 
 `lesson-catalog.ts` contains lesson/world content; `curriculum.ts` contains pure
@@ -142,6 +148,12 @@ notes, idempotent awards, profile isolation and concurrent spending without real
 waits. Deterministic simulations establish policy behaviour, not learning efficacy.
 
 ## Eventual hosted accounts
+
+Accounts remain optional. Ordinary local play must stay available without login;
+future sync should preserve a usable local copy and a way to export learner
+history. Complete learner export/import is not implemented yet. Optional paid
+support or hosted services must remain separate from earned hearts/gems and
+curriculum gates; no payment model is decided.
 
 Keep local learner IDs independent of login identity. A future adult account can
 own multiple learners; children need no email address. Sign-in should link/import

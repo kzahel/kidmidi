@@ -8,6 +8,13 @@ Transcribed directly from that image, without looking up another arrangement.
 Printed credits: C. Ruckstuhl above, I. Spühler-Suter below; MusicXML uses
 composer and lyricist roles respectively, inferred from their placement.
 
+This document records transcription provenance, not a public-domain or
+open-content declaration for the song, lyrics, arrangement or illustration.
+Those materials, the source photograph and generated score are excluded from
+Kidmidi's MIT software license. Their redistribution rights are not established
+by this transcription record. The project's future repertoire direction is
+[folk and public-domain music with explicit provenance](../product-direction.md).
+
 Treble clef, D major (F♯ and C♯), 2/4, 12 measures, 45 melody attacks.
 The 42 eighth notes remain individually flagged, with original stem directions;
 three quarter notes are at m2/beat1, m4/beat1 and m12/beat2. No rests, slurs,

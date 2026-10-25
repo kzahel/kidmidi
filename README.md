@@ -6,6 +6,14 @@ with Twinkle, Twinkle, Hot Cross Buns, Räge-Rägetröpfli, free play, and Note 
 
 **Play:** https://kzahel.github.io/kidmidi/
 
+Kidmidi is a long-term open platform for playful family music-making, with
+experiences that grow from toddler co-play into independent learning. The focus
+is folk and public-domain repertoire, informed by family use and experienced
+piano-teacher advice. Original software and documentation are [MIT-licensed](LICENSE);
+music and artwork have separate rights. Accounts will remain optional if added.
+See [product direction](docs/product-direction.md) for age-specific design,
+extensibility, portability and possible voluntary support.
+
 The home menu has large activity cards for **Play a song**, **Free play**, and
 **Note hunt**. Songs have their own selection screen. **Home** returns to the menu;
 the learner button opens profiles, hearts and rewards, and the persistent
@@ -281,3 +289,12 @@ Next experiment: play a song together, then decide what feels fun enough to keep
 
 For product context, see the [piano-learning landscape and competitive overview](docs/piano-learning-landscape.md)
 (platforms, pricing and open-source alternatives; researched October 2026).
+
+## License and content
+
+The [MIT license](LICENSE) covers original Kidmidi software and documentation.
+Third-party dependencies retain their own licenses. Compositions, lyrics,
+arrangements, recordings, artwork and source photographs are separate from the
+code license unless explicitly identified otherwise. In particular, the
+Räge-Rägetröpfli song data, downloadable score and songbook photo are not offered
+under MIT; see their [provenance](docs/transcriptions/raege-raegetroepfli.md).

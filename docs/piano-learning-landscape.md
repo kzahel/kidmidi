@@ -6,6 +6,11 @@ public repositories. It is a desk review, not a hands-on product test or a marke
 share ranking. Platform listings do not establish compatibility with a particular
 physical keyboard.
 
+Kidmidi's [product direction](product-direction.md) is a long-term, extensible MIT
+platform with age-specific family play, teacher-informed folk/public-domain
+repertoire, optional accounts and portable data. Read the comparisons below as
+context for that direction.
+
 ## Quick read
 
 - **Guided beginner courses:** Simply Piano, Skoove, Piano Academy and Yousician
@@ -91,8 +96,9 @@ comfortable and understandable, rather than inventing a waiting mode.
 **The commercial products sell much more content and a longer path.** Courses,
 licensed popular songs, videos and progression are recurring themes. Kidmidi's
 small repertoire and early curriculum remain a real gap for a family expecting
-months of instruction. A focused introductory playground is a more credible
-current position than a full piano-teacher replacement.
+months of instruction. A focused introductory playground is the current starting
+point; the long-term aim is to grow the open platform and curriculum through
+family use, teacher advice and contributions.
 
 **Native mobile support matters.** Simply Piano and Skoove demonstrate that a
 website and web billing do not imply browser-based lessons. Kidmidi currently
