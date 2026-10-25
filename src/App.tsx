@@ -152,7 +152,11 @@ export function App() {
         </div>
       )}
       {playing ? (
-        <PianoWorkspace session={session} onMap={() => navigate('path')} />
+        <PianoWorkspace
+          session={session}
+          learner={learners.snapshot?.learner}
+          onMap={() => navigate('path')}
+        />
       ) : mode === 'path' ? (
         <LearningMap
           key={learners.snapshot?.learner.id}

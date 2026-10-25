@@ -49,7 +49,17 @@ Unavailable prices show the remaining hearts/gems. Take off removes equipment,
 not ownership. Profile switching resets the shop to that learner's equipment.
 
 Fox, cat, bunny and puppy share original vector artwork across the stage,
-collection, home menu and header. Accessories are drawn in the same coordinate
+collection, home menu and header. The selected learner's equipped companion also
+accompanies song selection and the lesson browser, and sits beside the piano
+in songs, Note Hunt, Pattern Hunt and Free play. Desktop layouts reserve a side
+column; phones reserve space above the keys beside compact keyboard controls.
+The complete score and piano remain visible without overlap or scrolling.
+The companion sways for live playing/recording playback, and cheers for song hits
+or completed Note Hunt cards/patterns. It stays through lesson results, follows
+profile/equipment changes immediately and restores the saved outfit on reload.
+Companion presentation cannot advance practice, capture notes or award currency.
+Reduced motion keeps the companion/reaction symbols and suppresses movement.
+Accessories are drawn in the same coordinate
 space, so previews match the worn outfit. Blinking and the short equipment
 entrance respect reduced motion. The original vector art is MIT-licensed.
 

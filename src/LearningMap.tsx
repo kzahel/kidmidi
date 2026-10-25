@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Companion } from './Companion';
 import {
   hasBadge,
   journeyProgress,
@@ -124,11 +125,14 @@ export function LearningMap({
             </h2>
             <p>{shelf.description}</p>
           </div>
-          {content.length > 0 && (
-            <span>
-              {earned}/{content.length} 🏅
-            </span>
-          )}
+          <div className={styles['companion-summary']}>
+            <Companion learner={snapshot.learner} compact />
+            {content.length > 0 && (
+              <span>
+                {earned}/{content.length} 🏅
+              </span>
+            )}
+          </div>
         </div>
         <div className={styles['lessons']}>
           {content

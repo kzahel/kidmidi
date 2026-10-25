@@ -1,5 +1,6 @@
 import { ActivityControls } from './ActivityControls';
 import { ExploreScore } from './ExploreScore';
+import type { Learner } from './learners';
 import { NoteHunt } from './NoteHunt';
 import { Piano } from './Piano';
 import styles from './PianoWorkspace.module.css';
@@ -10,8 +11,10 @@ import { type PianoSession } from './usePianoSession';
 export function PianoWorkspace({
   session,
   onMap,
+  learner,
 }: {
   session: PianoSession;
+  learner?: Learner;
   onMap(): void;
 }) {
   const {
@@ -73,7 +76,7 @@ export function PianoWorkspace({
         </section>
       )}
       <RecordingDialog session={session} />
-      <Piano session={session} />
+      <Piano session={session} learner={learner} />
     </>
   );
 }

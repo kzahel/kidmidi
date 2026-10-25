@@ -2,7 +2,9 @@
 declare const styles: {
   readonly 'all-keys': string;
   readonly 'black': string;
+  readonly 'companion-dock': string;
   readonly 'expected': string;
+  readonly 'full-label': string;
   readonly 'hit': string;
   readonly 'hit-spark': string;
   readonly 'key-label': string;
@@ -18,6 +20,8 @@ declare const styles: {
   readonly 'middle-c': string;
   readonly 'piano-key': string;
   readonly 'pressed': string;
+  readonly 'short-label': string;
   readonly 'white': string;
+  readonly 'with-companion': string;
 };
 export default styles;

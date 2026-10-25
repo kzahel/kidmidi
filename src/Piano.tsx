@@ -1,7 +1,15 @@
+import { Companion } from './Companion';
+import type { Learner } from './learners';
 import { noteName, octave } from './music';
 import styles from './Piano.module.css';
 import { type PianoSession } from './usePianoSession';
-export function Piano({ session }: { session: PianoSession }) {
+export function Piano({
+  session,
+  learner,
+}: {
+  session: PianoSession;
+  learner?: Learner;
+}) {
   const {
     freePlay,
     hunting,
@@ -28,7 +36,8 @@ export function Piano({ session }: { session: PianoSession }) {
         className={
           styles['keyboard-panel'] +
           ' ' +
-          (view.size === 'kid' ? styles['kid-view'] : '')
+          (view.size === 'kid' ? styles['kid-view'] : '') +
+          (learner ? ' ' + styles['with-companion'] : '')
         }
         aria-label="Live piano keyboard"
       >
@@ -40,17 +49,23 @@ export function Piano({ session }: { session: PianoSession }) {
           >
             <button
               type="button"
+              aria-label="Close · middle C"
               aria-pressed={keyboard.zoom === 'close'}
               onClick={() => keyboard.setZoom('close')}
             >
-              Close · middle C
+              <span className={styles['full-label']}>Close · middle C</span>
+              <span className={styles['short-label']}>Close</span>
             </button>
             <button
               type="button"
+              aria-label={`All ${keyboard.range.high - keyboard.range.low + 1} keys`}
               aria-pressed={keyboard.zoom === 'all'}
               onClick={() => keyboard.setZoom('all')}
             >
-              All {keyboard.range.high - keyboard.range.low + 1} keys
+              <span className={styles['full-label']}>
+                All {keyboard.range.high - keyboard.range.low + 1} keys
+              </span>
+              <span className={styles['short-label']}>All keys</span>
             </button>
           </div>
           <button
@@ -240,6 +255,23 @@ export function Piano({ session }: { session: PianoSession }) {
             })}
           </div>
         </div>
+        {learner && (
+          <div className={styles['companion-dock']}>
+            <Companion
+              learner={learner}
+              playing={pressed.size > 0 || playback.active.size > 0}
+              celebration={
+                hunting
+                  ? session.hunt.found
+                    ? session.huntSession.roundId
+                    : undefined
+                  : !freePlay && hit
+                    ? String(hit.id)
+                    : undefined
+              }
+            />
+          </div>
+        )}
       </section>
     </>
   );

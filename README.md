@@ -157,6 +157,7 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/learning.ts` / `src/useHuntSession.ts`: daily review and adaptive Note Hunt sessions.
 - `src/lesson-catalog.ts` / `src/curriculum.ts`: editable, versioned lessons and pure badge/deck policy.
 - `src/LearningMap.tsx`: labelled, paged lessons and badge progress.
+- `src/Companion.tsx`: equipped companion and local playing/success reactions, outside notation and piano keys.
 - `src/learners.ts` / `src/learner-repository.ts` / `src/useLearners.ts`: profiles, rewards and asynchronous IndexedDB storage.
 - Component-owned `*.module.css`: scoped styles with exact generated typings and unused-class checks.
 
@@ -224,8 +225,12 @@ keys work. See [Note hunt behavior](docs/note-hunt.md).
 **Learners & rewards** opens a fitted, paged collection with **Rewards**,
 **Learners**, and **Progress** tabs. Rewards has **Friends** and **Dress up**:
 preview companions and outfits without spending, then explicitly buy or choose.
-Original illustrated fox, cat, bunny and puppy companions wear their accessories
-on the home screen and in the header. A bow, star necklace, teal scarf, daisy and
+Original illustrated fox, cat, bunny and puppy companions follow the selected
+learner through the home screen, song selection and lesson browser. During songs,
+Note Hunt, Pattern Hunt and Free play, your equipped friend has a visible spot
+beside the piano (above the keys on phones), wearing the same accessories. It
+sways while notes sound and cheers for correct song notes and completed hunt
+cards/patterns. Those reactions never affect recognition, pacing or rewards. A bow, star necklace, teal scarf, daisy and
 golden crown offer different outfits. The preview, collection cards and equipped
 companion use the same artwork. New equipment gives a small greeting; reduced
 motion disables movement and blinking. Pages show two rewards with Back/More

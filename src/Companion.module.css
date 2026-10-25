@@ -1,0 +1,145 @@
+.companion {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 136px;
+  height: 156px;
+  flex-shrink: 0;
+  isolation: isolate;
+}
+.companion::before {
+  content: "";
+  position: absolute;
+  inset: auto 6px 12px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e2ecd7;
+  z-index: -1;
+}
+.friend {
+  display: flex;
+  transform-origin: bottom center;
+}
+.companion .friend > span {
+  width: 136px;
+  height: 136px;
+}
+.reaction {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  color: #a26a77;
+  font-size: 20px;
+  rotate: 10deg;
+}
+.caption {
+  color: #62765d;
+  font-size: 12px;
+  line-height: 18px;
+}
+.playing {
+  animation: companion-sway 650ms ease-in-out;
+}
+.cheering {
+  animation: companion-cheer 650ms ease-out;
+}
+.compact {
+  width: 72px;
+  height: 80px;
+}
+.compact .friend > span {
+  width: 68px;
+  height: 68px;
+}
+.compact .reaction {
+  font-size: 13px;
+  top: 0;
+}
+.compact .caption {
+  font-size: 10px;
+  line-height: 12px;
+}
+.compact::before {
+  inset: auto 4px 8px;
+  height: 24px;
+}
+
+@keyframes companion-sway {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  30% {
+    rotate: -5deg;
+  }
+  70% {
+    rotate: 5deg;
+  }
+}
+
+@keyframes companion-cheer {
+  0%,
+  100% {
+    translate: 0;
+    rotate: 0deg;
+  }
+  30% {
+    translate: 0 -8px;
+    rotate: -6deg;
+  }
+  65% {
+    translate: 0 -3px;
+    rotate: 5deg;
+  }
+}
+
+@media (width <= 640px), (height <= 500px) {
+  .companion {
+    width: 80px;
+    height: 84px;
+  }
+  .companion .friend > span {
+    width: 76px;
+    height: 76px;
+  }
+  .reaction {
+    font-size: 14px;
+    top: 0;
+  }
+  .caption {
+    font-size: 10px;
+    line-height: 12px;
+  }
+  .companion::before {
+    height: 24px;
+    inset: auto 4px 8px;
+  }
+  .compact {
+    width: 64px;
+    height: 68px;
+  }
+  .compact .friend > span {
+    width: 62px;
+    height: 62px;
+  }
+}
+
+@media (width <= 640px) and (height <= 680px) {
+  .companion {
+    width: 64px;
+    height: 68px;
+  }
+  .companion .friend > span {
+    width: 62px;
+    height: 62px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playing,
+  .cheering {
+    animation: none;
+  }
+}

@@ -318,3 +318,69 @@
     width: min(100%, calc(var(--white-key-width) * var(--key-units) + 8px));
   }
 }
+
+.short-label {
+  display: none;
+}
+.with-companion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 144px;
+  gap: 0 12px;
+}
+.with-companion .keyboard-controls {
+  grid-column: 1;
+  grid-row: 1;
+}
+.with-companion .keyboard-range-setup {
+  grid-column: 1;
+  grid-row: 2;
+}
+.with-companion .keyboard-scroll {
+  grid-column: 1;
+  grid-row: 3;
+}
+.companion-dock {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  place-self: end center;
+}
+
+@media (width <= 640px) {
+  .with-companion {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .with-companion .keyboard-controls {
+    min-height: 84px;
+    margin-right: 84px;
+    gap: 4px;
+  }
+  .with-companion .companion-dock {
+    grid-column: 1;
+    grid-row: 1;
+    place-self: center end;
+  }
+  .with-companion .full-label {
+    display: none;
+  }
+  .with-companion .short-label {
+    display: inline;
+  }
+  .with-companion .keyboard-controls button {
+    padding-inline: 8px;
+  }
+}
+
+@media (width <= 640px) and (height <= 680px) {
+  .with-companion .keyboard-controls {
+    min-height: 68px;
+    margin-right: 68px;
+  }
+}
+
+@media (width >= 641px) and (height <= 500px) {
+  .with-companion {
+    grid-template-columns: minmax(0, 1fr) 88px;
+    gap: 0 8px;
+  }
+}

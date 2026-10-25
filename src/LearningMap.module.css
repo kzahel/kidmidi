@@ -63,10 +63,6 @@
   margin: 0;
   font-size: clamp(20px, 3vw, 28px);
 }
-.panel-heading > span {
-  white-space: nowrap;
-  font-weight: 700;
-}
 .lessons {
   flex: 1;
   min-height: 0;
@@ -236,7 +232,44 @@
   }
   .lessons button,
   .preview {
-    padding: 10px;
-    gap: 8px;
+    padding: 8px;
+    gap: 4px;
+  }
+}
+
+.companion-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.companion-summary > span {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+@media (width <= 640px) {
+  .companion-summary {
+    flex-direction: column;
+    gap: 0;
+  }
+  .companion-summary > span {
+    font-size: 12px;
+  }
+}
+
+@media (height <= 500px) and (width >= 641px) {
+  .companion-summary {
+    gap: 4px;
+  }
+  .companion-summary > span {
+    font-size: 12px;
+  }
+}
+
+@media (width <= 640px) and (height <= 680px) {
+  .companion-summary {
+    flex-direction: row;
+    gap: 4px;
   }
 }

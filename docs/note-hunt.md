@@ -90,6 +90,10 @@ stylesheet. The shared Score renderer's flashcard option
 hides time signatures and permits a narrower engraving with larger glyphs.
 The two cards and full piano fit the viewport without scrolling. Reduced motion
 keeps the green cards and hearts while suppressing confetti and heart animation.
+The learner's equipped companion sits beside the piano, stays through lesson
+results and cheers when a card or full pattern is found. Its display/animation
+never advances recognition or changes feedback delays or rewards. Phone controls
+use compact labels while preserving accessible names and touch targets.
 No network services are used. Profiles persist through the asynchronous learner
 repository.
 
