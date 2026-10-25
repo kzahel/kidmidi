@@ -905,3 +905,75 @@ button:hover:not(:disabled) {
     font-size: 6px;
   }
 }
+
+.explore-drawing {
+  position: absolute;
+  inset: 0;
+}
+.explore-drawing > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.explore-score .hit-notehead {
+  animation: none;
+  filter: none;
+}
+.practice-controls > .phrase-count {
+  width: 110px;
+  min-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.save-status {
+  display: inline-block;
+  width: 8ch;
+  font-size: 11px;
+  color: #62816a;
+}
+.recording-save-error {
+  flex-shrink: 0;
+  font-size: 12px;
+  margin: 4px 10px;
+  color: #906216;
+}
+.recordings-menu {
+  width: min(580px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  border: 1px solid #ccd8c5;
+  border-radius: 12px;
+  background: #fffefa;
+  color: #293d37;
+  padding: 16px;
+}
+.recordings-menu::backdrop {
+  background: #20352b66;
+}
+.recordings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.recordings-menu > select {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.recording-actions,
+.recording-delete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.recording-delete {
+  margin-top: 14px;
+  align-items: center;
+}
+.recordings-local {
+  font-size: 12px;
+  color: #6e796b;
+  margin: 14px 0 0;
+}

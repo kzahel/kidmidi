@@ -4,7 +4,6 @@ import {
   ExploreRecorder,
   exploreNotation,
   groupPlayedNotes,
-  maxExploreNotes,
   type PlayedNote,
 } from '../src/explore';
 
@@ -133,9 +132,9 @@ test('live display stays bounded while the download retains the complete take', 
   const recorder = new ExploreRecorder((take) => {
     count = take.length;
   });
-  for (let index = 0; index <= maxExploreNotes; index++) {
+  for (let index = 0; index < 1200; index++) {
     recorder.noteOn(`key-${index}`, 60, index * 500, 90);
     recorder.noteOff(`key-${index}`, index * 500 + 200);
   }
-  assert.equal(count, maxExploreNotes);
+  assert.equal(count, 1200);
 });

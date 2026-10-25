@@ -87,7 +87,10 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/music.ts`: starter songs, MusicXML generation, MIDI parsing, and pitch-only
   practice progression. Durations are displayed, but rhythm is not scored.
 - `src/feedback.ts`: note-length/held-key feedback and delayed idle hints, independent of recognition.
-- `src/explore.ts`: raw MIDI capture, loose note/chord grouping and live MusicXML.
+- `src/explore.ts`: raw MIDI capture, chord grouping and full MusicXML export.
+- `src/ExploreScore.tsx` / `src/live-score.ts`: fixed live staff positions and page windows.
+- `src/recordings.ts` / `src/RecordingMenu.tsx`: local session autosave and recording files.
+- `src/playback.ts`: performance-timed preview playback, separate from recording.
 - `src/hunt.ts` / `src/NoteHunt.tsx`: note-finding rounds, heart rewards and paired staff cards.
 - `src/view.ts`: Compact/Kid sizing and saved multiline settings.
 - `src/rain.ts`: manually checked songbook transcription and source illustration.
@@ -104,14 +107,20 @@ to browse all four printed line groups, **Book photo** for the source, or
 **MusicXML** to export. Chords are visual references; practice still matches melody notes only.
 See [transcription evidence](docs/transcriptions/raege-raegetroepfli.md).
 
-In song practice, the score is the target. In **Just explore**, playing writes a
-running score in loose 4/4: notes appear immediately, nearby attacks form chords,
-and long pauses are skipped. Low notes add a bass staff. The newest note/chord
-stays highlighted. Compact/Kid and Multiline also work here; the view shows the
-latest two bars (four with Multiline), while **MusicXML** downloads the full take.
-Use **Clear recording** (↺) to start again. Captures stay in memory when switching
-songs, and reset on reload. A take holds up to 512 attacks and then asks you to
-download or clear it. See [live notation behavior](docs/explore-transcription.md).
+In **Just explore**, a fixed grand staff reserves its measures before you play.
+Notes/chords fill equally spaced quarter-note slots without moving earlier notes.
+Phones show one measure; wider screens fit more, and Multiline can reserve another
+row. Reaching the end starts a clean visual page while the full recording continues.
+**Clear page** also clears only the drawing. **New recording** (↺) archives the
+current session and starts a new one.
+
+Recording is automatic and local to this browser. **Save** flushes pending writes;
+**Recordings** loads or plays a session, downloads/opens a recording JSON file, or
+exports the complete take as MusicXML. The most recently changed session returns
+after reload. Playback uses the performed timing, overlaps and velocity through
+the preview voice, with piano highlights, and never records itself. Live playing
+stops playback. Download a recording to keep a separate copy or transfer devices.
+There is no 512-note capture limit. See [live notation and recording behavior](docs/explore-transcription.md).
 
 **Note hunt** shows a single target note beside the note you play. Start with
 middle C, E and G, or choose C–G or C–C for more white notes. A first-, second-, or
@@ -124,7 +133,7 @@ mode starts a fresh game. See [Note hunt behavior](docs/note-hunt.md).
 
 Rhythm is approximate, with no inferred tempo, meter or hand independence.
 There is no audio transcription or automatic MIDI-file/photo import.
-Session progress and recordings are in memory; refreshing starts over.
+Song/game progress resets on refresh; Explore recordings persist locally.
 There are no analytics, uploads, or external page assets. The first local install
 requires the network.
 

@@ -1,65 +1,101 @@
-# Just explore: live notation
+# Just explore: fixed live notation and saved recordings
 
-Just explore writes MIDI, on-screen piano, and computer-keyboard playing into a
-running MusicXML score. This is deliberately loose notation for experimenting.
-The user requested a convenient 4/4 default rather than strict timing or meter
-inference. Practice songs still use their existing target-matching behavior.
+Explore accepts MIDI, on-screen piano and computer-keyboard attacks. Capture,
+live presentation, full notation export and playback have separate responsibilities.
+Practice targets and Note hunt scoring remain independent.
 
-## Capture and interpretation
+## Capture
 
-`src/explore.ts` keeps source attacks with stable IDs, source/channel/pitch input
-identity, pitch, velocity, onset and release times. Web MIDI uses the message's
-DOM high-resolution timestamp; other inputs use the same performance clock.
-Snapshot copies are immutable to consumers. Duplicate note-ons while a key is
-held are ignored; new attacks after release remain separate notes. Losing focus,
-changing inputs or unplugging finishes held source notes without deleting the take.
+`ExploreRecorder` retains every source attack with an ID, source/channel/pitch
+identity, pitch, velocity, onset/release timestamps and an explicit chord-group
+index. Duplicate held note-ons are ignored; fresh repeated pitches remain separate
+attacks. Notes within 80ms form a chord unless that pitch is already in the group.
+Releases, unplugging, focus loss and input changes finish held notes without
+removing the recording. Range calibration consumes its setup notes before capture.
 
-The displayed interpretation is separate from this raw capture:
+There is no application note-count cutoff. The complete active session stays in
+memory as a fallback; the live UI receives only the latest 32 groups, so longer
+sessions do not increase per-key engraving work. Resuming a loaded session appends
+new input 500ms after its previous end, translating the new page's performance
+clock into that session's timeline. An interrupted held note restores with a
+300ms fallback duration. CC64/pedal interpretation is still unsupported.
 
-- Attacks within 80ms of a group's first attack form a chord. Repeated pitches
-  always begin a new group, even when they are close in time.
-- A quarter note is provisionally 500ms. Ordinary attack spacing sets approximate
-  eighth/quarter/half/whole values. For a pause of 1600ms or more, use the previous
-  key-hold duration instead. The last held group initially appears as a quarter
-  and gets its approximate value on release or the next attack.
-- Silent gaps are omitted. Pausing to find a key never creates a run of rests.
-  There is no tempo or meter inference, metronome, or timing score.
-- Sequential note/chord groups fill convenient 4/4 bars. Notes crossing barlines
-  are split with notated and playback ties; trailing rests complete the last bar.
-  Added rests are formatting padding, not detected performance silence.
-- Chord tones share the group's approximate duration. This does not reconstruct
-  independent overlapping voices or pedal sustain. Raw release times remain
-  available in the in-memory take for future interpretation.
-- Pitches are preserved, spelled with sharps where needed, without key inference.
-  Below-middle-C pitches add a bass staff. This fixed staff split is a readability
-  choice, not inferred hand assignment. Near-simultaneous notes are beamed/grouped
-  by the engraver where appropriate; no harmony labels are invented.
+## Fixed staff
 
-## Display and lifecycle
+The previous MusicXML live view re-engraved, resized and respaced after every
+attack. `ExploreScore` now reserves the complete grand staff before input, using
+VexFlow directly (the version already present through OSMD, now a direct pinned
+dependency). The same SVG/staves remain mounted while a note layer fills in.
 
-The normal view shows the last two bars; Multiline shows the last four. The
-complete take remains downloadable as MusicXML. This bounds live engraving work
-as a performance grows. The cursor follows the latest note/chord (including a
-continuation if it crosses a bar); rests are never colored as played notes.
-Compact/Kid sizes use the shared score renderer, which fits the entire displayed
-excerpt within the available width and height without scrolling or clipping.
-A blank 4/4 staff appears before the first note.
+- Width and Compact/Kid preference choose one to four measures per row. Multiline
+  can reserve a second row when height allows. Only resizing or changing display
+  preferences rebuilds the grid, never new notes or releases.
+- Each measure has four fixed quarter-note positions. One attack group occupies
+  one slot, including chords spanning both staves. Earlier notes keep their exact
+  positions; there is no continuous panning, duration-driven spacing or new staff
+  appearing when the first bass note arrives.
+- A full page wipes visually on the next group. The recording and cumulative note
+  count continue. Clear page starts a fresh group/page without deleting any notes.
+- Live symbols intentionally use quarter notes, independent of performed length.
+  MIDI pitches are preserved in capture/export; below C4 goes to the bass staff.
+  Pitches outside C2–C7 are displayed in a nearby octave with an explicit actual
+  pitch/arrow label, preserving a fixed layout even at extreme MIDI pitches.
+- Newest noteheads are green. The piano continues to show physically held notes.
+  The whole drawing fits the viewport without scrolling or layout animation.
 
-Clear recording resets only the explore take. Switching to a song and returning
-keeps it; reloading discards it. Up to 512 source attacks are retained. At that
-limit the piano still plays, capture stops, and the page explicitly offers
-clearing/downloading. There is no recording upload, account, or background audio
-capture. The current MIDI CC64 limitation also applies to free play.
+## Export interpretation
+
+Full MusicXML export runs on request, not on each key. It retains the earlier
+loose transcription: a provisional quarter is 500ms, gaps under 1600ms select a
+nearby eighth/quarter/half/whole duration, and longer pauses use key-hold duration
+instead of a wall of rests. Sequential groups fill 4/4 bars with ties across
+barlines and padding rests. Low notes add a bass staff. Chord tones share an
+approximate duration; separate hands/voices/tempo/meter are not inferred. Sharps
+spell chromatic pitches. The export is editable notation, not an exact timing
+reconstruction; raw recording JSON retains performance timing separately.
+
+## Saving and controls
+
+`RecordingLibrary` stores metadata and individual notes in IndexedDB
+`kidmidi-recordings`. Changed attacks/releases are batched roughly every 200ms in
+atomic note/metadata transactions. A continuous performance does not postpone
+saving until a pause, and old notes are not serialized again for each key.
+Visibility loss/pagehide and Save flush pending writes. Browser termination can
+still interrupt an in-flight save; the Saved indicator reflects completed writes.
+No recording data is uploaded.
+
+- The most recently changed saved session restores on reload if playing has not
+  already started. Late restoration/loading cannot replace new live input.
+- New recording archives the previous take and starts fresh. Clear page only
+  clears the drawing. Neither is the Delete operation.
+- Recordings offers Load, Play, Download recording (versioned JSON), Open recording
+  file and MusicXML. Import validates data, normalizes IDs and creates a new session;
+  it does not overwrite the source recording. Imports are bounded to 100MB/500k
+  notes for responsiveness; live recording has no fixed note-count limit.
+- Delete asks for a second explicit click in the menu and removes that saved
+  session and its notes. Download is the portable backup/transfer mechanism.
+- Save failures are visible, with the active session retained in memory and
+  unsaved sessions retained for download. Storage is local to this browser/origin;
+  it is not a cloud backup or synchronized account.
+
+Playback uses captured note timing, overlaps and velocity with a simple local
+synthesized voice; it does not send notes to the physical keyboard. The live staff
+and piano follow playback without generating captured events. Stop, live input,
+leaving Explore, blur/visibility changes and loading/new sessions cancel playback
+and release its voices. Playback scheduling only visits the currently due notes;
+it does not create oscillators for an entire long recording in advance.
 
 ## Validation
 
-Node tests cover immutable capture, timestamps, repeated attacks, chord grouping,
-long pauses, 4/4 duration totals per voice, tied continuations, grand-staff pitch
-preservation, full-download versus rolling-view counts, empty scores, and the
-recording bound. Source attack counts exclude rests and tied continuations.
+Node coverage checks immutable capture, repeated/chord attacks, explicit page
+breaks within a chord window, unchanged slot positions, page wrapping, bounded UI
+snapshots past the old capture limit, resumed clocks/IDs, recording-file parsing,
+full MusicXML pitch/rhythm/ties and an unavailable-storage fallback.
 
-One browser integration exercises actual MIDI event routing into an engraved
-three-note chord, repeated note, bass staff, MusicXML XML parsing/export, display
-settings and clearing. Desktop and phone renders are visually reviewed for
-clefs, accidentals, stems, ties, chord grouping, clipping and latest-note focus.
-The fast main-push pipeline remains unchanged; browser checks stay separate.
+One browser boundary exercises real mocked MIDI into chords/bass and full XML
+export. Another verifies unchanged SVG identity/geometry and first-note position
+as a page fills, visual-only clears, IndexedDB reload recovery, archive/load,
+portable JSON round trip, timed playback/highlights without re-recording, deletion
+and phone fit. Existing practice/game/keyboard tests remain the regression suite.
+Desktop/phone fixed staves and the recording menu are visually reviewed with
+bundled Playwright Chromium. Main-push CI stays fast; browser checks remain separate.

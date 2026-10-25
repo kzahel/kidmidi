@@ -71,9 +71,15 @@ try {
   const score = await page.request.get(new URL(scoreUrl, origin).href);
   assert.ok(score.ok());
   assert.match(await score.text(), /<fifths>2<\/fifths>/);
+  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  await expect(page.locator('.explore-score svg')).toBeVisible();
+  await page.getByRole('button', { name: 'Play C4', exact: true }).click();
+  await expect(page.locator('.explore-score .hit-notehead')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible();
   assert.deepEqual(errors, []);
   console.log(
-    `Built Pages bundle, notation, illustration and MusicXML passed at ${prefix}`,
+    `Built Pages bundle, notation, illustration, MusicXML and Explore recording passed at ${prefix}`,
   );
 } finally {
   await browser?.close();

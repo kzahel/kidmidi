@@ -17,8 +17,10 @@ adapters can follow later. Practice targets use MusicXML; live MIDI is performan
 input. Just explore also turns that input into loose, local notation. Preserve raw
 attack/release timestamps separately from approximate displayed durations; do not
 introduce audio transcription or a server for this feature. See
-`docs/explore-transcription.md`. Note hunt is a separate game with attempt-based
-positive rewards; keep its scoring separate from patient song practice. See
+`docs/explore-transcription.md`. Keep Explore’s live staff geometry fixed while
+playing, independent from MusicXML export. Visual clears/page wraps must retain
+the full autosaved recording; playback never feeds capture. Note hunt is a
+separate game with attempt-based positive rewards; keep its scoring separate from patient song practice. See
 `docs/note-hunt.md`. The piano has close/full views and per-input ranges; MIDI
 port identity does not establish a physical key count. See `docs/keyboard-range.md`.
 

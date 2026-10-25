@@ -8,7 +8,13 @@ export class PianoAudio {
     { oscillator: OscillatorNode; gain: GainNode }
   >();
 
-  play(id: string, midi: number, when?: number, duration?: number) {
+  play(
+    id: string,
+    midi: number,
+    when?: number,
+    duration?: number,
+    velocity = 90,
+  ) {
     this.context ??= new AudioContext();
     void this.context.resume();
     this.stop(id);
@@ -19,8 +25,11 @@ export class PianoAudio {
     oscillator.type = 'triangle';
     oscillator.frequency.value = 440 * 2 ** ((midi - 69) / 12);
     gain.gain.setValueAtTime(0, start);
-    gain.gain.linearRampToValueAtTime(0.17, start + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.045, start + 0.35);
+    gain.gain.linearRampToValueAtTime((0.17 * velocity) / 90, start + 0.008);
+    gain.gain.exponentialRampToValueAtTime(
+      (0.045 * velocity) / 90,
+      start + 0.35,
+    );
     oscillator.connect(gain).connect(context.destination);
     oscillator.start(start);
     this.voices.set(id, { oscillator, gain });

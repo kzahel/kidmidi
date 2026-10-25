@@ -8,8 +8,8 @@ export type PlayedNote = {
   velocity: number;
   onsetMs: number;
   offsetMs?: number;
+  groupIndex?: number;
 };
-export const maxExploreNotes = 512;
 const chordWindowMs = 80;
 const quarterMs = 500;
 
@@ -17,41 +17,127 @@ export class ExploreRecorder {
   private notes: PlayedNote[] = [];
   private held = new Map<string, PlayedNote>();
   private serial = 0;
+  private groupIndex = -1;
+  private groupStart = -Infinity;
+  private groupPitches = new Set<number>();
+  private clockShift: number | null = 0;
 
-  constructor(private emit: (notes: PlayedNote[]) => void) {}
+  constructor(
+    private emit: (notes: PlayedNote[]) => void,
+    private options: {
+      recentGroups?: number;
+      onWrite?: (notes: PlayedNote[]) => void;
+    } = {},
+  ) {}
+
+  get count() {
+    return this.notes.length;
+  }
+  get nextGroup() {
+    return this.groupIndex + 1;
+  }
+  getNotes() {
+    return this.notes.map((note) => ({ ...note }));
+  }
 
   noteOn(inputId: string, midi: number, atMs: number, velocity: number) {
-    if (this.held.has(inputId) || this.notes.length >= maxExploreNotes) return;
-    const note = { id: ++this.serial, inputId, midi, velocity, onsetMs: atMs };
+    if (this.held.has(inputId)) return;
+    if (this.clockShift === null) {
+      const end = this.notes.reduce(
+        (max, note) => Math.max(max, note.offsetMs ?? note.onsetMs),
+        0,
+      );
+      this.clockShift = (this.notes.length ? end + 500 : 0) - atMs;
+    }
+    const onsetMs = atMs + this.clockShift;
+    if (
+      onsetMs - this.groupStart > chordWindowMs ||
+      this.groupPitches.has(midi)
+    ) {
+      this.groupIndex++;
+      this.groupStart = onsetMs;
+      this.groupPitches.clear();
+    }
+    this.groupPitches.add(midi);
+    const note = {
+      id: ++this.serial,
+      inputId,
+      midi,
+      velocity,
+      onsetMs,
+      groupIndex: this.groupIndex,
+    };
     this.notes.push(note);
     this.held.set(inputId, note);
+    this.options.onWrite?.([{ ...note }]);
     this.publish();
   }
 
   noteOff(inputId: string, atMs: number) {
     const note = this.held.get(inputId);
-    if (!note || atMs < note.onsetMs) return;
-    note.offsetMs = atMs;
+    const offsetMs = atMs + (this.clockShift ?? 0);
+    if (!note || offsetMs < note.onsetMs) return;
+    note.offsetMs = offsetMs;
     this.held.delete(inputId);
+    this.options.onWrite?.([{ ...note }]);
     this.publish();
   }
 
   releaseAll(atMs: number) {
     if (!this.held.size) return;
-    for (const note of this.held.values())
-      note.offsetMs = Math.max(note.onsetMs, atMs);
+    const changed = [...this.held.values()];
+    for (const note of changed)
+      note.offsetMs = Math.max(note.onsetMs, atMs + (this.clockShift ?? 0));
     this.held.clear();
+    this.options.onWrite?.(changed.map((note) => ({ ...note })));
     this.publish();
+  }
+
+  load(notes: readonly PlayedNote[]) {
+    this.held.clear();
+    this.notes = notes.map((note) => ({
+      ...note,
+      offsetMs: note.offsetMs ?? note.onsetMs + 300,
+    }));
+    const groups = groupPlayedNotes(this.notes);
+    groups.forEach((group, index) =>
+      group.notes.forEach((note) => {
+        note.groupIndex = index;
+      }),
+    );
+    this.serial = this.notes.reduce((max, note) => Math.max(max, note.id), 0);
+    this.groupIndex = groups.length - 1;
+    this.groupStart = -Infinity;
+    this.groupPitches.clear();
+    this.clockShift = null;
+    this.publish();
+  }
+
+  breakGroup() {
+    this.groupStart = -Infinity;
+    this.groupPitches.clear();
   }
 
   clear() {
     this.notes = [];
     this.held.clear();
+    this.serial = 0;
+    this.groupIndex = -1;
+    this.groupStart = -Infinity;
+    this.groupPitches.clear();
+    this.clockShift = 0;
     this.publish();
   }
 
   private publish() {
-    this.emit(this.notes.map((note) => ({ ...note })));
+    let first = 0;
+    if (this.options.recentGroups) {
+      const minimum = this.groupIndex - this.options.recentGroups + 1;
+      first = this.notes.length;
+      while (first > 0 && (this.notes[first - 1].groupIndex ?? 0) >= minimum)
+        first--;
+    }
+    this.emit(this.notes.slice(first).map((note) => ({ ...note })));
   }
 }
 
@@ -70,6 +156,9 @@ export function groupPlayedNotes(notes: readonly PlayedNote[]): PlayedGroup[] {
     const last = groups.at(-1);
     if (
       last &&
+      (last.notes[0].groupIndex === undefined ||
+        note.groupIndex === undefined ||
+        last.notes[0].groupIndex === note.groupIndex) &&
       note.onsetMs - last.onsetMs <= chordWindowMs &&
       !last.notes.some((member) => member.midi === note.midi)
     ) {

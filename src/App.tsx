@@ -1,14 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { assetUrl } from './assets';
 import { PianoAudio } from './audio';
-import {
-  ExploreRecorder,
-  emptyNotes,
-  exploreNotation,
-  exploreSong,
-  maxExploreNotes,
-  type PlayedNote,
-} from './explore';
+import { ExploreScore } from './ExploreScore';
+import { ExploreRecorder, type PlayedNote } from './explore';
 import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
 import { guessHunt, nextHunt, startHunt } from './hunt';
 import { keyboardLayout, screenKeyboard } from './keyboard';
@@ -21,6 +15,9 @@ import {
   startPosition,
 } from './music';
 import { NoteHunt } from './NoteHunt';
+import { emptyPlayback, RecordingPlayer } from './playback';
+import { downloadMusicXml, RecordingMenu } from './RecordingMenu';
+import { emptyLibrary, RecordingLibrary } from './recordings';
 import { Score } from './Score';
 import { useKeyboard } from './useKeyboard';
 import { useMidi } from './useMidi';
@@ -51,7 +48,40 @@ export function App() {
   const hunting = mode === 'hunt';
   const [hunt, setHunt] = useState(startHunt);
   const [take, setTake] = useState<PlayedNote[]>([]);
-  const [recorder] = useState(() => new ExploreRecorder(setTake));
+  const [libraryState, setLibraryState] = useState(emptyLibrary);
+  const [library] = useState(() => new RecordingLibrary(setLibraryState));
+  const [recorder] = useState(
+    () =>
+      new ExploreRecorder(setTake, {
+        recentGroups: 32,
+        onWrite: (notes) => library.capture(notes),
+      }),
+  );
+  const [recordingsOpen, setRecordingsOpen] = useState(false);
+  const [afterGroup, setAfterGroup] = useState(0);
+  const [playback, setPlayback] = useState(emptyPlayback);
+  const [player] = useState(() => new RecordingPlayer(setPlayback));
+  const displayedTake = playback.playing ? playback.notes : take;
+  useEffect(() => {
+    void library.init(recorder);
+    const save = () => {
+      recorder.releaseAll(performance.now());
+      void library.flush();
+    };
+    const hidden = () => {
+      if (document.hidden) save();
+    };
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      window.removeEventListener('pagehide', save);
+      document.removeEventListener('visibilitychange', hidden);
+      library.dispose();
+    };
+  }, [library, recorder]);
+  useEffect(() => {
+    if (!freePlay) player.stop();
+  }, [freePlay, player]);
   const [view, setView] = useState(loadViewSettings);
   const wholeSong = view.multiline;
   const [screen, setScreen] = useState(() => ({
@@ -65,10 +95,6 @@ export function App() {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
-  const liveScore = useMemo(
-    () => exploreNotation(take, view.multiline),
-    [take, view.multiline],
-  );
   const [rangeOpen, setRangeOpen] = useState(false);
   const [hints, setHints] = useState(true);
   const [pressed, setPressed] = useState(new Set<number>());
@@ -97,12 +123,13 @@ export function App() {
   current.current = { song, position, freePlay, hunting, hunt };
 
   const releaseAll = useCallback(() => {
+    player.stop();
     held.current.clear();
     setPressed(new Set());
     audio.current.stopAll();
     feedback.cancel();
     recorder.releaseAll(performance.now());
-  }, [feedback, recorder]);
+  }, [feedback, recorder, player]);
   const play = useCallback(
     (event: NoteEvent, source: string) => {
       const id = `${source}:${event.channel}:${event.note}`;
@@ -118,6 +145,7 @@ export function App() {
         setLastNote(event.note);
         if (source !== 'midi') audio.current.play(id, event.note);
         const state = current.current;
+        if (state.freePlay && player.playing) player.stop();
         if (state.hunting) {
           const next = guessHunt(state.hunt, event.note);
           current.current = { ...state, hunt: next };
@@ -140,7 +168,7 @@ export function App() {
       }
       setPressed(new Set(held.current.values()));
     },
-    [feedback, recorder],
+    [feedback, recorder, player],
   );
   const midi = useMidi((event) => {
     if (event.type === 'on' && keyboard.observe(event.note)) return;
@@ -221,8 +249,9 @@ export function App() {
       document.removeEventListener('visibilitychange', hidden);
       feedback.dispose();
       audio.current.close();
+      player.dispose();
     };
-  }, [play, releaseAll, feedback]);
+  }, [play, releaseAll, feedback, player]);
 
   function reset() {
     releaseAll();
@@ -235,8 +264,26 @@ export function App() {
   }
   function clearTake() {
     releaseAll();
+    library.newSession();
     recorder.clear();
+    setAfterGroup(0);
     setLastNote(null);
+  }
+  function clearExplorePage() {
+    releaseAll();
+    recorder.breakGroup();
+    setAfterGroup(recorder.nextGroup);
+  }
+  async function loadRecording(id: string) {
+    releaseAll();
+    if (id !== library.state.current?.id) recorder.load(await library.load(id));
+    setAfterGroup(0);
+    setLastNote(null);
+  }
+  async function readRecording(id: string) {
+    if (id === library.state.current?.id) return recorder.getNotes();
+    await library.flush();
+    return library.read(id);
   }
   const shownPosition = hit?.position ?? position;
   const notes = song.phrases[shownPosition.phrase];
@@ -384,7 +431,7 @@ export function App() {
         <section className="practice" aria-label="Piano practice">
           <div className="practice-controls">
             {freePlay ? (
-              <span className="phrase-count">{take.length} notes · 4/4</span>
+              <span className="phrase-count">{recorder.count} notes · 4/4</span>
             ) : (
               <>
                 <span className="phrase-count">
@@ -467,41 +514,65 @@ export function App() {
                 Idle hints
               </label>
             )}
-            {freePlay && take.length > 0 && (
-              <a
-                className="source-link"
-                download="just-explore.musicxml"
-                href={`data:application/vnd.recordare.musicxml+xml;charset=utf-8,${encodeURIComponent(liveScore.downloadXml)}`}
-              >
-                MusicXML ↓
-              </a>
+            {freePlay && (
+              <>
+                <button type="button" onClick={() => setRecordingsOpen(true)}>
+                  Recordings
+                </button>
+                <button
+                  type="button"
+                  disabled={!recorder.count}
+                  onClick={() => void library.flush()}
+                >
+                  Save
+                </button>
+                <span className="save-status" role="status">
+                  {libraryState.status === 'saving'
+                    ? 'Saving…'
+                    : libraryState.status === 'saved'
+                      ? 'Saved'
+                      : libraryState.status === 'error'
+                        ? 'Save failed'
+                        : '\u00a0'}
+                </span>
+                <button
+                  type="button"
+                  disabled={!recorder.count}
+                  onClick={() => downloadMusicXml(recorder.getNotes())}
+                >
+                  MusicXML ↓
+                </button>
+                <button type="button" onClick={clearExplorePage}>
+                  Clear page
+                </button>
+                {playback.playing && (
+                  <button type="button" onClick={() => player.stop()}>
+                    Stop playback
+                  </button>
+                )}
+              </>
             )}
             <button
               type="button"
               className="restart"
               onClick={freePlay ? clearTake : reset}
-              aria-label={freePlay ? 'Clear recording' : 'Start again'}
-              title={freePlay ? 'Clear recording' : 'Start again'}
+              aria-label={freePlay ? 'New recording' : 'Start again'}
+              title={freePlay ? 'New recording' : 'Start again'}
             >
               ↺
             </button>
           </div>
           {freePlay && (
             <>
-              <Score
-                notes={emptyNotes}
-                active={liveScore.active}
-                complete={false}
-                song={exploreSong}
-                hit={liveScore.hit}
-                hint={false}
+              <ExploreScore
+                notes={displayedTake}
+                multiline={view.multiline}
                 size={view.size}
-                wholeSong={view.multiline}
-                scoreXml={liveScore.xml}
+                afterGroup={playback.playing ? 0 : afterGroup}
               />
-              {take.length >= maxExploreNotes && (
-                <p className="recording-full" role="status">
-                  Page full · Download or clear to keep writing.
+              {libraryState.error && (
+                <p className="recording-save-error" role="alert">
+                  {libraryState.error}
                 </p>
               )}
             </>
@@ -616,6 +687,27 @@ export function App() {
           </div>
         </section>
       )}
+      {recordingsOpen && (
+        <RecordingMenu
+          state={libraryState}
+          onClose={() => setRecordingsOpen(false)}
+          read={readRecording}
+          onLoad={loadRecording}
+          onPlay={async (id) => {
+            await loadRecording(id);
+            player.play(recorder.getNotes());
+          }}
+          onDelete={async (id) => {
+            if (id === library.state.current?.id) clearTake();
+            await library.remove(id);
+          }}
+          onImport={async (title, notes) => {
+            releaseAll();
+            await library.import(title, recorder, notes);
+            setAfterGroup(0);
+          }}
+        />
+      )}
       <section className="keyboard-panel" aria-label="Live piano keyboard">
         <div className="keyboard-controls">
           <div className="keyboard-zoom" role="group" aria-label="Piano zoom">
@@ -711,8 +803,12 @@ export function App() {
             }
           >
             {keyLayout.keys.map(({ note, black, left, width }) => {
-              const active = pressed.has(note);
-              const keyHit = hunting ? null : freePlay ? liveScore.hit : hit;
+              const active = pressed.has(note) || playback.active.has(note);
+              const keyHit = hunting
+                ? null
+                : freePlay
+                  ? displayedTake.at(-1)
+                  : hit;
               const hint =
                 hintReady &&
                 !freePlay &&

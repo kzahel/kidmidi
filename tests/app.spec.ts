@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 test('real score renders, waits for correct fresh presses, and can restart', async ({
@@ -494,10 +495,10 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
   await send([0x80, 62, 0], 7250);
   await expect(page.getByText('6 notes · 4/4')).toBeVisible();
   await expect(page.locator('.score svg')).toHaveCount(1);
-  const href = await page
-    .getByRole('link', { name: 'MusicXML ↓' })
-    .getAttribute('href');
-  const xml = decodeURIComponent(href?.split(',')[1] ?? '');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'MusicXML ↓', exact: true }).click();
+  const download = await downloadPromise;
+  const xml = await readFile((await download.path())!, 'utf8');
   const content = await page.evaluate((xml) => {
     const doc = new DOMParser().parseFromString(xml, 'application/xml');
     return {
@@ -516,10 +517,10 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
   await page.getByLabel('Multiline', { exact: true }).check();
   await expect(page.locator('.score .hit-notehead')).toHaveCount(1);
   await page
-    .getByRole('button', { name: 'Clear recording', exact: true })
+    .getByRole('button', { name: 'New recording', exact: true })
     .click();
   await expect(page.getByText('0 notes · 4/4')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'MusicXML ↓' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'MusicXML ↓' })).toBeDisabled();
   await expect(page.locator('.score svg')).toHaveCount(1);
 });
 
@@ -832,5 +833,154 @@ test('piano zoom fits full MIDI ranges and remembers calibrated endpoints per ke
         )
       );
     }),
+  ).toBe(true);
+});
+
+test('Explore keeps a fixed grid, saves every page, restores sessions and plays without recording itself', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.addInitScript(() => {
+    const input = Object.assign(new EventTarget(), {
+      id: 'session-midi',
+      name: 'Session piano',
+      manufacturer: 'Test',
+      state: 'connected',
+    });
+    Object.defineProperty(navigator, 'requestMIDIAccess', {
+      value: async () => ({
+        inputs: new Map([[input.id, input]]),
+        onstatechange: null,
+      }),
+    });
+    Object.assign(window, {
+      sessionMidi: (data: number[], at: number) => {
+        const event = Object.assign(new Event('midimessage'), {
+          data: new Uint8Array(data),
+        });
+        Object.defineProperty(event, 'timeStamp', { value: at });
+        input.dispatchEvent(event);
+      },
+    });
+  });
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Session piano', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  const score = page.locator('.explore-score');
+  await expect(score.locator('svg')).toBeVisible();
+  await expect(score).toHaveAttribute('data-measures', '2');
+  const bounds = await score.locator('svg').boundingBox();
+  await score
+    .locator('svg')
+    .evaluate((svg) => svg.setAttribute('data-stable-grid', 'yes'));
+  const send = (data: number[], at: number) =>
+    page.evaluate(
+      ({ data, at }) =>
+        (
+          window as unknown as { sessionMidi(data: number[], at: number): void }
+        ).sessionMidi(data, at),
+      { data, at },
+    );
+  const attack = async (note: number, at: number) => {
+    await send([0x90, note, 100], at);
+    await send([0x80, note, 0], at + 200);
+  };
+  await attack(60, 0);
+  const first = await score
+    .locator('[data-slot="0"] .vf-notehead')
+    .boundingBox();
+  for (const [index, note] of [64, 67, 48, 50, 62, 65, 69].entries())
+    await attack(note, (index + 1) * 500);
+  expect(
+    await score.locator('[data-slot="0"] .vf-notehead').boundingBox(),
+  ).toEqual(first);
+  expect(await score.locator('svg').boundingBox()).toEqual(bounds);
+  await expect(score.locator('svg')).toHaveAttribute('data-stable-grid', 'yes');
+  await expect(score.locator('[data-slot]')).toHaveCount(8);
+  await attack(72, 4000);
+  await expect(score).toHaveAttribute('data-page-start', '8');
+  await expect(score.locator('[data-slot]')).toHaveCount(1);
+  await expect(page.getByText('9 notes · 4/4', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Clear page', exact: true }).click();
+  await expect(score.locator('[data-slot]')).toHaveCount(0);
+  await expect(page.getByText('9 notes · 4/4', { exact: true })).toBeVisible();
+  await attack(74, 4500);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  await expect(page.getByText('10 notes · 4/4', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Recordings', exact: true }).click();
+  const menu = page.getByRole('dialog', { name: 'Recordings', exact: true });
+  await expect(
+    menu.getByRole('combobox', { name: 'Saved recordings' }).locator('option'),
+  ).toHaveCount(1);
+  const exported = page.waitForEvent('download');
+  await menu
+    .getByRole('button', { name: 'Download recording', exact: true })
+    .click();
+  const downloaded = await exported;
+  const path = (await downloaded.path())!;
+  const file = JSON.parse(await readFile(path, 'utf8'));
+  expect(file.notes).toHaveLength(10);
+  expect(file.notes[0].onsetMs).toBe(0);
+  expect(file.notes.at(-1).offsetMs).toBe(4700);
+  await menu
+    .getByRole('button', { name: 'Close recordings', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'New recording', exact: true })
+    .click();
+  await expect(page.getByText('0 notes · 4/4', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Recordings', exact: true }).click();
+  await menu.getByRole('button', { name: 'Load', exact: true }).click();
+  await expect(page.getByText('10 notes · 4/4', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Recordings', exact: true }).click();
+  await menu.getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Stop playback', exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward(500);
+  await expect(
+    page.getByRole('button', { name: 'Play E4', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('10 notes · 4/4', { exact: true })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Stop playback', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Play E4', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Recordings', exact: true }).click();
+  await menu
+    .getByLabel('Open recording file', { exact: true })
+    .setInputFiles(path);
+  await expect(menu).toHaveCount(0);
+  await expect(page.getByText('10 notes · 4/4', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Recordings', exact: true }).click();
+  await expect(
+    menu.getByRole('combobox', { name: 'Saved recordings' }).locator('option'),
+  ).toHaveCount(2);
+  await menu.getByRole('button', { name: 'Delete', exact: true }).click();
+  await menu
+    .getByRole('button', { name: 'Delete recording', exact: true })
+    .click();
+  await expect(
+    menu.getByRole('combobox', { name: 'Saved recordings' }).locator('option'),
+  ).toHaveCount(1);
+  await menu
+    .getByRole('button', { name: 'Close recordings', exact: true })
+    .click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(score).toHaveAttribute('data-measures', '1');
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollHeight <= innerHeight &&
+        document.documentElement.scrollWidth <= innerWidth,
+    ),
   ).toBe(true);
 });
