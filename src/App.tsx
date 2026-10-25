@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { assetUrl } from './assets';
 import { PianoAudio } from './audio';
+import {
+  ExploreRecorder,
+  emptyNotes,
+  exploreNotation,
+  exploreSong,
+  maxExploreNotes,
+  type PlayedNote,
+} from './explore';
 import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
 import {
   advance,
@@ -34,9 +42,15 @@ export function App() {
   const song = songs.find((candidate) => candidate.id === songId) ?? songs[0];
   const [position, setPosition] = useState(startPosition);
   const [freePlay, setFreePlay] = useState(false);
+  const [take, setTake] = useState<PlayedNote[]>([]);
+  const [recorder] = useState(() => new ExploreRecorder(setTake));
   const [view, setView] = useState(loadViewSettings);
   const wholeNotes = useMemo(() => song.phrases.flat(), [song]);
   const wholeSong = view.multiline;
+  const liveScore = useMemo(
+    () => exploreNotation(take, view.multiline),
+    [take, view.multiline],
+  );
   const [hints, setHints] = useState(true);
   const [pressed, setPressed] = useState(new Set<number>());
   const [lastNote, setLastNote] = useState<number | null>(null);
@@ -68,21 +82,26 @@ export function App() {
     setPressed(new Set());
     audio.current.stopAll();
     feedback.cancel();
-  }, [feedback]);
+    recorder.releaseAll(performance.now());
+  }, [feedback, recorder]);
   const play = useCallback(
     (event: NoteEvent, source: string) => {
       const id = `${source}:${event.channel}:${event.note}`;
+      const atMs = event.atMs ?? performance.now();
       if (event.type === 'off') {
         held.current.delete(id);
         audio.current.stop(id);
         feedback.release(id);
+        recorder.noteOff(id, atMs);
       } else {
         if (held.current.has(id)) return;
         held.current.set(id, event.note);
         setLastNote(event.note);
         if (source !== 'midi') audio.current.play(id, event.note);
         const state = current.current;
-        if (!state.freePlay) {
+        if (state.freePlay) {
+          recorder.noteOn(id, event.note, atMs, event.velocity);
+        } else {
           const next = advance(state.song, state.position, event.note);
           if (next !== state.position) {
             feedback.start(
@@ -97,7 +116,7 @@ export function App() {
       }
       setPressed(new Set(held.current.values()));
     },
-    [feedback],
+    [feedback, recorder],
   );
   const midi = useMidi((event) => play(event, 'midi'), releaseAll);
 
@@ -163,6 +182,11 @@ export function App() {
   function reset() {
     releaseAll();
     setPosition(startPosition());
+    setLastNote(null);
+  }
+  function clearTake() {
+    releaseAll();
+    recorder.clear();
     setLastNote(null);
   }
   const shownPosition = hit?.position ?? position;
@@ -250,7 +274,9 @@ export function App() {
       )}
       <section className="practice" aria-label="Piano practice">
         <div className="practice-controls">
-          {!freePlay && (
+          {freePlay ? (
+            <span className="phrase-count">{take.length} notes · 4/4</span>
+          ) : (
             <>
               <span className="phrase-count">
                 Phrase {shownPosition.phrase + 1} of {song.phrases.length}
@@ -258,62 +284,93 @@ export function App() {
               <button type="button" onClick={() => audio.current.hear(notes)}>
                 <span aria-hidden="true">▷</span> Hear this phrase
               </button>
-              <select
-                aria-label="Score size"
-                value={view.size}
-                onChange={(event) =>
-                  setView((previous) => ({
-                    ...previous,
-                    size: event.target.value as ScoreSize,
-                  }))
-                }
-              >
-                <option value="compact">Compact</option>
-                <option value="kid">Kid</option>
-              </select>
-              <label className="hint-toggle">
-                <input
-                  type="checkbox"
-                  checked={view.multiline}
-                  onChange={(event) =>
-                    setView((previous) => ({
-                      ...previous,
-                      multiline: event.target.checked,
-                    }))
-                  }
-                />
-                Multiline
-              </label>
-              {song.source && (
-                <a
-                  className="source-link"
-                  href={assetUrl(song.source.image)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Book photo ↗
-                </a>
-              )}
-              <label className="hint-toggle">
-                <input
-                  type="checkbox"
-                  checked={hints}
-                  onChange={(event) => setHints(event.target.checked)}
-                />
-                Idle hints
-              </label>
             </>
+          )}
+          <select
+            aria-label="Score size"
+            value={view.size}
+            onChange={(event) =>
+              setView((previous) => ({
+                ...previous,
+                size: event.target.value as ScoreSize,
+              }))
+            }
+          >
+            <option value="compact">Compact</option>
+            <option value="kid">Kid</option>
+          </select>
+          <label className="hint-toggle">
+            <input
+              type="checkbox"
+              checked={view.multiline}
+              onChange={(event) =>
+                setView((previous) => ({
+                  ...previous,
+                  multiline: event.target.checked,
+                }))
+              }
+            />
+            Multiline
+          </label>
+          {!freePlay && song.source && (
+            <a
+              className="source-link"
+              href={assetUrl(song.source.image)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Book photo ↗
+            </a>
+          )}
+          {!freePlay && (
+            <label className="hint-toggle">
+              <input
+                type="checkbox"
+                checked={hints}
+                onChange={(event) => setHints(event.target.checked)}
+              />
+              Idle hints
+            </label>
+          )}
+          {freePlay && take.length > 0 && (
+            <a
+              className="source-link"
+              download="just-explore.musicxml"
+              href={`data:application/vnd.recordare.musicxml+xml;charset=utf-8,${encodeURIComponent(liveScore.downloadXml)}`}
+            >
+              MusicXML ↓
+            </a>
           )}
           <button
             type="button"
             className="restart"
-            onClick={reset}
-            aria-label="Start again"
-            title="Start again"
+            onClick={freePlay ? clearTake : reset}
+            aria-label={freePlay ? 'Clear recording' : 'Start again'}
+            title={freePlay ? 'Clear recording' : 'Start again'}
           >
             ↺
           </button>
         </div>
+        {freePlay && (
+          <>
+            <Score
+              notes={emptyNotes}
+              active={liveScore.active}
+              complete={false}
+              song={exploreSong}
+              hit={liveScore.hit}
+              hint={false}
+              size={view.size}
+              wholeSong={view.multiline}
+              scoreXml={liveScore.xml}
+            />
+            {take.length >= maxExploreNotes && (
+              <p className="recording-full" role="status">
+                Page full · Download or clear to keep writing.
+              </p>
+            )}
+          </>
+        )}
         {!freePlay && (
           <>
             <div className={`score-layout ${song.source ? 'illustrated' : ''}`}>
@@ -416,6 +473,7 @@ export function App() {
               const black = noteName(note).includes('♯');
               const left = whiteNotes.filter((white) => white < note).length;
               const active = pressed.has(note);
+              const keyHit = freePlay ? liveScore.hit : hit;
               const hint =
                 hintReady &&
                 !freePlay &&
@@ -426,7 +484,7 @@ export function App() {
                 <button
                   type="button"
                   key={note}
-                  className={`piano-key ${black ? 'black' : 'white'} ${active ? 'pressed' : ''} ${hint ? 'expected' : ''} ${hit?.midi === note ? 'hit' : ''}`}
+                  className={`piano-key ${black ? 'black' : 'white'} ${active ? 'pressed' : ''} ${hint ? 'expected' : ''} ${freePlay ? (active ? 'hit' : '') : hit?.midi === note ? 'hit' : ''}`}
                   style={
                     black
                       ? { left: `calc(${left} * 100% / 15 - 2%)` }
@@ -473,8 +531,12 @@ export function App() {
                     }
                   }}
                 >
-                  {hit?.midi === note && (
-                    <span className="hit-spark" key={hit.id} aria-hidden="true">
+                  {keyHit?.midi === note && (
+                    <span
+                      className="hit-spark"
+                      key={keyHit.id}
+                      aria-hidden="true"
+                    >
                       ✦
                     </span>
                   )}

@@ -572,3 +572,9 @@ button:hover:not(:disabled) {
     font-weight: 600;
   }
 }
+
+.recording-full {
+  margin: 6px 12px;
+  color: #906216;
+  font-size: 12px;
+}

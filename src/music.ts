@@ -111,6 +111,7 @@ export type NoteEvent = {
   note: number;
   velocity: number;
   channel: number;
+  atMs?: number;
 };
 
 // Web MIDI messages arrive complete. Native adapters can feed this same contract later.

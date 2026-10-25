@@ -98,7 +98,7 @@ export function useMidi(
     if (!selectedInput) return;
     const receive = (event: MIDIMessageEvent) => {
       const note = event.data && parseMidi(event.data);
-      if (note) callbacks.current.onNote(note);
+      if (note) callbacks.current.onNote({ ...note, atMs: event.timeStamp });
     };
     selectedInput.addEventListener('midimessage', receive);
     return () => {

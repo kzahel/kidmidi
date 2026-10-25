@@ -420,3 +420,101 @@ test('MIDI requests access on load, retries permission, remembers selection and 
     ),
   ).toBe(1);
 });
+
+test('Just explore writes MIDI chords and bass notes to a live score with download and clear', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const input = Object.assign(new EventTarget(), {
+      id: 'live',
+      name: 'Explore piano',
+      manufacturer: 'Casio',
+      state: 'connected',
+    });
+    Object.defineProperty(navigator, 'requestMIDIAccess', {
+      value: async () => ({
+        inputs: new Map([['live', input]]),
+        onstatechange: null,
+      }),
+    });
+    Object.assign(window, {
+      playMidi: (data: number[], atMs: number) => {
+        const event = Object.assign(new Event('midimessage'), {
+          data: new Uint8Array(data),
+        });
+        Object.defineProperty(event, 'timeStamp', { value: atMs });
+        input.dispatchEvent(event);
+      },
+    });
+  });
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Explore piano', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  await expect(
+    page
+      .getByRole('img', {
+        name: 'Live sheet music of what you played.',
+        exact: true,
+      })
+      .locator('svg'),
+  ).toBeVisible();
+  const send = (data: number[], atMs: number) =>
+    page.evaluate(
+      ({ data, atMs }) =>
+        (
+          window as unknown as { playMidi(data: number[], atMs: number): void }
+        ).playMidi(data, atMs),
+      { data, atMs },
+    );
+  for (const [pitch, at] of [
+    [60, 0],
+    [64, 20],
+    [67, 40],
+  ])
+    await send([0x90, pitch, 100], at);
+  await expect(page.getByText('3 notes · 4/4')).toBeVisible();
+  await expect(page.locator('.score .hit-notehead')).toHaveCount(3);
+  for (const [pitch, at] of [
+    [60, 400],
+    [64, 420],
+    [67, 440],
+  ])
+    await send([0x80, pitch, 0], at);
+  await send([0x90, 60, 100], 500);
+  await send([0x80, 60, 0], 1500);
+  await send([0x90, 48, 100], 1700);
+  await send([0x80, 48, 0], 1950);
+  await send([0x90, 62, 100], 7000);
+  await send([0x80, 62, 0], 7250);
+  await expect(page.getByText('6 notes · 4/4')).toBeVisible();
+  await expect(page.locator('.score svg')).toHaveCount(1);
+  const href = await page
+    .getByRole('link', { name: 'MusicXML ↓' })
+    .getAttribute('href');
+  const xml = decodeURIComponent(href?.split(',')[1] ?? '');
+  const content = await page.evaluate((xml) => {
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    return {
+      errors: doc.querySelectorAll('parsererror').length,
+      attacks: [...doc.querySelectorAll('note')].filter(
+        (note) => !note.querySelector('rest, tie[type="stop"]'),
+      ).length,
+      staves: doc.querySelector('staves')?.textContent,
+      beats: doc.querySelector('time > beats')?.textContent,
+    };
+  }, xml);
+  expect(content).toEqual({ errors: 0, attacks: 6, staves: '2', beats: '4' });
+  await page
+    .getByRole('combobox', { name: 'Score size' })
+    .selectOption('compact');
+  await page.getByLabel('Multiline', { exact: true }).check();
+  await expect(page.locator('.score .hit-notehead')).toHaveCount(1);
+  await page
+    .getByRole('button', { name: 'Clear recording', exact: true })
+    .click();
+  await expect(page.getByText('0 notes · 4/4')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'MusicXML ↓' })).toHaveCount(0);
+  await expect(page.locator('.score svg')).toHaveCount(1);
+});

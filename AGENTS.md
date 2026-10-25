@@ -11,8 +11,11 @@ sizes; use score scrolling and follow the played note instead of squeezing glyph
 Compact/Kid sizing and multiline are independent saved display preferences.
 
 Keep MIDI transport separate from practice and song data so native Android/iOS
-adapters can follow later. Score targets use MusicXML; live MIDI is performance
-input. No transcription pipeline is needed for the current scope.
+adapters can follow later. Practice targets use MusicXML; live MIDI is performance
+input. Just explore also turns that input into loose, local notation. Preserve raw
+attack/release timestamps separately from approximate displayed durations; do not
+introduce audio transcription or a server for this feature. See
+`docs/explore-transcription.md`.
 
 Run `npm run typecheck`, `npm test`, `npm run check`, and `npm run build`.
 For browser-dependent changes run `npm run test:browser` using bundled Playwright

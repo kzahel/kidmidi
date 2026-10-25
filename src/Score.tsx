@@ -25,6 +25,7 @@ function paintCursor(
   const heads =
     state.hit || state.hint
       ? cursor.GNotesUnderCursor().flatMap((note) => {
+          if (note.sourceNote.isRest()) return [];
           const graphic = note as typeof note & {
             getNoteheadSVGs?: () => HTMLElement[];
           };
@@ -78,6 +79,7 @@ export function Score({
   hit,
   hint,
   size,
+  scoreXml,
 }: {
   notes: Note[];
   active: number;
@@ -88,6 +90,7 @@ export function Score({
   hit: NoteHit | null;
   hint: boolean;
   size: ScoreSize;
+  scoreXml?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const renderer = useRef<OpenSheetMusicDisplay | null>(null);
@@ -112,7 +115,7 @@ export function Score({
         instance = new OpenSheetMusicDisplay(mount, {
           backend: 'svg',
           autoResize: false,
-          autoBeam: false,
+          autoBeam: Boolean(scoreXml),
           drawCredits: false,
           drawTitle: false,
           drawSubtitle: false,
@@ -124,7 +127,7 @@ export function Score({
             { type: 0, color: '#71bfa4', alpha: 0.35, follow: false },
           ],
         });
-        instance.EngravingRules.PageLeftMargin = 1;
+        instance.EngravingRules.PageLeftMargin = scoreXml ? 3 : 1;
         instance.EngravingRules.PageRightMargin = 1;
         instance.EngravingRules.MinimumDistanceBetweenSystems = 3;
         instance.EngravingRules.MinSkyBottomDistBetweenSystems = 1;
@@ -133,21 +136,23 @@ export function Score({
         instance.EngravingRules.PageBottomMargin = 0;
         instance.EngravingRules.NewSystemAtXMLNewSystemAttribute = true;
         await instance.load(
-          musicXml(notes, {
-            ...song,
-            measuresPerSystem: wholeSong
-              ? (song.measuresPerSystem ?? 2)
-              : undefined,
-            startMeasure: wholeSong
-              ? 1
-              : 1 +
-                song.phrases
-                  .slice(0, phraseIndex)
-                  .flat()
-                  .reduce((sum, note) => sum + note.beats, 0) /
-                  (song.timeSignature?.beats ?? 4),
-            finalBarline: wholeSong || phraseIndex === song.phrases.length - 1,
-          }),
+          scoreXml ??
+            musicXml(notes, {
+              ...song,
+              measuresPerSystem: wholeSong
+                ? (song.measuresPerSystem ?? 2)
+                : undefined,
+              startMeasure: wholeSong
+                ? 1
+                : 1 +
+                  song.phrases
+                    .slice(0, phraseIndex)
+                    .flat()
+                    .reduce((sum, note) => sum + note.beats, 0) /
+                    (song.timeSignature?.beats ?? 4),
+              finalBarline:
+                wholeSong || phraseIndex === song.phrases.length - 1,
+            }),
         );
         if (disposed) return;
         instance.Zoom = scoreZoom[size];
@@ -178,7 +183,7 @@ export function Score({
       mount.remove();
       renderer.current = null;
     };
-  }, [notes, song, wholeSong, phraseIndex, size]);
+  }, [notes, song, wholeSong, phraseIndex, size, scoreXml]);
 
   useEffect(() => {
     if (renderer.current && host.current)
@@ -189,7 +194,11 @@ export function Score({
     <div
       className={`score ${hit ? 'hit-active' : hint ? 'hint-active' : ''} ${wholeSong ? 'multiline' : ''}`}
       role="img"
-      aria-label={`Sheet music: ${notes.map((note) => note.midi).join(', ')}. ${hit ? 'The note you played is highlighted.' : hint ? 'A faint cursor hints at the next note.' : 'Waiting for you to play.'}`}
+      aria-label={
+        scoreXml
+          ? 'Live sheet music of what you played.'
+          : `Sheet music: ${notes.map((note) => note.midi).join(', ')}. ${hit ? 'The note you played is highlighted.' : hint ? 'A faint cursor hints at the next note.' : 'Waiting for you to play.'}`
+      }
     >
       {error && <p role="alert">{error}</p>}
       <div ref={host} />

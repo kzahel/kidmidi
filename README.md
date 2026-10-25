@@ -80,6 +80,7 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/music.ts`: starter songs, MusicXML generation, MIDI parsing, and pitch-only
   practice progression. Durations are displayed, but rhythm is not scored.
 - `src/feedback.ts`: note-length/held-key feedback and delayed idle hints, independent of recognition.
+- `src/explore.ts`: raw MIDI capture, loose note/chord grouping and live MusicXML.
 - `src/view.ts`: Compact/Kid sizing and saved multiline settings.
 - `src/rain.ts`: manually checked songbook transcription and source illustration.
 - `src/useMidi.ts`: automatic permission request/reconnect and connection lifecycle.
@@ -94,8 +95,18 @@ for all four printed line groups, **Book photo** for the source, or **MusicXML**
 export. Chords are visual references; practice still matches melody notes only.
 See [transcription evidence](docs/transcriptions/raege-raegetroepfli.md).
 
-The score is the target. This scaffold does not transcribe performances or
-provide automatic MIDI-file/photo import. Session progress is in memory; refreshing starts over.
+In song practice, the score is the target. In **Just explore**, playing writes a
+running score in loose 4/4: notes appear immediately, nearby attacks form chords,
+and long pauses are skipped. Low notes add a bass staff. The newest note/chord
+stays highlighted. Compact/Kid and Multiline also work here; the view shows the
+latest two bars (eight with Multiline), while **MusicXML** downloads the full take.
+Use **Clear recording** (↺) to start again. Captures stay in memory when switching
+songs, and reset on reload. A take holds up to 512 attacks and then asks you to
+download or clear it. See [live notation behavior](docs/explore-transcription.md).
+
+Rhythm is approximate, with no inferred tempo, meter or hand independence.
+There is no audio transcription or automatic MIDI-file/photo import.
+Session progress and recordings are in memory; refreshing starts over.
 There are no analytics, uploads, or external page assets. The first local install
 requires the network.
 
