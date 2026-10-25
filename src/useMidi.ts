@@ -16,9 +16,10 @@ export function useMidi(
 ) {
   const [inputs, setInputs] = useState<MIDIInput[]>([]);
   const [outputs, setOutputs] = useState<MIDIOutput[]>([]);
-  const [outputPreference, setOutputPreference] = useState(
-    loadMidiOutputPreference,
-  );
+  const [outputPreference, setOutputPreference] = useState(() => {
+    const saved = loadMidiOutputPreference();
+    return saved === 'speakers' ? ('auto' as const) : saved;
+  });
   const [selected, setSelectedId] = useState('');
   const [status, setStatus] = useState('');
   const [requesting, setRequesting] = useState(false);
@@ -145,9 +146,7 @@ export function useMidi(
 
   function setOutput(value: string) {
     const preference =
-      value === 'auto' || value === 'speakers'
-        ? value
-        : outputs.find((output) => output.id === value);
+      value === 'auto' ? value : outputs.find((output) => output.id === value);
     if (!preference) return;
     const saved =
       typeof preference === 'string'

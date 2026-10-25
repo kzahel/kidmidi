@@ -67,7 +67,7 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
     });
   });
   await openPractice(page);
-  await expect(page.getByText('Test Casio')).toBeVisible();
+  await expectInput(page, 'Test Casio');
   await expect(page.locator('[class*="__score__"] svg')).toBeVisible();
   const cursor = page.locator('[class*="__score__"] [id^="cursorImg"]');
   await openSettings(page);
@@ -156,9 +156,11 @@ test('phone layout, touch input, unsupported MIDI and completing a song', async 
     Object.defineProperty(navigator, 'requestMIDIAccess', { value: undefined }),
   );
   await openPractice(page);
+  await openSettings(page);
   await expect(
-    page.getByRole('button', { name: 'Connect keyboard' }),
+    page.getByRole('button', { name: 'Connect keyboard', exact: true }),
   ).toBeDisabled();
+  await closeSettings(page);
   await expect(page.locator('[class*="__score__"] svg').first()).toBeVisible();
   expect(
     await page.evaluate(
@@ -405,10 +407,10 @@ test('MIDI requests access on load, retries permission, remembers selection and 
       (window as unknown as { midiRequests(): number }).midiRequests(),
     ),
   ).toBe(1);
+  await openSettings(page);
   await page
     .getByRole('button', { name: 'Connect keyboard', exact: true })
     .click();
-  await openSettings(page);
   await expect(page.getByRole('combobox', { name: 'MIDI input' })).toHaveValue(
     'other',
   );
@@ -418,9 +420,11 @@ test('MIDI requests access on load, retries permission, remembers selection and 
     .getByRole('combobox', { name: 'MIDI input' })
     .selectOption('casio');
   await closeSettings(page);
+  await openSettings(page);
   await expect(
-    page.getByRole('button', { name: 'Saved Casio', exact: true }),
-  ).toBeVisible();
+    page.getByRole('combobox', { name: 'MIDI input', exact: true }),
+  ).toHaveValue('casio');
+  await closeSettings(page);
   await page.reload();
   await enterSong(page);
   await openSettings(page);
@@ -448,9 +452,11 @@ test('MIDI requests access on load, retries permission, remembers selection and 
   await page.evaluate(() =>
     (window as unknown as { unplugCasio(): void }).unplugCasio(),
   );
+  await openSettings(page);
   await expect(
-    page.getByRole('button', { name: 'Other MIDI', exact: true }),
-  ).toBeVisible();
+    page.getByRole('combobox', { name: 'MIDI input', exact: true }),
+  ).toHaveValue('other');
+  await closeSettings(page);
   await expect(
     page.getByRole('button', { name: 'Play C4', exact: true }),
   ).toHaveAttribute('aria-pressed', 'false');
@@ -496,9 +502,7 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
     });
   });
   await openPractice(page);
-  await expect(
-    page.getByRole('button', { name: 'Explore piano', exact: true }),
-  ).toBeVisible();
+  await expectInput(page, 'Explore piano');
   await openActivity(page, 'explore');
   await expect(
     page
@@ -681,9 +685,7 @@ test('Note hunt compares MIDI notes, rewards fresh guesses and lingers through h
     });
   });
   await openPractice(page);
-  await expect(
-    page.getByRole('button', { name: 'Hunt piano', exact: true }),
-  ).toBeVisible();
+  await expectInput(page, 'Hunt piano');
   await openActivity(page, 'hunt');
   await page
     .getByRole('combobox', { name: 'Note range', exact: true })
@@ -814,9 +816,7 @@ test('piano zoom fits full MIDI ranges and remembers calibrated endpoints per ke
     });
   });
   await openPractice(page);
-  await expect(
-    page.getByRole('button', { name: 'casio keys', exact: true }),
-  ).toBeVisible();
+  await expectInput(page, 'casio keys');
   const keys = page.locator('[class*="__piano-key__"]');
   await expect(keys).toHaveCount(25);
   const send = (data: number[]) =>
@@ -956,9 +956,7 @@ test('Explore keeps a fixed grid, saves every page, restores sessions and plays 
     });
   });
   await openPractice(page);
-  await expect(
-    page.getByRole('button', { name: 'Session piano', exact: true }),
-  ).toBeVisible();
+  await expectInput(page, 'Session piano');
   await openActivity(page, 'explore');
   const score = page.locator('[class*="__explore-score__"]');
   await expect(score.locator('svg')).toBeVisible();
@@ -1143,9 +1141,11 @@ test('MIDI auto selection upgrades a legacy Through default on hotplug and respe
       (window as unknown as { plugRealKeyboard(): void }).plugRealKeyboard(),
     );
   await openPractice(page);
+  await openSettings(page);
   await expect(
-    page.getByRole('button', { name: 'Midi Through Port-0', exact: true }),
-  ).toBeVisible();
+    page.getByRole('combobox', { name: 'MIDI input', exact: true }),
+  ).toHaveValue('through');
+  await closeSettings(page);
   await plug();
   await openSettings(page);
   await expect(
@@ -1272,11 +1272,11 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
       (window as unknown as { previewSpeakers(): number }).previewSpeakers(),
     );
   await openPractice(page);
-  await openOptions(page);
+  await openSettings(page);
   await expect(
-    page.getByRole('combobox', { name: 'Phrase sound', exact: true }),
-  ).toHaveValue('auto');
-  await closeOptions(page);
+    page.getByRole('button', { name: 'Auto', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await closeSettings(page);
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
@@ -1308,29 +1308,25 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
       .every((event) => event.data?.[0] === 0x80),
   ).toBe(true);
   const sent = (await messages()).length;
-  await openOptions(page);
-  await page
-    .getByRole('combobox', { name: 'Phrase sound', exact: true })
-    .selectOption('speakers');
-  await closeOptions(page);
+  await openSettings(page);
+  await page.getByRole('button', { name: 'Screen', exact: true }).click();
+  await closeSettings(page);
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
-  expect(await speakers()).toBe(7);
+  expect(await speakers()).toBe(14);
   expect((await messages()).length).toBe(sent);
   await page.getByRole('button', { name: 'Stop preview', exact: true }).click();
   await page.reload();
   await enterSong(page);
-  await openOptions(page);
+  await openSettings(page);
   await expect(
-    page.getByRole('combobox', { name: 'Phrase sound', exact: true }),
-  ).toHaveValue('speakers');
-  await closeOptions(page);
-  await openOptions(page);
-  await page
-    .getByRole('combobox', { name: 'Phrase sound', exact: true })
-    .selectOption('auto');
-  await closeOptions(page);
+    page.getByRole('button', { name: 'Screen', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await closeSettings(page);
+  await openSettings(page);
+  await page.getByRole('button', { name: 'Auto', exact: true }).click();
+  await closeSettings(page);
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
@@ -1349,7 +1345,7 @@ test('phrase previews use matching MIDI output, stop safely and retain a speaker
   await page
     .getByRole('button', { name: 'Hear this phrase', exact: true })
     .click();
-  expect(await speakers()).toBe(7);
+  expect(await speakers()).toBe(14);
   expect(
     (await messages()).some(
       (event) => event.port === 'other' || event.port === 'through',
@@ -1399,10 +1395,23 @@ async function closeOptions(page: Page) {
     await details.locator('summary').click();
 }
 async function openSettings(page: Page) {
-  await page.getByTitle('Keyboard settings', { exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Sound and settings', exact: true })
+    .click();
+  await page.getByText('⌨ Keyboard connection', { exact: true }).click();
 }
 async function closeSettings(page: Page) {
   await page
-    .getByRole('button', { name: 'Close keyboard settings', exact: true })
+    .getByRole('button', { name: 'Close sound and settings', exact: true })
     .click();
+}
+
+async function expectInput(page: Page, name: string) {
+  await openSettings(page);
+  await expect(
+    page
+      .getByRole('combobox', { name: 'MIDI input', exact: true })
+      .locator('option:checked'),
+  ).toHaveText(name);
+  await closeSettings(page);
 }

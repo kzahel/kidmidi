@@ -13,8 +13,7 @@ const clock: FeedbackClock = {
   cancel: (timer) => window.clearTimeout(timer),
 };
 
-// Only phrase demonstrations go through this output route. Neither output
-// playback nor a keyboard's MIDI echo should be counted as a child's performance.
+// Phrase timing stays separate from performance input and the global route.
 export class PhrasePreview {
   private serial = 0;
   private output: PreviewOutput | null = null;
@@ -30,7 +29,12 @@ export class PhrasePreview {
     private time: FeedbackClock = clock,
   ) {}
 
-  async hear(notes: Note[], output?: PreviewOutput) {
+  async hear(
+    notes: Note[],
+    output?: PreviewOutput,
+    alsoSpeakers = false,
+    quiet = false,
+  ) {
     this.stop();
     if (!notes.length) return;
     const serial = this.serial;
@@ -59,7 +63,7 @@ export class PhrasePreview {
         error = 'Keyboard playback failed · using speakers';
       }
     }
-    if (!this.output) {
+    if ((!this.output || alsoSpeakers) && !quiet) {
       try {
         this.speaker.hear(notes);
       } catch {

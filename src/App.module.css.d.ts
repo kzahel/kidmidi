@@ -3,6 +3,7 @@ declare const styles: {
   readonly 'activity-title': string;
   readonly 'app': string;
   readonly 'device-button': string;
+  readonly 'device-icon': string;
   readonly 'device-label': string;
   readonly 'header': string;
   readonly 'header-actions': string;
@@ -10,6 +11,7 @@ declare const styles: {
   readonly 'learner-button': string;
   readonly 'learner-label': string;
   readonly 'midi-status': string;
+  readonly 'route-label': string;
   readonly 'save-warning': string;
 };
 export default styles;

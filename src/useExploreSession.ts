@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { ExploreRecorder, type PlayedNote } from './explore';
 import { emptyPlayback, RecordingPlayer } from './playback';
 import { emptyLibrary, RecordingLibrary } from './recordings';
-export function useExploreSession(freePlay: boolean) {
+import type { NoteSound } from './sound-output';
+export function useExploreSession(freePlay: boolean, sound: NoteSound) {
   const [take, setTake] = useState<PlayedNote[]>([]);
   const [libraryState, setLibraryState] = useState(emptyLibrary);
   const [library] = useState(() => new RecordingLibrary(setLibraryState));
@@ -16,7 +17,7 @@ export function useExploreSession(freePlay: boolean) {
   const [recordingsOpen, setRecordingsOpen] = useState(false);
   const [afterGroup, setAfterGroup] = useState(0);
   const [playback, setPlayback] = useState(emptyPlayback);
-  const [player] = useState(() => new RecordingPlayer(setPlayback));
+  const [player] = useState(() => new RecordingPlayer(setPlayback, sound));
   const displayedTake = playback.playing ? playback.notes : take;
   useEffect(() => {
     void library.init(recorder);

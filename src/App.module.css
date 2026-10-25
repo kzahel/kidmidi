@@ -47,6 +47,12 @@
 .device-label {
   font-size: 12px;
 }
+.device-icon {
+  font-size: 14px;
+}
+.route-label {
+  display: none;
+}
 .learner-button {
   display: flex;
   align-items: center;
@@ -81,9 +87,14 @@
     font-size: 15px;
   }
   .activity-title,
+  .device-icon,
   .device-label,
   .learner-label {
     display: none;
+  }
+  .route-label {
+    display: inline;
+    font-size: 12px;
   }
   .learner-button,
   .device-button {

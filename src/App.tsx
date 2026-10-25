@@ -6,6 +6,7 @@ import { LearnerMenu } from './LearnerMenu';
 import { progress } from './learners';
 import { Pet } from './Pet';
 import { PianoWorkspace } from './PianoWorkspace';
+import { soundRoutes } from './sound-settings';
 import { useHuntSession } from './useHuntSession';
 import { useLearners } from './useLearners';
 import { type Activity, usePianoSession } from './usePianoSession';
@@ -22,9 +23,22 @@ export function App() {
     learners.record,
     mode === 'hunt' && !blocked,
   );
-  const session = usePianoSession(mode, hunt, blocked);
+  const session = usePianoSession(mode, hunt, blocked, settingsOpen);
+  const soundRoute = soundRoutes.find(
+    (route) => route.id === session.soundSettings.route,
+  )!;
+  const soundLabel = session.soundError
+    ? 'Screen fallback'
+    : session.soundSettings.route === 'auto'
+      ? session.connected
+        ? 'Auto · Keys + Screen'
+        : 'Auto · Screen'
+      : session.soundSettings.route === 'keyboard' && !session.midi.output
+        ? 'Keyboard · Screen fallback'
+        : soundRoute.label;
   const stats = learners.snapshot ? progress(learners.snapshot) : null;
   function navigate(next: Activity) {
+    session.sound.speaker.unlock();
     session.reset();
     session.setRecordingsOpen(false);
     session.keyboard.cancelLearning();
@@ -55,24 +69,24 @@ export function App() {
           <button
             type="button"
             className={styles['device-button']}
-            aria-label={session.connected?.name || 'Connect keyboard'}
-            title="Keyboard settings"
-            disabled={!session.midi.supported || session.midi.requesting}
+            aria-label="Sound and settings"
+            aria-description={`${soundLabel}. ${session.soundSettings.sound.name}.`}
+            title="Sound and settings"
             onClick={() => {
-              if (!session.connected) {
-                void session.midi.connect();
-                return;
-              }
+              session.sound.speaker.unlock();
               session.releaseAll();
               session.keyboard.cancelLearning();
               session.setRangeOpen(false);
               setSettingsOpen(true);
             }}
           >
-            <span aria-hidden="true">{session.connected ? '●' : '⌨'}</span>
-            <span className={styles['device-label']}>
-              {session.connected?.name || 'Keyboard'}
+            <span className={styles['device-icon']} aria-hidden="true">
+              {soundRoute.icon}
             </span>
+            <span className={styles['device-label']}>{soundLabel}</span>
+            <span className={styles['route-label']}>{soundRoute.label}</span>
+            <span aria-hidden="true">{session.soundSettings.sound.emoji}</span>
+            <span aria-hidden="true">⚙</span>
           </button>
           <button
             type="button"

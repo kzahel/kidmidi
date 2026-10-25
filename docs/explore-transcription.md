@@ -80,12 +80,17 @@ No recording data is uploaded.
   unsaved sessions retained for download. Storage is local to this browser/origin;
   it is not a cloud backup or synchronized account.
 
-Playback uses captured note timing, overlaps and velocity with a simple local
-synthesized voice; it does not send notes to the physical keyboard. The live staff
+Playback uses captured note timing, overlaps and velocity through the
+[global sound destination](sound-playground.md): Screen uses the current synthesized
+voice, Keyboard uses the selected MIDI output, Both uses both, and Quiet stays
+silent. Auto chooses a matching MIDI output or falls back to Screen. The live staff
 and piano follow playback without generating captured events. Stop, live input,
 leaving Explore, blur/visibility changes and loading/new sessions cancel playback
 and release its voices. Playback scheduling only visits the currently due notes;
-it does not create oscillators for an entire long recording in advance.
+it does not create oscillators for an entire long recording in advance. Outgoing
+MIDI note echoes are filtered before capture; sound-setting auditions never enter
+the take. Recordings retain notes and timing, and are replayed with the current
+sound rather than embedding a sound preset in the recording file.
 
 ## Validation
 

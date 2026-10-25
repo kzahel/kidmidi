@@ -12,6 +12,10 @@
   background: #263a3299;
 }
 .heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fffefa;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -157,3 +157,19 @@ test('output matching pairs the selected input by identity, avoids unrelated vir
   );
   assert.equal(chooseMidiOutput([alternate], input, 'auto'), alternate);
 });
+
+test('global Both demonstrates through MIDI and speakers once; Quiet has no sound', async () => {
+  const both = fixture();
+  await both.player.hear([...notes], both.output, true);
+  assert.equal(both.messages.length, 6);
+  assert.equal(both.speakers(), 1);
+  both.player.stop();
+  assert.equal(both.clears(), 1);
+  const quiet = fixture();
+  await quiet.player.hear([...notes], undefined, false, true);
+  assert.equal(quiet.messages.length, 0);
+  assert.equal(quiet.speakers(), 0);
+  assert.equal(quiet.state().playing, true);
+  quiet.finish();
+  assert.equal(quiet.state().playing, false);
+});

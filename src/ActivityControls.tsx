@@ -10,8 +10,6 @@ export function ActivityControls({ session }: { session: PianoSession }) {
     song,
     previewState,
     preview,
-    pageNotes,
-    midi,
     view,
     page,
     setRequestedPage,
@@ -67,7 +65,7 @@ export function ActivityControls({ session }: { session: PianoSession }) {
             type="button"
             onClick={() => {
               if (previewState.playing) preview.stop();
-              else void preview.hear(pageNotes, midi.output);
+              else session.hearPhrase();
             }}
           >
             <span aria-hidden="true">{previewState.playing ? '◼' : '▷'}</span>{' '}

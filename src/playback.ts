@@ -1,5 +1,5 @@
-import { PianoAudio } from './audio';
 import type { PlayedNote } from './explore';
+import { type NoteSound, SoundOutput } from './sound-output';
 export type PlaybackState = {
   playing: boolean;
   notes: PlayedNote[];
@@ -11,14 +11,16 @@ export const emptyPlayback: PlaybackState = {
   active: new Set(),
 };
 export class RecordingPlayer {
-  private audio = new PianoAudio();
   private timer?: ReturnType<typeof setTimeout>;
   private started = 0;
   private notes: PlayedNote[] = [];
   private index = 0;
   private active = new Map<number, PlayedNote>();
   playing = false;
-  constructor(private emit: (state: PlaybackState) => void) {}
+  constructor(
+    private emit: (state: PlaybackState) => void,
+    private audio: NoteSound = new SoundOutput(),
+  ) {}
   play(notes: PlayedNote[]) {
     this.stop();
     if (!notes.length) return;

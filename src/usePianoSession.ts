@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PianoAudio } from './audio';
 import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
 import { displayKeyRange, keyboardLayout, screenKeyboard } from './keyboard';
 import { advance, type NoteEvent, songs, startPosition } from './music';
 import { PhrasePreview, type PreviewState } from './phrase-preview';
+import { SoundOutput } from './sound-output';
+import { loadSoundSettings, saveSoundSettings } from './sound-settings';
 import { useExploreSession } from './useExploreSession';
 import type { HuntController } from './useHuntSession';
 import { useKeyboard } from './useKeyboard';
@@ -27,6 +28,7 @@ export function usePianoSession(
   mode: Activity,
   huntSession: HuntController,
   blocked = false,
+  audition = false,
 ) {
   const huntController = useRef(huntSession);
   huntController.current = huntSession;
@@ -36,7 +38,10 @@ export function usePianoSession(
   const freePlay = mode === 'explore';
   const hunting = mode === 'hunt';
   const hunt = huntSession.state;
-  const explore = useExploreSession(freePlay);
+  const [soundSettings, setSoundSettings] = useState(loadSoundSettings);
+  const [soundError, setSoundError] = useState('');
+  const [sound] = useState(() => new SoundOutput(undefined, setSoundError));
+  const explore = useExploreSession(freePlay, sound);
   const {
     libraryState,
     library,
@@ -88,9 +93,10 @@ export function usePianoSession(
     playing: false,
     error: '',
   });
-  const [preview] = useState(() => new PhrasePreview(setPreviewState));
+  const [preview] = useState(
+    () => new PhrasePreview(setPreviewState, sound.speaker),
+  );
   const held = useRef(new Map<string, number>());
-  const audio = useRef(new PianoAudio());
   const active = mode === 'practice';
   const current = useRef({
     song,
@@ -99,42 +105,62 @@ export function usePianoSession(
     hunting,
     active,
     blocked,
+    audition,
   });
-  current.current = { song, position, freePlay, hunting, active, blocked };
+  current.current = {
+    song,
+    position,
+    freePlay,
+    hunting,
+    active,
+    blocked,
+    audition,
+  };
 
   const releaseAll = useCallback(() => {
     player.stop();
     preview.stop();
     held.current.clear();
     setPressed(new Set());
-    audio.current.stopAll();
+    sound.stopAll();
     feedback.cancel();
     recorder.releaseAll(performance.now());
-  }, [feedback, recorder, player, preview]);
+  }, [feedback, recorder, player, preview, sound]);
   const play = useCallback(
     (event: NoteEvent, source: string) => {
       const id = `${source}:${event.channel}:${event.note}`;
       const atMs = event.atMs ?? performance.now();
       if (event.type === 'off') {
         held.current.delete(id);
-        audio.current.stop(id);
+        sound.stop(id);
         feedback.release(id);
         recorder.noteOff(id, atMs);
       } else {
         if (
-          current.current.blocked ||
+          (current.current.blocked && !current.current.audition) ||
           (!current.current.active &&
             !current.current.freePlay &&
-            !current.current.hunting)
+            !current.current.hunting &&
+            !current.current.audition)
         )
           return;
         if (held.current.has(id)) return;
+        const state = current.current;
+        if (player.playing) player.stop();
+        if (preview.playing) preview.stop();
         held.current.set(id, event.note);
         setLastNote(event.note);
-        if (source !== 'midi') audio.current.play(id, event.note);
-        const state = current.current;
-        if (state.freePlay && player.playing) player.stop();
-        if (state.hunting) {
+        sound.play(
+          id,
+          event.note,
+          undefined,
+          undefined,
+          event.velocity,
+          source,
+        );
+        if (state.audition) {
+          // Settings are a sound playground, never a performance or an attempt.
+        } else if (state.hunting) {
           huntController.current.guess(event.note, source);
         } else if (state.freePlay) {
           recorder.noteOn(id, event.note, atMs, event.velocity);
@@ -154,17 +180,21 @@ export function usePianoSession(
       }
       setPressed(new Set(held.current.values()));
     },
-    [feedback, recorder, player],
+    [feedback, recorder, player, preview, sound],
   );
   const midi = useMidi((event) => {
     if (preview.midiPlaying && event.type === 'on') return;
+    if (sound.isEcho(event)) return;
     if (event.type === 'on' && keyboard.observe(event.note)) return;
     play(event, 'midi');
   }, releaseAll);
   useEffect(() => {
-    preview.stop();
-    return () => preview.stop();
-  }, [midi.output, preview]);
+    releaseAll();
+  }, [midi.output, releaseAll]);
+  useEffect(() => {
+    sound.configure(soundSettings, midi.output);
+    saveSoundSettings(soundSettings);
+  }, [sound, soundSettings, midi.output]);
   const connected = midi.inputs.find((input) => input.id === midi.selected);
   const keyboard = useKeyboard(connected ?? screenKeyboard);
   const displayedRange = displayKeyRange(
@@ -257,11 +287,22 @@ export function usePianoSession(
       window.removeEventListener('blur', releaseAll);
       document.removeEventListener('visibilitychange', hidden);
       feedback.dispose();
-      audio.current.close();
+      sound.close();
       player.dispose();
       preview.dispose();
     };
-  }, [play, releaseAll, feedback, player, preview]);
+  }, [play, releaseAll, feedback, player, preview, sound]);
+
+  function hearPhrase() {
+    releaseAll();
+    const destination = sound.playbackDestinations;
+    void preview.hear(
+      pageNotes,
+      destination.keyboard ? sound.midiOutput : undefined,
+      destination.screen,
+      soundSettings.route === 'quiet',
+    );
+  }
 
   function reset() {
     releaseAll();
@@ -354,6 +395,11 @@ export function usePianoSession(
     hintReady,
     previewState,
     preview,
+    hearPhrase,
+    sound,
+    soundSettings,
+    setSoundSettings,
+    soundError,
     releaseAll,
     play,
     midi,

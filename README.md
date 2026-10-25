@@ -8,9 +8,10 @@ with Twinkle, Twinkle, Hot Cross Buns, Räge-Rägetröpfli, free play, and Note 
 
 The home menu has large activity cards for **Play a song**, **Free play**, and
 **Note hunt**. Songs have their own selection screen. **Home** returns to the menu;
-the learner button opens profiles, hearts and rewards, and the keyboard button
-opens device settings. Activity **Options** contains notation size, Multiline,
-idle hints and sound choices. Navigation and utility controls have at least 48px
+the learner button opens profiles, hearts and rewards, and the persistent
+sound/gear button opens **Sound and settings** from every activity, including
+without a MIDI keyboard. Activity **Options** contains notation size, Multiline
+and idle hints. Navigation and utility controls have at least 48px
 touch targets. Piano keys retain their musical proportions; **Close** shows one
 octave on small screens for wider touch keys, and two octaves on desktop.
 
@@ -74,16 +75,32 @@ port list does not clear held notes. The physical keyboard produces its own soun
 MIDI carries notes, not audio. There is no microphone capture.
 
 You can also tap/click the on-screen piano or use A S D F G H J K for C4 through C5.
-**Hear this phrase** automatically uses the MIDI output matching the selected
-keyboard when one is available. **Phrase sound** selects Auto, Speakers, or a
-specific MIDI output; explicit choices are remembered. **Stop preview**, changing
-songs/outputs, losing focus or unplugging cancels the demonstration. Without a
-matching output (or if it cannot open/send), it uses the speaker preview voice.
-MIDI input is paused during a keyboard demonstration so echoed notes cannot
-advance the song. Playback uses MIDI channel 1 and the keyboard's current sound;
-its volume and receive settings still apply. On-screen keys and saved Explore
-recording playback continue to use the speaker preview voice. See
-[MIDI phrase playback](docs/midi-phrase-playback.md).
+**Sound and settings** chooses where live notes, phrase demonstrations and saved
+recordings play: **Screen**, **Keyboard**, **Both**, **Quiet**, or **Auto**.
+Screen uses this device’s speakers/headphones. Keyboard sends screen/computer keys
+and playback to the selected MIDI output; physical piano keys keep their own
+sound and are never echoed back to MIDI. Both adds the Screen voice alongside the
+piano. Quiet stops app-generated sound. The app cannot silence the piano’s built-in
+speakers: turn its volume down for Screen-only or quiet playing. Missing or failed
+MIDI output falls back to Screen for screen keys and playback, with a visible status.
+Auto uses these defaults: physical keys sound on the piano, screen keys on this
+device, and playback uses a matching MIDI output when available.
+
+Pick **🎹 Soft keys, 🫧 Bubble, 🤖 Robot, 👻 Ghost, 🚀 Space, 🔔 Bell, or 🎮 Arcade**
+for Screen sound. **Make a sound** offers sine/triangle/square/saw waves, brightness,
+pluck/hold, wobble, reverb, attack/release and a pitch swoop, with a live waveform,
+envelope picture, randomizer and reset. Try the small piano or connected keys inside
+settings without recording or advancing practice. Save up to twelve named emoji
+sounds locally. Sound, volume and routing choices persist across activities/reloads;
+keyboard output selection lives under **Keyboard connection**. Presets change the
+browser synth; the physical piano keeps its own instrument/volume. See
+[global sound and sound playground](docs/sound-playground.md).
+
+**Hear this phrase** follows the global sound route. **Stop preview**, changing
+songs/outputs, losing focus or unplugging cancels the demonstration. MIDI input is
+paused during a keyboard demonstration so echoed notes cannot advance the song.
+Playback uses MIDI channel 1 and the keyboard’s current sound; its volume and receive
+settings still apply. See [MIDI phrase playback](docs/midi-phrase-playback.md).
 The piano has proportioned keys and stays centered instead of stretching across
 a wide screen. **Close · middle C** shows C3–C5 on desktop and C4–C5 on
 phones/small landscape screens, with larger touch keys.
@@ -119,7 +136,9 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/useMidi.ts`: automatic permission request/reconnect and connection lifecycle.
 - `src/midi-device.ts`: saved input preference and deterministic device selection.
 - `src/keyboard.ts` / `src/useKeyboard.ts`: close/full piano layout and per-input key ranges.
-- `src/audio.ts`: local preview voice.
+- `src/audio.ts`: local synthesizer, effects and waveform analysis.
+- `src/sound-settings.ts` / `src/sound-output.ts`: saved voices and global sound routing.
+- `src/SoundLab.tsx` / `src/DeviceSettings.tsx`: sound playground and global settings.
 - `src/phrase-preview.ts`: phrase demonstrations through matched MIDI output or speakers.
 - `src/App.tsx` / `src/ActivityMenu.tsx`: app shell and activity navigation.
 - `src/usePianoSession.ts` / `src/useExploreSession.ts`: shared transport/input routing and recording lifecycle.
@@ -146,8 +165,8 @@ Recording is automatic and local to this browser. **Save** flushes pending write
 **Recordings** loads or plays a session, downloads/opens a recording JSON file, or
 exports the complete take as MusicXML. The most recently changed session returns
 after reload. Playback uses the performed timing, overlaps and velocity through
-the preview voice, with piano highlights, and never records itself. Live playing
-stops playback. Download a recording to keep a separate copy or transfer devices.
+the global sound route and current Screen voice, with piano highlights, and never
+records itself. Live playing stops playback. Download a recording to keep a separate copy or transfer devices.
 There is no 512-note capture limit. See [live notation and recording behavior](docs/explore-transcription.md).
 
 **Note hunt** shows a target note beside the note you play. **My learning path**
