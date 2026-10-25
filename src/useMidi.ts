@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   chooseMidiInput,
   loadMidiPreference,
+  midiInputPriority,
   saveMidiPreference,
 } from './midi-device';
 import { type NoteEvent, parseMidi } from './music';
@@ -46,11 +47,18 @@ export function useMidi(
             preferred.current,
             selectedId.current,
           );
-          if (chosen && !preferred.current) {
+          if (
+            chosen &&
+            (!preferred.current ||
+              (preferred.current.selection !== 'manual' &&
+                midiInputPriority(chosen) >
+                  midiInputPriority(preferred.current)))
+          ) {
             preferred.current = {
               id: chosen.id,
               name: chosen.name,
               manufacturer: chosen.manufacturer,
+              selection: 'automatic',
             };
             saveMidiPreference(preferred.current);
           }
@@ -114,6 +122,7 @@ export function useMidi(
       id: input.id,
       name: input.name,
       manufacturer: input.manufacturer,
+      selection: 'manual',
     };
     saveMidiPreference(preferred.current);
     selectedId.current = id;

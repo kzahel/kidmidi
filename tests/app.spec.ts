@@ -984,3 +984,91 @@ test('Explore keeps a fixed grid, saves every page, restores sessions and plays 
     ),
   ).toBe(true);
 });
+
+test('MIDI auto selection upgrades a legacy Through default on hotplug and respects an explicit virtual port', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const through = Object.assign(new EventTarget(), {
+      id: 'through',
+      name: 'Midi Through Port-0',
+      manufacturer: 'ALSA',
+      state: 'connected',
+    });
+    const casio = Object.assign(new EventTarget(), {
+      id: 'casio',
+      name: 'CASIO USB-MIDI',
+      manufacturer: 'Casio',
+      state: 'connected',
+    });
+    if (!localStorage.getItem('midi-selection-fixture')) {
+      localStorage.setItem('midi-selection-fixture', 'yes');
+      localStorage.setItem(
+        'kidmidi.midi-input.v1',
+        JSON.stringify({
+          id: through.id,
+          name: through.name,
+          manufacturer: through.manufacturer,
+        }),
+      );
+    }
+    const access = {
+      inputs: new Map([['through', through]]),
+      onstatechange: null as (() => void) | null,
+    };
+    Object.defineProperty(navigator, 'requestMIDIAccess', {
+      value: async () => access,
+    });
+    Object.assign(window, {
+      plugRealKeyboard: () => {
+        access.inputs.set('casio', casio);
+        access.onstatechange?.();
+      },
+      sendRealKey: () =>
+        casio.dispatchEvent(
+          Object.assign(new Event('midimessage'), {
+            data: new Uint8Array([0x90, 60, 100]),
+          }),
+        ),
+    });
+  });
+  const plug = () =>
+    page.evaluate(() =>
+      (window as unknown as { plugRealKeyboard(): void }).plugRealKeyboard(),
+    );
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Midi Through Port-0', exact: true }),
+  ).toBeVisible();
+  await plug();
+  await expect(
+    page.getByRole('combobox', { name: 'MIDI input', exact: true }),
+  ).toHaveValue('casio');
+  await page.evaluate(() =>
+    (window as unknown as { sendRealKey(): void }).sendRealKey(),
+  );
+  await expect(page.getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    '1',
+  );
+  const preference = () =>
+    page.evaluate(() =>
+      JSON.parse(localStorage.getItem('kidmidi.midi-input.v1')!),
+    );
+  expect(await preference()).toMatchObject({
+    id: 'casio',
+    selection: 'automatic',
+  });
+  await page
+    .getByRole('combobox', { name: 'MIDI input', exact: true })
+    .selectOption('through');
+  expect(await preference()).toMatchObject({
+    id: 'through',
+    selection: 'manual',
+  });
+  await page.reload();
+  await plug();
+  await expect(
+    page.getByRole('combobox', { name: 'MIDI input', exact: true }),
+  ).toHaveValue('through');
+});

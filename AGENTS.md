@@ -23,6 +23,8 @@ the full autosaved recording; playback never feeds capture. Note hunt is a
 separate game with attempt-based positive rewards; keep its scoring separate from patient song practice. See
 `docs/note-hunt.md`. The piano has close/full views and per-input ranges; MIDI
 port identity does not establish a physical key count. See `docs/keyboard-range.md`.
+Auto-select named MIDI inputs ahead of known virtual routing/blank ports; preserve
+explicit manual selections and preferred-keyboard reconnect behavior.
 
 Run `npm run typecheck`, `npm test`, `npm run check`, and `npm run build`.
 For browser-dependent changes run `npm run test:browser` using bundled Playwright

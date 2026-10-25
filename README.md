@@ -53,8 +53,14 @@ retry if the browser blocks an automatic request or requires a user gesture.
 The browser controls whether its permission grant persists; keep using the same
 origin (127.0.0.1 and localhost have separate permissions and preferences).
 
-If several inputs are available, choose the piano from the selector. Its ID,
-name and manufacturer are remembered locally. Replugging restores that input;
+Automatic input selection prefers named devices over blank inputs and known
+virtual routing ports such as MIDI Through Port-0, IAC Driver and loopMIDI. If only
+a routing port is present initially, plugging in a keyboard upgrades that default.
+Older automatically saved Through defaults are corrected too.
+
+If several inputs are available, choose the piano from the selector. An explicit
+choice always wins, including a deliberately selected virtual input. Its ID,
+name, manufacturer and whether it was selected manually are remembered locally. Replugging restores that input;
 a temporary fallback does not overwrite the preference. If an ID changes, a
 unique matching name/manufacturer can restore the choice. Plugging and unplugging
 updates the device list without another permission request. Refreshing an unchanged

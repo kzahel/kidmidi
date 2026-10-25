@@ -24,3 +24,39 @@ test('input selection restores a preferred port, permits fallback and handles ch
   );
   assert.equal(chooseMidiInput([other, casio], null, 'casio'), casio);
 });
+
+test('automatic selection avoids Through and blank ports, including old saved defaults and hotplug', () => {
+  const through = {
+    id: 'through',
+    name: 'Midi Through Port-0',
+    manufacturer: 'ALSA',
+  };
+  const blank = { id: 'blank', name: '', manufacturer: null };
+  assert.equal(chooseMidiInput([through, casio], null, ''), casio);
+  assert.equal(chooseMidiInput([through, casio], through, 'through'), casio);
+  assert.equal(
+    chooseMidiInput(
+      [through, casio],
+      { ...through, selection: 'automatic' },
+      'through',
+    ),
+    casio,
+  );
+  assert.equal(chooseMidiInput([blank, casio], blank, 'blank'), casio);
+  assert.equal(chooseMidiInput([through], null, ''), through);
+  assert.equal(chooseMidiInput([through, casio], null, 'through'), casio);
+  assert.equal(chooseMidiInput([through], casio, ''), through);
+  assert.equal(chooseMidiInput([through, casio], casio, 'through'), casio);
+  assert.equal(
+    chooseMidiInput(
+      [through, casio],
+      { ...through, selection: 'manual' },
+      'casio',
+    ),
+    through,
+  );
+  assert.deepEqual(
+    parseMidiPreference(JSON.stringify({ ...through, selection: 'manual' })),
+    { ...through, selection: 'manual' },
+  );
+});
