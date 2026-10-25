@@ -250,7 +250,7 @@ function staffNotes(
       .sort((a, b) => a.midi - b.midi) ?? [];
   const voice = `<voice>${staff}</voice><type>${noteType(segment.ticks)}</type><staff>${staff}</staff>`;
   if (!notes.length)
-    return `<note><rest/><duration>${segment.ticks}</duration>${voice}</note>`;
+    return `<note print-object="no"><rest/><duration>${segment.ticks}</duration>${voice}</note>`;
   return notes
     .map((note, index) => {
       const pitch = `<pitch><step>${steps[note.midi % 12]}</step>${sharps.has(note.midi % 12) ? '<alter>1</alter>' : ''}<octave>${Math.floor(note.midi / 12) - 1}</octave></pitch>`;

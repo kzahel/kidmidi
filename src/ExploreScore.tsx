@@ -113,6 +113,7 @@ export function ExploreScore({
         const pitches = entry.notes
           .filter((note) => (note.midi < 60 ? 1 : 0) === staff)
           .sort((a, b) => a.midi - b.midi);
+        // Silent hands/beats stay blank; never draw placeholder rests.
         if (!pitches.length) continue;
         // Keep even extreme MIDI notes inside the fixed staff. The octave label
         // makes octave displacement explicit instead of moving the layout.

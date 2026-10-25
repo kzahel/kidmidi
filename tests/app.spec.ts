@@ -481,6 +481,9 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
     await send([0x90, pitch, 100], at);
   await expect(page.getByText('3 notes · 4/4')).toBeVisible();
   await expect(page.locator('.score .hit-notehead')).toHaveCount(3);
+  await expect(page.locator('.explore-score .vf-notehead')).toHaveCount(3);
+  await expect(page.locator('.explore-score [data-slot]')).toHaveCount(1);
+
   for (const [pitch, at] of [
     [60, 400],
     [64, 420],
@@ -494,6 +497,7 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
   await send([0x90, 62, 100], 7000);
   await send([0x80, 62, 0], 7250);
   await expect(page.getByText('6 notes · 4/4')).toBeVisible();
+  await expect(page.locator('.explore-score .vf-notehead')).toHaveCount(6);
   await expect(page.locator('.score svg')).toHaveCount(1);
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'MusicXML ↓', exact: true }).click();
@@ -506,11 +510,22 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
       attacks: [...doc.querySelectorAll('note')].filter(
         (note) => !note.querySelector('rest, tie[type="stop"]'),
       ).length,
+      visibleRests: [...doc.querySelectorAll('note')].filter(
+        (note) =>
+          note.querySelector('rest') &&
+          note.getAttribute('print-object') !== 'no',
+      ).length,
       staves: doc.querySelector('staves')?.textContent,
       beats: doc.querySelector('time > beats')?.textContent,
     };
   }, xml);
-  expect(content).toEqual({ errors: 0, attacks: 6, staves: '2', beats: '4' });
+  expect(content).toEqual({
+    errors: 0,
+    attacks: 6,
+    visibleRests: 0,
+    staves: '2',
+    beats: '4',
+  });
   await page
     .getByRole('combobox', { name: 'Score size' })
     .selectOption('compact');

@@ -40,6 +40,7 @@ dependency). The same SVG/staves remain mounted while a note layer fills in.
   MIDI pitches are preserved in capture/export; below C4 goes to the bass staff.
   Pitches outside C2–C7 are displayed in a nearby octave with an explicit actual
   pitch/arrow label, preserving a fixed layout even at extreme MIDI pitches.
+- Empty hands/beats stay blank; no rests are drawn in the live staff.
 - Newest noteheads are green. The piano continues to show physically held notes.
   The whole drawing fits the viewport without scrolling or layout animation.
 
@@ -49,7 +50,8 @@ Full MusicXML export runs on request, not on each key. It retains the earlier
 loose transcription: a provisional quarter is 500ms, gaps under 1600ms select a
 nearby eighth/quarter/half/whole duration, and longer pauses use key-hold duration
 instead of a wall of rests. Sequential groups fill 4/4 bars with ties across
-barlines and padding rests. Low notes add a bass staff. Chord tones share an
+barlines and invisible padding rests (`print-object="no"`). These preserve voice
+durations without adding rest symbols to otherwise silent staff space. Low notes add a bass staff. Chord tones share an
 approximate duration; separate hands/voices/tempo/meter are not inferred. Sharps
 spell chromatic pitches. The export is editable notation, not an exact timing
 reconstruction; raw recording JSON retains performance timing separately.

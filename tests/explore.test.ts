@@ -21,7 +21,7 @@ const note = (
   offsetMs,
 });
 const attackCount = (xml: string) =>
-  [...xml.matchAll(/<note>(.*?)<\/note>/g)].filter(
+  [...xml.matchAll(/<note\b[^>]*>(.*?)<\/note>/g)].filter(
     ([, content]) =>
       !content.includes('<rest') && !content.includes('<tie type="stop"'),
   ).length;
@@ -29,7 +29,7 @@ const attackCount = (xml: string) =>
 function checkBars(xml: string) {
   for (const [, measure] of xml.matchAll(/<measure[^>]*>(.*?)<\/measure>/g)) {
     const totals = new Map<string, number>();
-    for (const [, content] of measure.matchAll(/<note>(.*?)<\/note>/g)) {
+    for (const [, content] of measure.matchAll(/<note\b[^>]*>(.*?)<\/note>/g)) {
       if (content.includes('<chord/>')) continue;
       const voice = content.match(/<voice>(\d+)<\/voice>/)?.[1];
       const duration = Number(
@@ -113,6 +113,12 @@ test('notation fills 4/4 bars, ties sustained notes across bars and represents b
   assert.match(chord.xml, /<chord\/>/);
   assert.equal(attackCount(chord.xml), 3);
   checkBars(chord.xml);
+  const rests = [
+    ...chord.downloadXml.matchAll(/<note([^>]*)>(.*?)<\/note>/g),
+  ].filter(([, , content]) => content.includes('<rest'));
+  assert.ok(rests.length > 0);
+  for (const [, attributes] of rests)
+    assert.match(attributes, /print-object="no"/);
 });
 
 test('live display stays bounded while the download retains the complete take', () => {
