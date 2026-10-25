@@ -153,8 +153,8 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/usePianoSession.ts` / `src/useExploreSession.ts`: shared transport/input routing and recording lifecycle.
 - `src/Piano.tsx`, `src/PracticeScore.tsx`, `src/ActivityControls.tsx`: activity presentation.
 - `src/learning.ts` / `src/useHuntSession.ts`: daily review and adaptive Note Hunt sessions.
-- `src/lesson-catalog.ts` / `src/curriculum.ts`: editable, versioned lessons and pure badge/gate policy.
-- `src/LearningMap.tsx`: picture-led worlds, lesson choices and permanent gates.
+- `src/lesson-catalog.ts` / `src/curriculum.ts`: editable, versioned lessons and pure badge/deck policy.
+- `src/LearningMap.tsx`: labelled, paged lessons and badge progress.
 - `src/learners.ts` / `src/learner-repository.ts` / `src/useLearners.ts`: profiles, rewards and asynchronous IndexedDB storage.
 - Component-owned `*.module.css`: scoped styles with exact generated typings and unused-class checks.
 
@@ -180,35 +180,51 @@ the global sound route and current Screen voice, with piano highlights, and neve
 records itself. Live playing stops playback. Download a recording to keep a separate copy or transfer devices.
 There is no 512-note capture limit. See [live notation and recording behavior](docs/explore-transcription.md).
 
-**Note hunt** opens a picture-led map. **Garden** has three short lessons with
-note names: C/E/G, C–G and C–C. Finish its rainbow badge, then spend **60 hearts**
-to open **Treehouse** permanently. Treehouse revisits those ranges without names;
-tap **💡** for help. Its optional **✨ Quick** challenge quietly measures fluent
-finds, with no countdown or deadline. Worlds 3–8 preview future skills and cannot
-be purchased yet. Icons, short labels and numbers carry the child-facing screens.
+**Note hunt** opens **Lessons**, a labelled browser with **Find notes**, **Read
+notes**, **Patterns**, and **Coming soon** groups. Choose any implemented lesson
+immediately, including Quick and patterns: no earlier badge or heart purchase is
+required. Cards show the pitch range, name support, set length, and **Ready to
+play** or **Badge earned**. Pages show four cards, or two on short phones;
+Back/More buttons reveal the rest without scrolling. Returning from a lesson
+reopens its group. Pets are companions and rewards, not lesson levels.
 
-Each lesson visits every note twice. A badge needs at least 80% first-try finds
-and one for every pitch; reading badges also require those finds without help.
-The Quick badge adds a four-second response threshold. New badges give gems once;
-replaying always earns hearts. Garden pays the usual 3/2/1 hearts by attempt,
-Treehouse pays 6/4/2, and Quick pays 9/6/3. Long pauses never reduce those rewards.
-The displayed world advances through skill gates, so easy-heart collecting cannot
-bypass the curriculum. See [curriculum and editing guide](docs/learners-and-curriculum.md).
+Find notes (Garden) has C/E/G, C–G and C–C lessons with names. Read notes
+(Treehouse) revisits those ranges without names; tap **💡** for help. Its optional
+**Quick** challenge measures fluent finds without a countdown or deadline.
+Patterns (River) has **Step up**, **Step down**, **Skip a key**, and **Out and back**.
+Each shows an entire three- or five-note shape on the staff, with progress checks
+as you play. Notes within a pattern connect freely; a wrong note waits at that
+position. The completed pattern lingers while keys are held, then for 1.6 seconds
+after release, just like individual Note Hunt cards. Rhythm is not scored.
+Bass clef, mixed clefs, accidentals, key signatures and simultaneous notes are
+labelled Coming soon, separate from playable lessons.
 
-**🎹 Practice** keeps the original relaxed game available. Its **My learning path**
-starts with C4/E4/G4, reviews earlier learning days and adds white notes after
-consistent first-try success across multiple days. C/E/G, C–G and C–C can also be
-selected manually. Practice earns the usual hearts indefinitely. Both practice
-and lessons show the target beside the played note, give higher/lower cues, and
-linger on a match while keys are held and for 1.6 seconds after release. MIDI,
-touch and computer keys work. See [Note hunt behavior](docs/note-hunt.md).
+Single-note lessons visit every note twice. Pattern lessons visit each of two
+written shapes twice. Badges require a complete set, at least 80% first-try finds
+and one for every pitch; reading badges require those finds without help.
+Pattern badges also require the complete written sequences, and do not establish
+independent single-note reading. The optional Quick badge adds a four-second
+response threshold. New badges give gems once; replaying always earns hearts.
+Garden and Patterns pay 3/2/1 hearts by attempt, Treehouse pays 6/4/2, and Quick
+pays 9/6/3. Long pauses never reduce those rewards. See the
+[curriculum and editing guide](docs/learners-and-curriculum.md).
+
+**Free practice** keeps the original relaxed game available. Its **My learning
+path** starts with C4/E4/G4, reviews earlier learning days and adds white notes
+after consistent first-try success across multiple days. C/E/G, C–G and C–C can
+also be selected manually. This adaptive practice suggestion does not restrict
+lesson access. Practice earns the usual hearts indefinitely. Practice and
+single-note lessons show the target beside the played note, give higher/lower
+cues, and preserve their existing held-key/1.6-second feedback pacing. The
+labelled **Lessons** button returns to the overview. MIDI, touch and computer
+keys work. See [Note hunt behavior](docs/note-hunt.md).
 
 **Learners & rewards** lets families add, rename and switch learners. Each learner
 keeps their own history, lifetime hearts, worlds, badges and separate heart/gem
-wallets. A free fox keeps them company; hearts buy permanent pet friends, charms
-and gates, while **3 gems** buy the puppy. Spending never removes badges or closes
-an opened gate. Existing hearts, friends and recordings are preserved. Profiles
-and completed rounds persist locally
+wallets. A free fox keeps them company; hearts buy permanent pet friends and
+charms, while **3 gems** buy the puppy. Spending never removes badges. Earlier
+world purchases remain saved; lessons now open without purchases. Existing
+hearts, friends and recordings are preserved. Profiles and completed rounds persist locally
 in IndexedDB; device settings and the Explore recording library stay separate.
 A failed progress save offers retry and retains the pending award in that tab.
 There are no accounts, sign-in or cross-device sync yet. See

@@ -30,7 +30,8 @@ export function LearnerMenu({
         <div>
           <h3>{learner.name}</h3>
           <p>
-            World {journey.world} · ♥ {stats.balance} · 💎 {journey.gemBalance}
+            {journey.badges} badges · ♥ {stats.balance} · 💎{' '}
+            {journey.gemBalance}
           </p>
           <p>{stats.earned} hearts earned, forever</p>
         </div>
@@ -165,10 +166,10 @@ export function LearnerMenu({
           is no countdown or deadline.
         </p>
         <p>
-          Treehouse costs 60 hearts after the Garden rainbow badge. Earlier
-          games stay open. Worlds 3–8 are previews. Hearts buy friends and
-          gates; gems buy the puppy. Spending never removes badges or closes a
-          gate.
+          Choose any implemented lesson from Lessons, including reading and
+          patterns. No earlier badge or heart purchase is needed. Coming soon
+          topics are not playable yet. Hearts buy friends and charms; gems buy
+          the puppy. Existing badges, friends and past purchases stay saved.
         </p>
         <ul>
           {(learner.badges ?? []).map((badge) => {

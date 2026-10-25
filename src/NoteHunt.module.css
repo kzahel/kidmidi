@@ -305,3 +305,81 @@
     font-size: 22px;
   }
 }
+
+.pattern-card {
+  flex: 1;
+  margin: 8px clamp(8px, 2vw, 24px);
+}
+.pattern-progress {
+  display: flex;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 16px);
+  flex-shrink: 0;
+  padding: 8px 0;
+}
+.pattern-progress > span {
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #eeeade;
+  font-weight: 650;
+}
+.pattern-progress .pattern-done {
+  background: #d8efce;
+  color: #236440;
+}
+.pattern-progress > span[aria-current="step"] {
+  outline: 2px solid #648a67;
+}
+
+@media (width <= 640px) {
+  .lesson-count {
+    font-size: 14px;
+  }
+  .hunt-points {
+    font-size: 18px;
+  }
+  .hunt-controls {
+    gap: 4px;
+  }
+  .hunt-controls > button {
+    padding-inline: 8px;
+  }
+  .pattern-progress > span {
+    padding: 5px;
+    font-size: 13px;
+  }
+}
+
+@media (height <= 500px) and (width >= 641px) {
+  .pattern-card {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    margin: 6px;
+  }
+  .lesson-count {
+    font-size: 13px;
+    white-space: normal;
+  }
+  .pattern-progress {
+    padding: 2px 0;
+  }
+  .pattern-progress > span {
+    padding: 4px;
+    font-size: 13px;
+  }
+}
+
+.pattern-hunt .hunt-feedback {
+  flex-direction: row;
+  min-height: 48px;
+  gap: 12px;
+}
+.pattern-card > [role="img"] {
+  flex: 1;
+}
+
+@media (height <= 500px) and (width >= 641px) {
+  .pattern-hunt .hunt-feedback {
+    min-height: 0;
+  }
+}

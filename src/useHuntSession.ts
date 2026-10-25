@@ -5,6 +5,7 @@ import {
   lessonById,
   lessonDeck,
   lessonOpen,
+  patternSize,
 } from './curriculum';
 import { guessHunt, type HuntLevel, nextHunt, startHunt } from './hunt';
 import type { LearnerSnapshot } from './learners';
@@ -43,6 +44,7 @@ export function useHuntSession(
     deck: number[];
     completed: number;
     points: number;
+    events: Encounter[];
     result: LessonResult | null;
   } | null>(null);
   const [choice, setChoice] = useState<LearningChoice>({
@@ -136,6 +138,14 @@ export function useHuntSession(
     setState(updated);
     setChoice(plan);
     setHelped(false);
+    if (
+      lesson?.patterns &&
+      run.current &&
+      run.current.completed % patternSize(lesson) !== 0
+    ) {
+      round.current.timer.start();
+      if (document.hidden || !document.hasFocus()) round.current.timer.pause();
+    }
   }
   useLayoutEffect(() => {
     if (snapshot && owner.current !== snapshot.learner.id) {
@@ -222,13 +232,14 @@ export function useHuntSession(
           : {}),
       };
       if (activeRun && lesson) {
+        activeRun.events.push(event);
         activeRun.completed++;
         activeRun.points += next.reward;
         if (activeRun.completed === activeRun.deck.length) {
           const profile = latest.current.snapshot!;
           const assessment = assessLesson(
             lesson,
-            [...profile.encounters, event],
+            activeRun.events,
             activeRun.id,
           );
           activeRun.result = {
@@ -244,6 +255,14 @@ export function useHuntSession(
         }
       }
       latest.current.record(event);
+      // The complete pattern is already visible. Keep recognition moving inside
+      // it; the existing held-key celebration runs only at its boundary.
+      if (
+        activeRun &&
+        lesson?.patterns &&
+        activeRun.completed % patternSize(lesson) !== 0
+      )
+        begin(nextHunt(next), next.target);
     }
   }
   function chooseLesson(id: string) {
@@ -257,18 +276,33 @@ export function useHuntSession(
       deck: lessonDeck(lesson),
       completed: 0,
       points: 0,
+      events: [],
       result: null,
     };
     setLessonId(id);
     setResult(null);
     begin();
   }
+  const activeLesson = lessonId ? lessonById(lessonId) : undefined;
+  const size = activeLesson ? patternSize(activeLesson) : 1;
+  const completed = run.current?.completed ?? 0;
+  const patternStart =
+    Math.floor(Math.max(0, completed - (state.found ? 1 : 0)) / size) * size;
+  const pattern =
+    activeLesson?.patterns && run.current
+      ? {
+          pitches: run.current.deck.slice(patternStart, patternStart + size),
+          index: completed - patternStart,
+          id: `${run.current.id}-${patternStart}`,
+        }
+      : null;
   return {
     state,
+    pattern,
     roundId,
     adaptive,
     choice,
-    lesson: lessonId ? lessonById(lessonId) : undefined,
+    lesson: activeLesson,
     result,
     helped,
     chooseLesson,

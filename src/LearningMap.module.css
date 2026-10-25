@@ -3,129 +3,151 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 2vh, 24px);
-  padding: clamp(4px, 2vw, 24px);
+  gap: clamp(8px, 1.8vh, 18px);
+  padding: clamp(4px, 1.5vw, 18px);
 }
-.map-heading {
+.map-heading,
+.panel-heading,
+.map-footer,
+.pagination {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
 }
 .map-heading h1 {
-  font-size: 32px;
   margin: 0;
+  font-size: clamp(24px, 4vw, 36px);
 }
-.map-heading > span {
-  color: #9b4f69;
-  font-size: clamp(16px, 3vw, 22px);
-  font-weight: 700;
+.map-heading p,
+.panel-heading p {
+  margin: 4px 0 0;
+  color: #59664f;
+  font-size: clamp(13px, 1.8vw, 16px);
 }
 .map-heading button {
-  margin-left: auto;
   background: #e4eaf2;
+  flex-shrink: 0;
 }
-.worlds {
+.shelves {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   flex-shrink: 0;
 }
-.worlds button {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  padding: 10px 4px;
+.shelves button {
   background: #f0f0e7;
   border: 2px solid transparent;
+  padding: 10px 6px;
+  font-size: clamp(13px, 2vw, 18px);
 }
-.worlds button[aria-pressed="true"] {
+.shelves button[aria-pressed="true"] {
   border-color: #648a67;
   background: #e4efda;
 }
-.worlds button > span {
-  font-size: 32px;
-}
-.worlds small {
-  font-size: 13px;
+.shelves button > span {
+  font-size: 24px;
 }
 .world-panel {
   flex: 1;
   min-height: 0;
   background: #edf2e5;
   border-radius: 24px;
-  padding: clamp(12px, 3vw, 32px);
+  padding: clamp(12px, 2vw, 24px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
-.world-panel h2 {
+.panel-heading h2 {
   margin: 0;
   font-size: clamp(20px, 3vw, 28px);
+}
+.panel-heading > span {
+  white-space: nowrap;
+  font-weight: 700;
 }
 .lessons {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-content: center;
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
-.lessons button {
-  background: #fffef8;
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  padding: 24px 10px;
-  border: 2px solid #d6e0c9;
-}
-.lessons button:disabled {
-  opacity: 0.55;
-}
-.lesson-icon {
-  font-size: clamp(36px, 6vw, 64px);
-}
-.lessons strong {
-  font-size: 19px;
-}
-.lessons small {
-  font-size: 16px;
-}
-.gate {
-  flex: 1;
+.lessons button,
+.preview {
+  min-width: 0;
   min-height: 0;
+  background: #fffef8;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  gap: 10px;
+  gap: clamp(4px, 1vh, 10px);
+  padding: clamp(10px, 2vw, 20px);
+  border: 2px solid #d6e0c9;
+  border-radius: 18px;
+  text-align: left;
 }
-.gate > span {
-  font-size: clamp(40px, 8vh, 80px);
+.lesson-icon {
+  font-size: clamp(24px, 4vh, 40px);
+  line-height: 1;
 }
-.gate p {
-  font-size: 22px;
-  margin: 0;
+.lessons strong {
+  font-size: clamp(16px, 2.5vw, 22px);
 }
-.gate button {
-  font-size: 20px;
-  min-width: 120px;
+.description {
+  color: #59664f;
+  font-size: clamp(13px, 1.8vw, 16px);
+}
+.lessons small {
+  color: #477659;
+  font-size: clamp(12px, 1.6vw, 14px);
+}
+.preview {
+  background: #f5f3eb;
+}
+.preview small {
+  color: #746b59;
+}
+.map-footer {
+  padding-inline: 4px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #70604e;
+}
+.pagination {
+  justify-content: center;
+}
+.pagination button {
+  background: #fffef8;
 }
 
 @media (width <= 640px) {
-  .worlds {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .map-heading {
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .map-heading button {
+    max-width: 110px;
+    font-size: 14px;
+    padding: 8px;
+  }
+  .shelves {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
-  .worlds button {
-    padding: 6px 4px;
+  .shelves button {
+    padding: 6px;
   }
   .lessons {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
   }
-  .lessons button {
-    padding: 12px 8px;
+  .world-panel {
+    gap: 8px;
+  }
+  .panel-heading {
     gap: 6px;
   }
 }
@@ -133,56 +155,88 @@
 @media (height <= 500px) and (width >= 641px) {
   .map {
     display: grid;
-    grid-template-columns: 270px minmax(0, 1fr);
-    grid-template-rows: 48px minmax(0, 1fr);
-    gap: 8px 16px;
-    padding: 4px;
+    grid-template-columns: 210px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 0;
   }
   .map-heading {
     grid-column: 1;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
   }
   .map-heading h1 {
-    display: none;
+    font-size: 24px;
   }
-  .map-heading > span {
-    font-size: 16px;
+  .map-heading p {
+    font-size: 12px;
   }
-  .worlds {
+  .map-heading button {
+    width: 100%;
+  }
+  .shelves {
     grid-column: 1;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
     align-content: center;
-    gap: 6px;
   }
-  .worlds button {
+  .shelves button {
     padding: 4px;
+    font-size: 12px;
   }
-  .worlds button > span {
-    font-size: 26px;
+  .shelves button > span {
+    display: block;
+    font-size: 20px;
   }
   .world-panel {
     grid-column: 2;
     grid-row: 1 / -1;
-    padding: 12px;
-    gap: 8px;
+    padding: 10px;
+    gap: 6px;
+  }
+  .panel-heading h2 {
+    font-size: 20px;
+  }
+  .panel-heading p {
+    font-size: 12px;
   }
   .lessons {
     gap: 6px;
   }
-  .lessons button {
-    padding: 12px 4px;
-    gap: 6px;
-  }
-  .lesson-icon {
-    font-size: 32px;
-  }
-  .lessons strong {
-    font-size: 15px;
-  }
-  .gate {
+  .lessons button,
+  .preview {
+    padding: 8px;
     gap: 4px;
   }
-  .gate > span {
-    font-size: 32px;
+  .lesson-icon {
+    display: none;
+  }
+  .lessons strong {
+    font-size: 16px;
+  }
+  .description,
+  .lessons small,
+  .map-footer {
+    font-size: 12px;
+  }
+  .map-footer {
+    grid-column: 1;
+  }
+}
+
+@media (width <= 640px) and (height <= 680px) {
+  .map-heading p,
+  .panel-heading p,
+  .lesson-icon,
+  .map-footer {
+    display: none;
+  }
+  .lessons {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .lessons button,
+  .preview {
+    padding: 10px;
+    gap: 8px;
   }
 }

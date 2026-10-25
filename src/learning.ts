@@ -1,3 +1,5 @@
+import { lessons } from './lesson-catalog';
+
 // Curriculum policy is independent of storage, React and MIDI transport.
 export const curriculum = [60, 64, 67, 62, 65, 69, 71, 72] as const;
 export type LearningReason = 'review' | 'practice' | 'introduce' | 'chosen';
@@ -38,7 +40,17 @@ export function learningDay(at: number, timeZone: string) {
     .join('-');
 }
 
+function singleNoteHistory(history: Encounter[]) {
+  return history.filter(
+    (event) =>
+      !lessons.some(
+        (lesson) => lesson.id === event.lesson?.id && lesson.patterns,
+      ),
+  );
+}
+
 export function noteEvidence(history: Encounter[], target: number) {
+  history = singleNoteHistory(history);
   const recent = history.filter((event) => event.target === target).slice(-12);
   const correct = recent.filter((event) => event.guesses.length === 1);
   const days = new Set(correct.map((event) => event.day)).size;
@@ -83,6 +95,7 @@ export function chooseExercise(
     0,
     Math.max(3, Math.min(unlocked, curriculum.length)),
   );
+  history = singleNoteHistory(history);
   // Freeze the review list using earlier days only. Reloads and mode changes
   // resume it; today's new evidence cannot keep adding more review cards.
   const before = history.filter((event) => event.day < day);

@@ -6,12 +6,19 @@ import {
   journeyProgress,
   lessonById,
   lessonDeck,
+  lessonLength,
   lessonOpen,
   lessons,
+  patternSize,
   worldOpen,
   worlds,
 } from '../src/curriculum';
 import { progress, withEncounter, withPurchase } from '../src/learners';
+import {
+  advanceCurriculum,
+  chooseExercise,
+  noteEvidence,
+} from '../src/learning';
 import {
   finishLesson,
   gardenGraduate,
@@ -37,6 +44,15 @@ test('catalog has unique stable IDs, valid gates and balanced decks with no adja
       lesson.assessment.successesPerNote > 0 &&
         lesson.assessment.successesPerNote <= lesson.assessment.repetitions,
     );
+    if (lesson.patterns) {
+      const size = patternSize(lesson);
+      assert.ok(size > 1);
+      assert.ok(lesson.patterns.every((pattern) => pattern.length === size));
+      assert.deepEqual(
+        [...new Set(lesson.patterns.flat())].sort(),
+        [...lesson.notes].sort(),
+      );
+    }
     const visited = new Set([lesson.id]);
     let prerequisite = lesson.requires;
     while (prerequisite) {
@@ -53,16 +69,19 @@ test('catalog has unique stable IDs, valid gates and balanced decks with no adja
     if (lesson.requires) assert.ok(lessonById(lesson.requires));
     for (const value of [0, 0.5, 0.999999]) {
       const deck = lessonDeck(lesson, () => value);
-      assert.equal(
-        deck.length,
-        lesson.notes.length * lesson.assessment.repetitions,
-      );
+      assert.equal(deck.length, lessonLength(lesson));
       for (const note of lesson.notes)
-        assert.equal(deck.filter((target) => target === note).length, 2);
+        assert.equal(
+          deck.filter((target) => target === note).length,
+          (lesson.patterns?.flat() ?? lesson.notes).filter(
+            (target) => target === note,
+          ).length * lesson.assessment.repetitions,
+        );
       assert.ok(
-        deck.every(
-          (target, index) => index === 0 || target !== deck[index - 1],
-        ),
+        lesson.patterns ||
+          deck.every(
+            (target, index) => index === 0 || target !== deck[index - 1],
+          ),
       );
     }
   }
@@ -70,7 +89,7 @@ test('catalog has unique stable IDs, valid gates and balanced decks with no adja
     if (world.gate) assert.ok(lessonById(world.gate.badge));
 });
 
-test('old profiles and unlimited easy hearts cannot bypass skill gates; purchases stay open', () => {
+test('all implemented lessons can be chosen immediately without spending or earlier badges', () => {
   let state = newLearner();
   const legacy = lessonEvents(state, 'find-three')[0];
   delete legacy.lesson;
@@ -83,9 +102,14 @@ test('old profiles and unlimited easy hearts cannot bypass skill gates; purchase
     () => withPurchase(state, 'gate-treehouse', 'gate', 0),
     /badge/,
   );
-  assert.throws(
-    () => withEncounter(state, lessonEvents(state, 'read-three')[0]),
-    /Open this lesson/,
+  for (const lesson of lessons) assert.equal(lessonOpen(state, lesson), true);
+  const advanced = finishLesson(newLearner(), 'read-octave');
+  assert.equal(hasBadge(advanced, 'read-octave'), true);
+  assert.equal(hasBadge(advanced, 'read-three'), false);
+  assert.equal(advanced.purchases.length, 0);
+  assert.equal(
+    lessonOpen(state, { ...lessons[0], id: 'unimplemented' }),
+    false,
   );
   assert.throws(() => withPurchase(state, 'gate-cave', 'future', 0), /Unknown/);
   state = ['find-three', 'find-five', 'find-octave'].reduce(
@@ -99,7 +123,7 @@ test('old profiles and unlimited easy hearts cannot bypass skill gates; purchase
   assert.equal(withPurchase(state, 'gate-treehouse', 'retry', 1), state);
   assert.equal(lessonOpen(state, lessonById('find-three')!), true);
   assert.equal(lessonOpen(state, lessonById('read-three')!), true);
-  assert.equal(lessonOpen(state, lessonById('read-five')!), false);
+  assert.equal(lessonOpen(state, lessonById('read-five')!), true);
 });
 
 test('one balanced run earns a permanent badge and gems once; repeats still earn hearts', () => {
@@ -228,4 +252,54 @@ test('reward metadata rejects unknown/revised lessons, invalid indices and infla
     assert.throws(() => withEncounter(state, { ...event, lesson }), /invalid/);
   assert.throws(() => withEncounter(state, { ...event, reward: 9 }), /invalid/);
   assert.throws(() => withEncounter(newLearner('sibling'), event), /mismatch/);
+});
+
+test('pattern decks preserve complete shapes; badges require every phrase and survive replay', () => {
+  for (const lesson of lessons.filter((item) => item.patterns)) {
+    const state = newLearner();
+    const events = lessonEvents(state, lesson.id);
+    const size = patternSize(lesson);
+    assert.equal(events.length, lessonLength(lesson));
+    for (let i = 0; i < events.length; i += size)
+      assert.ok(
+        lesson.patterns!.some(
+          (pattern) =>
+            pattern.join(',') ===
+            events
+              .slice(i, i + size)
+              .map((event) => event.target)
+              .join(','),
+        ),
+      );
+    const run = events[0].lesson!.runId;
+    assert.equal(assessLesson(lesson, events.slice(0, -1), run).earned, false);
+    assert.equal(assessLesson(lesson, events, run).earned, true);
+    const reordered = events.map((event, index) => ({
+      ...event,
+      target: events[(index + 1) % events.length].target,
+    }));
+    assert.equal(assessLesson(lesson, reordered, run).earned, false);
+    const completed = events.reduce(withEncounter, state);
+    assert.equal(hasBadge(completed, lesson.id), true);
+    assert.equal(journeyProgress(completed).gems, 1);
+    assert.equal(journeyProgress(finishLesson(completed, lesson.id)).gems, 1);
+  }
+});
+
+test('pattern following does not enter the independent-note adaptive path', () => {
+  let state = newLearner();
+  for (let day = 1; day <= 4; day++) {
+    for (const id of ['steps-up', 'skips', 'returns'])
+      state = finishLesson(state, id, (event) => ({
+        ...event,
+        day: `2026-10-0${day}`,
+      }));
+  }
+  assert.equal(noteEvidence(state.encounters, 60).seen, 0);
+  assert.equal(advanceCurriculum(3, state.encounters), 3);
+  assert.deepEqual(chooseExercise(state.encounters, 3, '2026-10-25'), {
+    target: 60,
+    reason: 'introduce',
+    detail: 'Meet a new note',
+  });
 });

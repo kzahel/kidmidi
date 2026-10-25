@@ -18,6 +18,7 @@ export function hasBadge(snapshot: LearnerSnapshot, id: string) {
     snapshot.learner.badges?.some((badge) => badge.lessonId === id) ?? false
   );
 }
+// Legacy purchased-world milestones remain readable; they no longer gate lessons.
 export function worldOpen(snapshot: LearnerSnapshot, world: World) {
   return (
     world.entry === true ||
@@ -26,13 +27,18 @@ export function worldOpen(snapshot: LearnerSnapshot, world: World) {
     )
   );
 }
-export function lessonOpen(snapshot: LearnerSnapshot, lesson: Lesson) {
-  const world = worlds.find((world) => world.id === lesson.world);
-  return Boolean(
-    world &&
-      worldOpen(snapshot, world) &&
-      (!lesson.requires || hasBadge(snapshot, lesson.requires)),
+// Badges suggest an order; implemented lessons can always be tried directly.
+export function lessonOpen(_snapshot: LearnerSnapshot, lesson: Lesson) {
+  return lessons.some((item) => item.id === lesson.id);
+}
+export function lessonLength(lesson: Lesson) {
+  return (
+    (lesson.patterns?.flat().length ?? lesson.notes.length) *
+    lesson.assessment.repetitions
   );
+}
+export function patternSize(lesson: Lesson) {
+  return lesson.patterns?.[0]?.length ?? 1;
 }
 export function journeyProgress(snapshot: LearnerSnapshot) {
   const badges = snapshot.learner.badges ?? [];
@@ -53,18 +59,21 @@ export function journeyProgress(snapshot: LearnerSnapshot) {
   };
 }
 
-// A balanced deck visits every pitch twice. Shuffle each pass independently;
-// avoid an immediate repeat where passes meet.
+// Shuffle each pass independently, keeping every pattern intact. Single-note
+// decks visit every pitch twice and avoid adjacent repeats.
 export function lessonDeck(lesson: Lesson, random: () => number = Math.random) {
   const deck: number[] = [];
   for (let pass = 0; pass < lesson.assessment.repetitions; pass++) {
-    const notes = [...lesson.notes];
+    const notes = lesson.patterns
+      ? [...lesson.patterns]
+      : lesson.notes.map((note) => [note]);
     for (let i = notes.length - 1; i > 0; i--) {
       const j = Math.max(0, Math.min(i, Math.floor(random() * (i + 1))));
       [notes[i], notes[j]] = [notes[j], notes[i]];
     }
-    if (notes[0] === deck.at(-1)) notes.push(notes.shift()!);
-    deck.push(...notes);
+    if (!lesson.patterns && notes[0][0] === deck.at(-1))
+      notes.push(notes.shift()!);
+    deck.push(...notes.flat());
   }
   return deck;
 }
@@ -80,17 +89,32 @@ export function assessLesson(
       event.lesson.revision === lesson.revision &&
       event.lesson.runId === runId,
   );
-  const length = lesson.notes.length * lesson.assessment.repetitions;
+  const length = lessonLength(lesson);
+  const expected = lessonDeck(lesson, () => 0);
+  const ordered = [...rounds].sort((a, b) => a.lesson!.index - b.lesson!.index);
+  const size = patternSize(lesson);
+  const phrases = Array.from({ length: length / size }, (_, index) =>
+    ordered
+      .slice(index * size, (index + 1) * size)
+      .map((event) => event.target)
+      .join(','),
+  );
   const complete =
     rounds.length === length &&
     new Set(rounds.map((event) => event.lesson!.index)).size === length &&
     rounds.every(
       (event) => event.lesson!.index >= 0 && event.lesson!.index < length,
     ) &&
+    (!lesson.patterns ||
+      lesson.patterns.every(
+        (pattern) =>
+          phrases.filter((phrase) => phrase === pattern.join(',')).length ===
+          lesson.assessment.repetitions,
+      )) &&
     lesson.notes.every(
       (note) =>
         rounds.filter((event) => event.target === note).length ===
-        lesson.assessment.repetitions,
+        expected.filter((target) => target === note).length,
     );
   const successes = rounds.filter(
     (event) =>

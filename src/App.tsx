@@ -64,7 +64,9 @@ export function App() {
           {mode === 'practice'
             ? session.song.title
             : mode === 'hunt'
-              ? 'Note hunt'
+              ? hunt.lesson?.patterns
+                ? 'Pattern hunt'
+                : 'Note hunt'
               : mode === 'explore'
                 ? 'Free play'
                 : ''}
@@ -112,7 +114,7 @@ export function App() {
             </span>
             <span>
               {stats && learners.snapshot
-                ? `${journeyProgress(learners.snapshot).world} ✦ · ♥ ${stats.balance}`
+                ? `🏅 ${journeyProgress(learners.snapshot).badges} · ♥ ${stats.balance}`
                 : ''}
             </span>
           </button>
@@ -146,6 +148,7 @@ export function App() {
         <LearningMap
           key={learners.snapshot?.learner.id}
           controller={learners}
+          initialWorld={hunt.lesson?.world}
           onLesson={(id) => {
             navigate('hunt');
             hunt.chooseLesson(id);

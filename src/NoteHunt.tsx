@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import activityControlsStyles from './ActivityControls.module.css';
-import type { Lesson } from './curriculum';
+import { type Lesson, lessonLength } from './curriculum';
 import { type HuntLevel, type HuntState, huntLevels } from './hunt';
 import { type Note, noteName, octave, type Song } from './music';
 import styles from './NoteHunt.module.css';
@@ -85,6 +85,87 @@ function NoteCard({
   );
 }
 
+function PatternCard({
+  pattern,
+  found,
+  onReady,
+  played,
+}: {
+  pattern: { pitches: number[]; index: number };
+  found: boolean;
+  onReady(): void;
+  played: number | null;
+}) {
+  const [pitches] = useState(pattern.pitches);
+  const song = useMemo<Song>(
+    () => ({
+      ...cardSong,
+      id: 'pattern-card',
+      timeSignature: { beats: pitches.length, beatType: 4 },
+    }),
+    [pitches],
+  );
+  const hit = useMemo(
+    () =>
+      pattern.index > 0
+        ? {
+            id: pattern.index,
+            inputId: 'pattern',
+            position: { phrase: 0, note: pattern.index - 1, complete: false },
+            midi: pitches[pattern.index - 1],
+            startedAt: 0,
+            durationMs: 480,
+            released: true,
+          }
+        : null,
+    [pattern.index, pitches],
+  );
+  const notes = useMemo<Note[]>(
+    () => pitches.map((midi) => ({ midi, beats: 1 })),
+    [pitches],
+  );
+  return (
+    <section
+      className={`${styles['hunt-card']} ${styles['pattern-card']} ${found ? styles['matched'] : ''}`}
+      aria-label="Play this pattern"
+    >
+      <span className={styles['hunt-card-title']}>
+        Play from left to right · take your time
+      </span>
+      <Score
+        notes={notes}
+        active={Math.max(0, pattern.index - 1)}
+        complete={false}
+        song={song}
+        hit={hit}
+        hint={false}
+        size="kid"
+        flashcard
+        onReady={onReady}
+      />
+      <div
+        className={styles['pattern-progress']}
+        aria-label={`${pattern.index} of ${pitches.length} pattern notes found`}
+      >
+        {pitches.map((midi, index) => (
+          <span
+            key={`${index}-${midi}`}
+            className={index < pattern.index ? styles['pattern-done'] : ''}
+            aria-current={index === pattern.index ? 'step' : undefined}
+          >
+            {index < pattern.index ? '✓' : index + 1} {noteName(midi)}
+          </span>
+        ))}
+      </div>
+      <span className={styles['hunt-note-name']}>
+        {played === null
+          ? 'Follow the shape ↑ ↓'
+          : `You played ${label(played)}`}
+      </span>
+    </section>
+  );
+}
+
 export function NoteHunt({
   state,
   onLevel,
@@ -98,8 +179,10 @@ export function NoteHunt({
   helped,
   onHelp,
   onMap,
+  pattern,
 }: {
   state: HuntState;
+  pattern: { pitches: number[]; index: number; id: string } | null;
   onLevel: (level: HuntLevel | 'adaptive') => void;
   adaptive: boolean;
   roundId: string;
@@ -133,7 +216,8 @@ export function NoteHunt({
         <span
           aria-label={`${result.successes} of ${result.length} badge finds`}
         >
-          {result.successes}/{result.length} ✦
+          Badge finds: {result.successes}/{result.length}
+          {result.badge ? ' · Badge earned!' : ''}
         </span>
         <div>
           <button
@@ -144,15 +228,17 @@ export function NoteHunt({
             ↺
           </button>
           <button type="button" onClick={onMap} aria-label="Learning map">
-            🗺️ →
+            Lessons →
           </button>
         </div>
       </section>
     );
   const message = state.found
-    ? state.attempts === 1
-      ? 'First try! ✨'
-      : 'Found it! ✨'
+    ? pattern
+      ? 'Pattern found! ✨'
+      : state.attempts === 1
+        ? 'First try! ✨'
+        : 'Found it! ✨'
     : state.played === null
       ? 'Find the matching note'
       : state.played < state.target
@@ -164,6 +250,7 @@ export function NoteHunt({
         pianoWorkspaceStyles['practice'] +
         ' ' +
         styles['note-hunt'] +
+        (pattern ? ' ' + styles['pattern-hunt'] : '') +
         ' ' +
         (state.found ? styles['hunt-found'] : '')
       }
@@ -177,15 +264,14 @@ export function NoteHunt({
         }
       >
         <button type="button" onClick={onMap} aria-label="Learning map">
-          🗺️
+          Lessons
         </button>
         {lesson ? (
           <span
             className={styles['lesson-count']}
-            aria-label={`${state.solved} of ${lesson.notes.length * lesson.assessment.repetitions} notes`}
+            aria-label={`${state.solved} of ${lessonLength(lesson)} notes`}
           >
-            {lesson.icon} {state.solved}/
-            {lesson.notes.length * lesson.assessment.repetitions}
+            {lesson.name} · {state.solved}/{lessonLength(lesson)}
           </span>
         ) : (
           <select
@@ -228,25 +314,35 @@ export function NoteHunt({
         </button>
       </div>
       {!lesson && <p className={styles['learning-reason']}>{detail}</p>}
-      <div className={styles['hunt-cards']}>
-        <NoteCard
-          key={roundId}
-          midi={state.target}
-          title="Find this"
-          matched={state.found}
+      {pattern ? (
+        <PatternCard
+          key={pattern.id}
+          pattern={pattern}
+          found={state.found}
           onReady={onReady}
-          names={names || state.found}
-          icon={lesson ? '🎯' : undefined}
+          played={state.played}
         />
-        <NoteCard
-          midi={state.played}
-          title="You played"
-          played
-          matched={state.found}
-          names={names || state.found}
-          icon={lesson ? '🎹' : undefined}
-        />
-      </div>
+      ) : (
+        <div className={styles['hunt-cards']}>
+          <NoteCard
+            key={roundId}
+            midi={state.target}
+            title="Find this"
+            matched={state.found}
+            onReady={onReady}
+            names={names || state.found}
+            icon={lesson ? '🎯' : undefined}
+          />
+          <NoteCard
+            midi={state.played}
+            title="You played"
+            played
+            matched={state.found}
+            names={names || state.found}
+            icon={lesson ? '🎹' : undefined}
+          />
+        </div>
+      )}
       <div
         className={styles['hunt-feedback']}
         aria-live="polite"

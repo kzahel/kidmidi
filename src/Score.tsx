@@ -122,7 +122,11 @@ export function Score({
       mount.style.transform = 'none';
       const baseWidth = Math.max(
         width,
-        flashcard ? 240 : size === 'kid' ? 640 : 480,
+        flashcard
+          ? Math.max(240, notes.length * 180)
+          : size === 'kid'
+            ? 640
+            : 480,
       );
       const availableWidth = Math.max(1, width - 4);
       const availableHeight = Math.max(1, height - 4);

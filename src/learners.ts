@@ -4,6 +4,7 @@ import {
   journeyProgress,
   type LessonBadge,
   lessonById,
+  lessonLength,
   lessonOpen,
   worldOpen,
   worlds,
@@ -141,8 +142,7 @@ export function validateEncounter(event: Encounter) {
         !event.lesson.runId ||
         !Number.isInteger(event.lesson.index) ||
         event.lesson.index < 0 ||
-        event.lesson.index >=
-          lesson.notes.length * lesson.assessment.repetitions ||
+        event.lesson.index >= lessonLength(lesson) ||
         !lesson.notes.includes(event.target) ||
         (lesson.support === 'names' && event.assistance !== 'note-name'))) ||
     !Number.isFinite(event.startedAt) ||

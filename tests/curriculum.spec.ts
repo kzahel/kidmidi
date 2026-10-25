@@ -2,37 +2,48 @@ import { expect, type Page, test } from '@playwright/test';
 import { type LearnerSnapshot, withPurchase } from '../src/learners';
 import { finishLesson, gardenGraduate, newLearner } from './fixtures/journey';
 
-test('picture-led worlds fit desktop and phones; lessons earn badges, open a gate and buy a gem pet', async ({
+test('labelled lessons fit desktop, tablets and phones; direct choices earn badges and buy a gem pet', async ({
   page,
 }) => {
   await page.clock.install();
   await page.goto('/');
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
   await expect(
-    page.getByRole('button', { name: 'Garden: 5 notes', exact: true }),
-  ).toBeDisabled();
-  await page
-    .getByRole('button', { name: 'World 2: Treehouse', exact: true })
-    .click();
+    page.getByRole('heading', { name: 'Lessons', exact: true }),
+  ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Open Treehouse for 60 hearts' }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Garden: 5 notes', exact: true }),
+  ).toBeEnabled();
+  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Treehouse: Quick', exact: true }),
+  ).toBeEnabled();
+  // A new learner can jump straight to the hardest reading lesson.
   await page
-    .getByRole('button', { name: 'World 3: Cave, coming soon', exact: true })
+    .getByRole('button', { name: 'Treehouse: Quick', exact: true })
     .click();
-  await expect(page.getByText('Soon', { exact: true })).toBeVisible();
-  await page
-    .getByRole('button', { name: 'World 1: Garden', exact: true })
-    .click();
+  await expect(target(page).locator('svg')).toBeVisible();
+  await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Learning map', exact: true }).click();
+  await page.getByRole('button', { name: 'Coming soon', exact: true }).click();
+  await expect(
+    page.getByText('Discover bass clef', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Next lesson page' }).click();
+  await expect(page.getByText('Notes together', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Find notes', exact: true }).click();
   for (const [name, viewport] of [
     ['desktop', { width: 1280, height: 800 }],
+    ['tablet', { width: 1024, height: 768 }],
+    ['tablet-portrait', { width: 768, height: 1024 }],
     ['phone', { width: 390, height: 844 }],
+    ['small-phone', { width: 320, height: 568 }],
     ['landscape', { width: 844, height: 390 }],
   ] as const) {
     await page.setViewportSize(viewport);
     await fits(
       page,
-      '[class*="__worlds__"] button, [class*="__lessons__"] button',
+      '[aria-label="Learning map"] button, [class*="__map-footer__"]',
     );
     await page.screenshot({ path: `test-results/curriculum-map-${name}.png` });
   }
@@ -62,15 +73,7 @@ test('picture-led worlds fit desktop and phones; lessons earn badges, open a gat
   await expect(
     page.getByLabel('96 hearts, 3 gems', { exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole('button', { name: 'World 2: Treehouse', exact: true })
-    .click();
-  await page
-    .getByRole('button', { name: 'Open Treehouse for 60 hearts', exact: true })
-    .click();
-  await expect(
-    page.getByLabel('36 hearts, 3 gems', { exact: true }),
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await page
     .getByRole('button', { name: 'Treehouse: 3 notes', exact: true })
     .click();
@@ -117,14 +120,12 @@ test('picture-led worlds fit desktop and phones; lessons earn badges, open a gat
     .getByRole('button', { name: 'Get Puppy friend for 3 gems', exact: true })
     .click();
   await expect(
-    page.getByText('World 2 · ♥ 144 · 💎 2', { exact: true }),
+    page.getByText('4 badges · ♥ 204 · 💎 2', { exact: true }),
   ).toBeVisible();
   await page.keyboard.press('Escape');
   await page.reload();
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'World 2: Treehouse', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await expect(
     page.getByRole('button', {
       name: 'Treehouse: 3 notes, badge earned',
@@ -132,7 +133,7 @@ test('picture-led worlds fit desktop and phones; lessons earn badges, open a gat
     }),
   ).toBeEnabled();
   await expect(
-    page.getByLabel('144 hearts, 2 gems', { exact: true }),
+    page.getByLabel('204 hearts, 2 gems', { exact: true }),
   ).toBeVisible();
   await expect(
     page
@@ -147,9 +148,7 @@ test('help and guesses survive settings; switching learner discards the old less
   await page.clock.install();
   await seed(page, withPurchase(gardenGraduate(), 'gate-treehouse', 'gate', 0));
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'World 2: Treehouse', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await page
     .getByRole('button', { name: 'Treehouse: 3 notes', exact: true })
     .click();
@@ -210,9 +209,7 @@ test('optional fluency waits indefinitely and never shows a countdown; quick acc
     state = finishLesson(state, id);
   await seed(page, state);
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'World 2: Treehouse', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await page
     .getByRole('button', { name: 'Treehouse: Quick', exact: true })
     .click();
@@ -237,7 +234,7 @@ test('optional fluency waits indefinitely and never shows a countdown; quick acc
   ).toBe(true);
 });
 
-test('a failed final badge save blocks the gate until retry and never doubles gems', async ({
+test('a failed final badge save can be retried without blocking experimentation or doubling gems', async ({
   page,
 }) => {
   await page.clock.install();
@@ -266,17 +263,12 @@ test('a failed final badge save blocks the gate until retry and never doubles ge
     'Test badge save interruption',
   );
   await page.getByRole('button', { name: 'Learning map', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'World 2: Treehouse', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await expect(
-    page.getByRole('button', { name: 'Open Treehouse for 60 hearts' }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Treehouse: 8 notes', exact: true }),
+  ).toBeEnabled();
   await page.getByRole('button', { name: 'Retry saving', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveCount(0);
-  await page
-    .getByRole('button', { name: 'Open Treehouse for 60 hearts' })
-    .click();
   const savedState = await saved(page);
   expect(savedState.learner.badges).toHaveLength(3);
   expect(
@@ -286,7 +278,146 @@ test('a failed final badge save blocks the gate until retry and never doubles ge
     savedState.purchases.filter(
       (purchase) => purchase.itemId === 'gate-treehouse',
     ),
-  ).toHaveLength(1);
+  ).toHaveLength(0);
+});
+
+test('patterns can be tried first, accept connected notes and keep the celebration at phrase boundaries', async ({
+  page,
+}) => {
+  const time = new Date('2026-10-25T10:00:00Z');
+  await page.clock.install({ time });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await page.getByRole('button', { name: 'Patterns', exact: true }).click();
+  for (const [name, viewport] of [
+    ['desktop', { width: 1280, height: 800 }],
+    ['tablet', { width: 1024, height: 768 }],
+    ['phone', { width: 390, height: 844 }],
+    ['small-phone', { width: 320, height: 568 }],
+    ['landscape', { width: 844, height: 390 }],
+  ] as const) {
+    await page.setViewportSize(viewport);
+    await page.clock.runFor(50);
+    await fits(
+      page,
+      '[aria-label="Learning map"] button, [class*="__map-footer__"]',
+    );
+    await page.screenshot({ path: `test-results/pattern-map-${name}.png` });
+    if (name === 'small-phone') {
+      await page.getByRole('button', { name: 'Next lesson page' }).click();
+      await expect(
+        page.getByRole('button', { name: 'River: Out and back', exact: true }),
+      ).toBeVisible();
+      await fits(page, '[aria-label="Learning map"] button');
+      await page.screenshot({
+        path: 'test-results/pattern-map-small-phone-page-2.png',
+      });
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .getByRole('button', { name: 'River: Out and back', exact: true })
+    .click();
+  const card = page.getByRole('region', { name: 'Play this pattern' });
+  for (const [name, viewport] of [
+    ['desktop', { width: 1280, height: 800 }],
+    ['tablet', { width: 1024, height: 768 }],
+    ['phone', { width: 390, height: 844 }],
+    ['small-phone', { width: 320, height: 568 }],
+    ['landscape', { width: 844, height: 390 }],
+  ] as const) {
+    await page.setViewportSize(viewport);
+    await page.clock.runFor(50);
+    await expect(card.locator('svg')).toBeVisible();
+    await fits(
+      page,
+      '[aria-label="Play this pattern"], [class*="__keyboard__"], [class*="__hunt-controls__"] > *',
+    );
+    await expect
+      .poll(() =>
+        card.getByRole('img', { name: /^Sheet music:/ }).evaluate((score) => {
+          const bounds = score.getBoundingClientRect();
+          const svg = score.querySelector('svg')!.getBoundingClientRect();
+          return (
+            svg.left >= bounds.left - 1 &&
+            svg.right <= bounds.right + 1 &&
+            svg.top >= bounds.top - 1 &&
+            svg.bottom <= bounds.bottom + 1
+          );
+        }),
+      )
+      .toBe(true);
+    await page.screenshot({ path: `test-results/pattern-play-${name}.png` });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (let phrase = 0; phrase < 4; phrase++) {
+    await expect(card.locator('svg')).toBeVisible();
+    const label = await card
+      .getByRole('img', { name: /^Sheet music:/ })
+      .getAttribute('aria-label');
+    const notes = label!
+      .match(/Sheet music: ([\d, ]+)/)![1]
+      .split(',')
+      .map(Number);
+    expect(notes).toHaveLength(5);
+    if (phrase === 0) {
+      await playPitch(page, 61); // A wrong note waits; it never resets the phrase.
+      await expect(
+        page.getByLabel('0 of 5 pattern notes found', { exact: true }),
+      ).toBeVisible();
+    }
+    for (let i = 0; i < notes.length; i++) {
+      await playPitch(page, notes[i]);
+      await expect(
+        page.getByLabel(`${i + 1} of 5 pattern notes found`, { exact: true }),
+      ).toBeVisible();
+      if (i === 0 && phrase === 0) {
+        await page.getByRole('button', { name: 'Sound and settings' }).click();
+        await page
+          .getByRole('button', { name: 'Close sound and settings' })
+          .click();
+        await expect(
+          page.getByLabel('1 of 5 pattern notes found', { exact: true }),
+        ).toBeVisible();
+      }
+    }
+    const previous = await card
+      .getByRole('img', { name: /^Sheet music:/ })
+      .getAttribute('aria-label');
+    await playPitch(page, 60); // Extra celebration input cannot score twice.
+    await page.clock.runFor(50);
+    await page.clock.fastForward(1000);
+    await expect(
+      card.getByRole('img', { name: previous!, exact: true }),
+    ).toBeVisible();
+    await page.clock.fastForward(650);
+    await page.clock.runFor(50);
+    if (phrase < 3)
+      await expect(
+        page.getByLabel('0 of 5 pattern notes found', { exact: true }),
+      ).toBeVisible();
+  }
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).toContainText('💎 +1');
+  await expect.poll(async () => (await saved(page)).encounters.length).toBe(20);
+  const snapshot = await saved(page);
+  expect(snapshot.learner.badges?.map((badge) => badge.lessonId)).toEqual([
+    'returns',
+  ]);
+  expect(
+    snapshot.encounters.reduce((sum, event) => sum + event.reward, 0),
+  ).toBe(59);
+  expect(snapshot.purchases).toHaveLength(0);
+  await page.reload();
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await page.getByRole('button', { name: 'Patterns', exact: true }).click();
+  await expect(
+    page.getByRole('button', {
+      name: 'River: Out and back, badge earned',
+      exact: true,
+    }),
+  ).toBeEnabled();
 });
 
 function target(page: Page) {
@@ -350,6 +481,25 @@ async function playLesson(
   }
 }
 async function fits(page: Page, selector: string) {
+  await expect
+    .poll(() =>
+      page.locator('[class*="__lessons__"] > *').evaluateAll((cards) =>
+        cards.every((card) => {
+          const bounds = card.getBoundingClientRect();
+          return [...card.children].every((child) => {
+            const rect = child.getBoundingClientRect();
+            return (
+              !rect.width ||
+              (rect.top >= bounds.top &&
+                rect.bottom <= bounds.bottom &&
+                rect.left >= bounds.left &&
+                rect.right <= bounds.right)
+            );
+          });
+        }),
+      ),
+    )
+    .toBe(true);
   await expect
     .poll(() =>
       page.evaluate(

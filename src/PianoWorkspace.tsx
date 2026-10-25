@@ -30,6 +30,7 @@ export function PianoWorkspace({
       {hunting ? (
         <NoteHunt
           state={hunt}
+          pattern={huntSession.pattern}
           adaptive={huntSession.adaptive}
           roundId={huntSession.roundId}
           detail={huntSession.choice.detail}

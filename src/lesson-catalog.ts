@@ -7,6 +7,8 @@ export type Lesson = {
   name: string;
   icon: string;
   notes: readonly number[];
+  description: string;
+  patterns?: readonly (readonly number[])[];
   support: 'names' | 'on-request';
   requires?: string;
   heartMultiplier: number;
@@ -64,6 +66,7 @@ const assessment = { repetitions: 2, accuracy: 0.8, successesPerNote: 1 };
 export const lessons: readonly Lesson[] = [
   {
     id: 'find-three',
+    description: 'C · E · G · names shown',
     revision: 1,
     world: 'garden',
     name: '3 notes',
@@ -76,6 +79,7 @@ export const lessons: readonly Lesson[] = [
   },
   {
     id: 'find-five',
+    description: 'C–G · names shown',
     revision: 1,
     world: 'garden',
     name: '5 notes',
@@ -89,6 +93,7 @@ export const lessons: readonly Lesson[] = [
   },
   {
     id: 'find-octave',
+    description: 'C–C · names shown',
     revision: 1,
     world: 'garden',
     name: '8 notes',
@@ -102,6 +107,7 @@ export const lessons: readonly Lesson[] = [
   },
   {
     id: 'read-three',
+    description: 'C · E · G · names hidden',
     revision: 1,
     world: 'treehouse',
     name: '3 notes',
@@ -114,6 +120,7 @@ export const lessons: readonly Lesson[] = [
   },
   {
     id: 'read-five',
+    description: 'C–G · names hidden',
     revision: 1,
     world: 'treehouse',
     name: '5 notes',
@@ -127,6 +134,7 @@ export const lessons: readonly Lesson[] = [
   },
   {
     id: 'read-octave',
+    description: 'C–C · names hidden',
     revision: 1,
     world: 'treehouse',
     name: '8 notes',
@@ -140,6 +148,7 @@ export const lessons: readonly Lesson[] = [
   },
   {
     id: 'fluent-octave',
+    description: 'C–C · optional fluency challenge',
     revision: 1,
     world: 'treehouse',
     name: 'Quick',
@@ -151,4 +160,57 @@ export const lessons: readonly Lesson[] = [
     gems: 2,
     assessment: { ...assessment, fluentMs: 4000 },
   },
+  ...[
+    {
+      id: 'steps-up',
+      name: 'Step up',
+      icon: '↗',
+      description: 'Neighbouring white keys · C–D–E',
+      patterns: [
+        [60, 62, 64],
+        [62, 64, 65],
+      ],
+    },
+    {
+      id: 'steps-down',
+      name: 'Step down',
+      icon: '↘',
+      description: 'Neighbouring white keys · E–D–C',
+      patterns: [
+        [64, 62, 60],
+        [65, 64, 62],
+      ],
+    },
+    {
+      id: 'skips',
+      name: 'Skip a key',
+      icon: '⤴',
+      description: 'Skip one white key · C–E–G',
+      patterns: [
+        [60, 64, 67],
+        [67, 64, 60],
+      ],
+    },
+    {
+      id: 'returns',
+      name: 'Out and back',
+      icon: '↗↘',
+      description: 'A little phrase · C–D–E–D–C',
+      patterns: [
+        [60, 62, 64, 62, 60],
+        [62, 64, 65, 64, 62],
+      ],
+    },
+  ].map(
+    (pattern): Lesson => ({
+      ...pattern,
+      revision: 1,
+      world: 'river',
+      notes: [...new Set(pattern.patterns.flat())],
+      support: 'names',
+      heartMultiplier: 1,
+      gems: 1,
+      assessment,
+    }),
+  ),
 ];

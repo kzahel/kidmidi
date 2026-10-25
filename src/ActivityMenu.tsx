@@ -38,10 +38,9 @@ export function ActivityMenu({
           {journey && (
             <div className={styles['level']}>
               <span
-                aria-label={`World ${journey.world}, ${journey.badges} badges, ${journey.gemBalance} gems`}
+                aria-label={`${journey.badges} badges, ${journey.gemBalance} gems`}
               >
-                {journey.world} ✦ · 🏅 {journey.badges} · 💎{' '}
-                {journey.gemBalance}
+                🏅 {journey.badges} badges · 💎 {journey.gemBalance}
               </span>
             </div>
           )}
@@ -105,7 +104,7 @@ export function ActivityMenu({
                 ♥
               </span>
               <strong>Note hunt</strong>
-              <span>🗺️ ♥ 💎</span>
+              <span>Choose a lesson · notes & patterns</span>
               <b aria-hidden="true">↗</b>
             </button>
           </>

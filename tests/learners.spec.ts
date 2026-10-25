@@ -73,7 +73,7 @@ test('activity menu and profile controls have touch targets on desktop, phone an
   ).toBeFocused();
 });
 
-test('learners keep separate hearts, worlds and cosmetics across switches, reloads and a new review day', async ({
+test('learners keep separate hearts, badges and cosmetics across switches, reloads and a new review day', async ({
   page,
 }) => {
   await page.clock.install({ time: new Date('2026-10-25T12:00:00Z') });
@@ -94,7 +94,7 @@ test('learners keep separate hearts, worlds and cosmetics across switches, reloa
   for (let round = 0; round < 4; round++) await solve(page);
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
-  ).toContainText('1 ✦ · ♥ 12');
+  ).toContainText('🏅 0 · ♥ 12');
   await page
     .getByRole('combobox', { name: 'Note range' })
     .selectOption('octave');
@@ -106,7 +106,7 @@ test('learners keep separate hearts, worlds and cosmetics across switches, reloa
   await expect(bow).toBeEnabled();
   await bow.click();
   await expect(
-    page.getByText('World 1 · ♥ 0 · 💎 0', { exact: true }),
+    page.getByText('0 badges · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await page
     .getByRole('button', { name: 'Choose Party bow', exact: true })
@@ -124,7 +124,7 @@ test('learners keep separate hearts, worlds and cosmetics across switches, reloa
     page.getByRole('heading', { name: 'Ben', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText('World 1 · ♥ 0 · 💎 0', { exact: true }),
+    page.getByText('0 badges · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await page.keyboard.press('a'); // Profile forms never play or award notes.
   await closeLearners(page);
@@ -152,7 +152,7 @@ test('learners keep separate hearts, worlds and cosmetics across switches, reloa
   ).toContainText('Ada');
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
-  ).toContainText('1 ✦ · ♥ 0');
+  ).toContainText('🏅 0 · ♥ 0');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await expect(
     page
