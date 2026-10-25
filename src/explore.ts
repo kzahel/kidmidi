@@ -214,7 +214,7 @@ export function exploreNotation(
   const groups = groupPlayedNotes(notes);
   const measures = makeMeasures(groups);
   const grandStaff = notes.some((note) => note.midi < 60);
-  const windowSize = multiline ? 8 : 2;
+  const windowSize = multiline ? 4 : 2;
   const start = Math.max(0, measures.length - windowSize);
   const shown = encodeMeasures(measures.slice(start), start + 1, grandStaff);
   const latest = groups.at(-1);

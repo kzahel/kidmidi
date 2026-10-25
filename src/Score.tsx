@@ -2,7 +2,7 @@ import type { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useEffect, useRef, useState } from 'react';
 import type { NoteHit } from './feedback';
 import { musicXml, type Note, type Song } from './music';
-import { type ScoreSize, scoreZoom } from './view';
+import { fitScore, type ScoreSize, scoreZoom } from './view';
 
 type CursorState = {
   active: number;
@@ -54,19 +54,6 @@ function paintCursor(
     head.classList.add('hit-notehead');
     head.classList.toggle('hit-held', !state.hit?.released);
   }
-  const viewport = root.closest<HTMLElement>('.score');
-  if (viewport && (state.hit || state.hint) && !state.complete) {
-    const marker = cursor.cursorElement.getBoundingClientRect();
-    const bounds = viewport.getBoundingClientRect();
-    if (marker.left < bounds.left + 12 || marker.right > bounds.right - 12) {
-      viewport.scrollLeft +=
-        marker.left - bounds.left - viewport.clientWidth * 0.35;
-    }
-    if (marker.top < bounds.top + 12 || marker.bottom > bounds.bottom - 12) {
-      viewport.scrollTop +=
-        marker.top - bounds.top - viewport.clientHeight * 0.35;
-    }
-  }
 }
 
 export function Score({
@@ -76,6 +63,7 @@ export function Score({
   song,
   wholeSong = false,
   phraseIndex = 0,
+  endPhrase,
   hit,
   hint,
   size,
@@ -87,6 +75,7 @@ export function Score({
   song: Song;
   wholeSong?: boolean;
   phraseIndex?: number;
+  endPhrase?: number;
   hit: NoteHit | null;
   hint: boolean;
   size: ScoreSize;
@@ -101,12 +90,64 @@ export function Score({
   useEffect(() => {
     let disposed = false;
     let observer: ResizeObserver | undefined;
+    let resizeFrame = 0;
     let instance: OpenSheetMusicDisplay | undefined;
     setError('');
     const mount = document.createElement('div');
     host.current?.appendChild(mount);
+    const viewport = host.current?.parentElement;
     const move = () => {
       if (instance) paintCursor(instance, latest.current, mount);
+    };
+    let previousWidth = 0;
+    let previousHeight = 0;
+    const layout = () => {
+      if (disposed || !instance || !viewport) return;
+      const width = viewport.clientWidth;
+      const height = viewport.clientHeight;
+      if (width < 1 || height < 1) return;
+      previousWidth = width;
+      previousHeight = height;
+      mount.style.transform = 'none';
+      const baseWidth = Math.max(width, size === 'kid' ? 640 : 480);
+      const availableWidth = Math.max(1, width - 4);
+      const availableHeight = Math.max(1, height - 4);
+      let best = { width: baseWidth, scale: 0, fittedWidth: 0 };
+      let renderedWidth = 0;
+      // A wider engraving can turn three cramped lines into one or two,
+      // keeping the fitted noteheads larger on a short, wide screen.
+      for (const factor of [1, 1.5, 2, 3]) {
+        const candidateWidth = Math.round(baseWidth * factor);
+        const upperBound = Math.min(1, availableWidth / candidateWidth);
+        if (upperBound < best.scale) break;
+        mount.style.width = `${candidateWidth}px`;
+        instance.Zoom = scoreZoom[size];
+        instance.render();
+        renderedWidth = candidateWidth;
+        const contentWidth = Math.max(candidateWidth, mount.scrollWidth);
+        const fit = fitScore(
+          contentWidth,
+          mount.scrollHeight,
+          availableWidth,
+          availableHeight,
+        );
+        if (fit.scale > best.scale)
+          best = {
+            width: candidateWidth,
+            scale: fit.scale,
+            fittedWidth: fit.width,
+          };
+        if (fit.scale >= upperBound - 0.001) break;
+      }
+      if (renderedWidth !== best.width) {
+        mount.style.width = `${best.width}px`;
+        instance.render();
+      }
+      mount.style.transform = `scale(${best.scale})`;
+      mount.style.left = `${Math.max(0, (width - best.fittedWidth) / 2)}px`;
+      mount.style.top = '2px';
+      viewport.dataset.fitScale = String(best.scale);
+      move();
     };
     async function render() {
       try {
@@ -142,32 +183,32 @@ export function Score({
               measuresPerSystem: wholeSong
                 ? (song.measuresPerSystem ?? 2)
                 : undefined,
-              startMeasure: wholeSong
-                ? 1
-                : 1 +
-                  song.phrases
-                    .slice(0, phraseIndex)
-                    .flat()
-                    .reduce((sum, note) => sum + note.beats, 0) /
-                    (song.timeSignature?.beats ?? 4),
+              startMeasure:
+                1 +
+                song.phrases
+                  .slice(0, phraseIndex)
+                  .flat()
+                  .reduce((sum, note) => sum + note.beats, 0) /
+                  (song.timeSignature?.beats ?? 4),
               finalBarline:
-                wholeSong || phraseIndex === song.phrases.length - 1,
+                (endPhrase ?? phraseIndex + 1) >= song.phrases.length,
             }),
         );
         if (disposed) return;
-        instance.Zoom = scoreZoom[size];
-        instance.render();
         renderer.current = instance;
-        move();
-        let previousWidth = mount.clientWidth;
+        layout();
         observer = new ResizeObserver(() => {
-          if (disposed || !instance || previousWidth === mount.clientWidth)
+          if (
+            disposed ||
+            !viewport ||
+            (previousWidth === viewport.clientWidth &&
+              previousHeight === viewport.clientHeight)
+          )
             return;
-          previousWidth = mount.clientWidth;
-          instance.render();
-          move();
+          cancelAnimationFrame(resizeFrame);
+          resizeFrame = requestAnimationFrame(layout);
         });
-        observer.observe(mount);
+        if (viewport) observer.observe(viewport);
       } catch {
         if (!disposed)
           setError(
@@ -179,11 +220,12 @@ export function Score({
     return () => {
       disposed = true;
       observer?.disconnect();
+      cancelAnimationFrame(resizeFrame);
       instance?.clear();
       mount.remove();
       renderer.current = null;
     };
-  }, [notes, song, wholeSong, phraseIndex, size, scoreXml]);
+  }, [notes, song, wholeSong, phraseIndex, endPhrase, size, scoreXml]);
 
   useEffect(() => {
     if (renderer.current && host.current)
@@ -201,7 +243,7 @@ export function Score({
       }
     >
       {error && <p role="alert">{error}</p>}
-      <div ref={host} />
+      <div className="score-host" ref={host} />
     </div>
   );
 }

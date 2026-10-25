@@ -124,7 +124,7 @@ test('live display stays bounded while the download retains the complete take', 
   const multiline = exploreNotation(notes, true);
   assert.equal(compact.measureCount, 18);
   assert.equal((compact.xml.match(/<measure /g) ?? []).length, 2);
-  assert.equal((multiline.xml.match(/<measure /g) ?? []).length, 8);
+  assert.equal((multiline.xml.match(/<measure /g) ?? []).length, 4);
   assert.equal(attackCount(compact.downloadXml), 70);
   checkBars(compact.xml);
   checkBars(multiline.xml);

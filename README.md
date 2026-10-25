@@ -9,11 +9,12 @@ with Twinkle, Twinkle, Hot Cross Buns, Räge-Rägetröpfli, and free play.
 The interface starts with compact song/MIDI controls, then the staff and piano.
 Keep titles, promotional copy, and decorative sections out of the practice view.
 Use **Kid** (default, large notation) or **Compact** (smaller notation), and toggle
-**Multiline** for the complete song in a scrolling score panel. Both sizes are
-larger than the original scaffold. Layout choices are remembered in this browser
-and work independently for every song. Multiline follows the note you play;
-on narrow screens the score also pans horizontally rather than shrinking or
-crowding the notation. You can swipe the score manually too.
+**Multiline** for pages containing multiple printed line groups when space allows.
+Layout choices are remembered in this browser and work independently for every
+song. The staff, illustration and piano fit within the screen without scrolling.
+Kid and Compact set the maximum notation size; engraving adapts to the available
+width and height. Pages advance with played-note feedback, and small arrows allow
+browsing multiline pages. Short or narrow screens show fewer line groups per page.
 The owner confirmed physical Casio USB-MIDI note input on 2026-10-25.
 
 Correct notes bloom green on the staff and light up the piano key, with a small
@@ -62,10 +63,10 @@ MIDI carries notes, not audio. There is no microphone capture.
 
 You can also tap/click the on-screen piano or use A S D F G H J K for C4 through C5.
 On-screen keys and **Hear this phrase** use a simple synthesized preview voice.
-The piano has narrower, fixed-width keys and stays centered instead of stretching
-across a wide screen. Kid mode keeps slightly wider touch targets. The piano
-scrolls horizontally on small screens. Notes outside its visible C3–C5
-range still arrive from MIDI and appear in the last-played readout.
+The piano has proportioned keys and stays centered instead of stretching across
+a wide screen. Kid mode keeps slightly wider touch targets. On small screens the
+entire piano scales to fit the width and available height. Notes outside its visible
+C3–C5 range still arrive from MIDI and appear in the last-played readout.
 
 Web MIDI needs HTTPS or a trusted loopback origin such as localhost. A plain HTTP
 LAN URL on an Android phone will not provide MIDI. For phone MIDI testing, serve
@@ -91,15 +92,15 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 The Räge-Rägetröpfli song is manually transcribed from the supplied book photo:
 all 12 bars, key/time signatures, chord symbols, lyrics, stems, flags and final
 barline. Its original illustration appears beside the score. Use **Multiline**
-for all four printed line groups, **Book photo** for the source, or **MusicXML** to
-export. Chords are visual references; practice still matches melody notes only.
+to browse all four printed line groups, **Book photo** for the source, or
+**MusicXML** to export. Chords are visual references; practice still matches melody notes only.
 See [transcription evidence](docs/transcriptions/raege-raegetroepfli.md).
 
 In song practice, the score is the target. In **Just explore**, playing writes a
 running score in loose 4/4: notes appear immediately, nearby attacks form chords,
 and long pauses are skipped. Low notes add a bass staff. The newest note/chord
 stays highlighted. Compact/Kid and Multiline also work here; the view shows the
-latest two bars (eight with Multiline), while **MusicXML** downloads the full take.
+latest two bars (four with Multiline), while **MusicXML** downloads the full take.
 Use **Clear recording** (↺) to start again. Captures stay in memory when switching
 songs, and reset on reload. A take holds up to 512 attacks and then asks you to
 download or clear it. See [live notation behavior](docs/explore-transcription.md).

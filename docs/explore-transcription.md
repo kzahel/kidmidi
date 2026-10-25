@@ -37,12 +37,13 @@ The displayed interpretation is separate from this raw capture:
 
 ## Display and lifecycle
 
-The normal view shows the last two bars; Multiline shows the last eight. The
+The normal view shows the last two bars; Multiline shows the last four. The
 complete take remains downloadable as MusicXML. This bounds live engraving work
 as a performance grows. The cursor follows the latest note/chord (including a
 continuation if it crosses a bar); rests are never colored as played notes.
-Compact/Kid sizes, horizontal panning, and multiline following use the shared
-score renderer. A blank 4/4 staff appears before the first note.
+Compact/Kid sizes use the shared score renderer, which fits the entire displayed
+excerpt within the available width and height without scrolling or clipping.
+A blank 4/4 staff appears before the first note.
 
 Clear recording resets only the explore take. Switching to a song and returning
 keeps it; reloading discards it. Up to 512 source attacks are retained. At that

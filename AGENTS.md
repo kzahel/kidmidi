@@ -6,8 +6,10 @@ loop: correct fresh note-on is accepted immediately, wrong notes wait, no timed
 scoring or punishment. Presentation lingers on a hit through its note-length/key
 hold; accept an early next correct note without forcing a pause. Keep recognition
 and feedback lifetime separate. Next-note cues are idle hints only: suppress them
-during playing/holds and wait for a pause before helping. Preserve readable staff
-sizes; use score scrolling and follow the played note instead of squeezing glyphs.
+during playing/holds and wait for a pause before helping. Fit the complete displayed
+score page and piano within the viewport without scrolling or clipping. Keep
+notation as large as space allows; paginate multiline practice and advance pages
+with played-note feedback.
 Compact/Kid sizing and multiline are independent saved display preferences.
 
 Keep MIDI transport separate from practice and song data so native Android/iOS
@@ -26,3 +28,6 @@ Keep main-push deployment fast: lint, Node unit tests and the typechecked build
 run in the single Pages job. Browser tests and the Pages bundle smoke check belong
 in the separate manual Browser checks workflow; do not add them back to every
 main push without an explicit request.
+
+Commit and push completed changes to the current branch by default, unless the
+user explicitly asks otherwise.

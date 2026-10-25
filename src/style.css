@@ -8,6 +8,13 @@
 * {
   box-sizing: border-box;
 }
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 body {
   margin: 0;
 }
@@ -37,6 +44,11 @@ button:disabled {
   max-width: 1200px;
   margin: 0 auto;
   padding: 8px 12px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: clip;
 }
 .toolbar,
 .song-picker,
@@ -50,7 +62,7 @@ button:disabled {
 .toolbar {
   justify-content: space-between;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 .song-picker {
   flex-wrap: wrap;
@@ -96,17 +108,26 @@ button:hover:not(:disabled) {
   flex-shrink: 0;
 }
 .midi-status {
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 12px;
   margin: 4px 0 8px;
   color: #756341;
 }
 .practice {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: #fffefa;
   border: 1px solid #e5e6dc;
   border-radius: 8px;
   overflow: hidden;
 }
 .practice-controls {
+  flex-shrink: 0;
   padding: 0 10px;
   gap: 12px;
   min-height: 40px;
@@ -137,11 +158,21 @@ button:hover:not(:disabled) {
   font-size: 23px;
 }
 .score {
-  min-height: 120px;
-  overflow: hidden;
-}
-.score > div {
+  flex: 1;
+  min-height: 0;
   min-width: 0;
+  position: relative;
+  overflow: clip;
+}
+.score-host {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+}
+.score-host > div {
+  position: absolute;
+  top: 0;
+  transform-origin: top left;
 }
 .score svg {
   display: block;
@@ -151,6 +182,7 @@ button:hover:not(:disabled) {
   font-size: 13px;
 }
 .progress-track {
+  flex-shrink: 0;
   height: 3px;
   background: #eeeee6;
 }
@@ -160,6 +192,7 @@ button:hover:not(:disabled) {
   transition: width 0.2s;
 }
 .play-status {
+  flex-shrink: 0;
   min-height: 40px;
   padding: 4px 12px;
   font-size: 13px;
@@ -170,17 +203,21 @@ button:hover:not(:disabled) {
   font-size: 12px;
 }
 .keyboard-panel {
-  margin-top: 8px;
+  flex-shrink: 0;
+}
+.song-select {
+  display: none;
 }
 .keyboard-scroll {
-  overflow-x: auto;
+  overflow: clip;
   border-radius: 7px;
 }
 .keyboard {
   --white-key-width: 38px;
-  width: calc(var(--white-key-width) * 15 + 8px);
+  width: min(100%, calc(var(--white-key-width) * 15 + 8px), calc(20dvh * 4.25));
+  aspect-ratio: 578 / 136;
   margin-inline: auto;
-  height: 136px;
+  height: auto;
   position: relative;
   background: #414c42;
   border: 4px solid #414c42;
@@ -268,9 +305,6 @@ button:hover:not(:disabled) {
     padding-inline: 6px;
     font-size: 12px;
   }
-  .keyboard {
-    height: 128px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .progress-track > div {
@@ -279,18 +313,24 @@ button:hover:not(:disabled) {
 }
 
 .score-layout {
+  flex: 1;
   min-width: 0;
+  min-height: 0;
+  display: flex;
 }
 .score-layout.illustrated {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px;
+  grid-template-columns: minmax(0, 1fr) clamp(40px, 9vw, 100px);
+  grid-template-rows: minmax(0, 1fr);
   gap: 8px;
   padding-right: 8px;
 }
 .book-illustration {
   display: block;
-  width: 94px;
-  max-height: 192px;
+  width: 100%;
+  height: 100%;
+  max-width: 94px;
+  max-height: min(100%, 192px);
   align-self: start;
   justify-self: center;
   border-radius: 6px;
@@ -308,6 +348,7 @@ button:hover:not(:disabled) {
   min-height: 40px;
 }
 .score-credit {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   gap: 8px;
@@ -320,13 +361,13 @@ button:hover:not(:disabled) {
 }
 @media (max-width: 640px) {
   .score-layout.illustrated {
-    grid-template-columns: minmax(0, 1fr) 80px;
+    grid-template-columns: minmax(0, 1fr) 48px;
     gap: 0;
     padding-right: 4px;
   }
   .book-illustration {
-    width: 76px;
-    max-height: 160px;
+    max-width: 48px;
+    max-height: min(100%, 160px);
   }
   .source-link {
     font-size: 11px;
@@ -442,12 +483,6 @@ button:hover:not(:disabled) {
   }
 }
 
-.score.multiline {
-  max-height: min(58dvh, 620px);
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  scrollbar-gutter: stable;
-}
 .score.hint-active [id^="cursorImg"] {
   animation: idle-cursor-build 6s ease-in-out both;
 }
@@ -461,7 +496,8 @@ button:hover:not(:disabled) {
 }
 .kid-view .keyboard {
   --white-key-width: 44px;
-  height: 158px;
+  aspect-ratio: 668 / 158;
+  height: auto;
 }
 .kid-view .piano-key.white > .key-label {
   font-size: 15px;
@@ -471,26 +507,6 @@ button:hover:not(:disabled) {
   padding: 4px 8px;
   font-size: 12px;
 }
-@media (max-width: 640px) {
-  .score.multiline {
-    max-height: 52dvh;
-  }
-  .kid-view .keyboard {
-    height: 140px;
-  }
-}
-
-.score,
-.score.multiline {
-  overflow-x: auto;
-}
-.kid-view .score > div {
-  min-width: 640px;
-}
-.compact-view .score > div {
-  min-width: 480px;
-}
-
 .score .hint-notehead,
 .score .hint-notehead path {
   animation: idle-note-build 6s ease-in-out both;
@@ -577,4 +593,69 @@ button:hover:not(:disabled) {
   margin: 6px 12px;
   color: #906216;
   font-size: 12px;
+}
+
+.page-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.practice-controls .page-controls button {
+  min-height: 32px;
+  padding: 2px 8px;
+  font-size: 20px;
+}
+@media (max-width: 640px) {
+  .song-picker {
+    display: none;
+  }
+  .song-select {
+    display: block;
+    flex: 1;
+    min-width: 0;
+  }
+  .toolbar {
+    flex-wrap: nowrap;
+  }
+  .connection {
+    flex-shrink: 1;
+    max-width: 52%;
+  }
+  .connection-button {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .connection select {
+    min-width: 0;
+    max-width: 80px;
+  }
+}
+@media (max-height: 600px) {
+  .app {
+    padding-block: 4px;
+    gap: 4px;
+  }
+  button,
+  select,
+  .hint-toggle,
+  .practice-controls,
+  .play-status {
+    min-height: 30px;
+  }
+  .practice-controls {
+    gap: 6px;
+  }
+  .practice-controls select {
+    min-height: 30px;
+  }
+  .score-credit {
+    padding-block: 2px;
+  }
+  .midi-status {
+    margin-block: 0;
+  }
 }

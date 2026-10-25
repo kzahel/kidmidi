@@ -62,6 +62,7 @@ whole-song/phrase views keeps a single SVG page and bounded excerpt height.
 
 The display control is now named Multiline and is available for all songs.
 Compact/Kid changes engraving size without changing the transcribed score or
-MusicXML download. Narrow score viewports pan rather than colliding symbols;
-multiline view follows the active played note. Target cursors are faint idle hints,
-visible only after a pause, not continuously advancing prompts.
+MusicXML download. The full displayed page fits the available width and height
+without scrolling. Multiline shows one or two printed line groups per page
+depending on screen size and advances with played-note feedback. Target cursors
+are faint idle hints, visible only after a pause, not continuously advancing prompts.

@@ -156,7 +156,9 @@ test('phone layout, touch input, unsupported MIDI and completing a song', async 
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.getByRole('button', { name: /Hot Cross Buns/ }).click();
+  await page
+    .getByRole('combobox', { name: 'Song', exact: true })
+    .selectOption('buns');
   for (const note of [
     64, 62, 60, 64, 62, 60, 60, 60, 60, 60, 62, 62, 62, 62, 64, 62, 60,
   ]) {
@@ -188,6 +190,9 @@ test('songbook score includes illustration, symbols, whole-song cursor and downl
   await expect(page.locator('.score')).toContainText('tröpf');
   await expect(page.locator('.score')).toContainText('D');
   await page.getByLabel('Multiline', { exact: true }).check();
+  await page
+    .getByRole('button', { name: 'Next score page', exact: true })
+    .click();
   await expect(page.locator('.score')).toContainText('Steind');
   await expect(page.locator('.score')).toContainText('Gass.');
   await expect(page.locator('.score svg')).toHaveCount(1);
@@ -237,7 +242,7 @@ test('songbook score includes illustration, symbols, whole-song cursor and downl
   ).toBe(true);
 });
 
-test('notation sizes and multiline persist, and multiline follows a played note', async ({
+test('notation sizes and multiline persist, and fitted pages follow a played note', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -291,9 +296,8 @@ test('notation sizes and multiline persist, and multiline follows a played note'
     await page
       .getByRole('button', { name: `Play ${note}`, exact: true })
       .click();
-  await expect
-    .poll(() => page.locator('.score').evaluate((el) => el.scrollTop))
-    .toBeGreaterThan(0);
+  await expect(page.getByText('Page 3 of 6', { exact: true })).toBeVisible();
+  expect(await page.locator('.score').evaluate((el) => el.scrollTop)).toBe(0);
   const scoreBox = await page.locator('.score').boundingBox();
   const headBox = await page.locator('.hit-notehead').boundingBox();
   expect(headBox?.y).toBeGreaterThanOrEqual(scoreBox?.y ?? Infinity);
@@ -517,4 +521,55 @@ test('Just explore writes MIDI chords and bass notes to a live score with downlo
   await expect(page.getByText('0 notes · 4/4')).toBeVisible();
   await expect(page.getByRole('link', { name: 'MusicXML ↓' })).toHaveCount(0);
   await expect(page.locator('.score svg')).toHaveCount(1);
+});
+
+test('raindrop Kid pages fit desktop, phone and landscape without scrolling or clipping', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.goto('/');
+  await page
+    .getByRole('button', { name: 'Räge-Rägetröpfli', exact: true })
+    .click();
+  await page.getByLabel('Multiline', { exact: true }).check();
+  const fits = () =>
+    page.evaluate(() => {
+      const score = document.querySelector<HTMLElement>('.score');
+      const svg = score?.querySelector('svg');
+      const piano = document.querySelector<HTMLElement>('.keyboard');
+      if (!score || !svg || !piano) return false;
+      const box = score.getBoundingClientRect();
+      const music = svg.getBoundingClientRect();
+      const keys = piano.getBoundingClientRect();
+      return (
+        document.documentElement.scrollWidth <= innerWidth &&
+        document.documentElement.scrollHeight <= innerHeight &&
+        music.width > 0 &&
+        music.height > 0 &&
+        music.left >= box.left - 1 &&
+        music.top >= box.top - 1 &&
+        music.right <= box.right + 1 &&
+        music.bottom <= box.bottom + 1 &&
+        keys.left >= 0 &&
+        keys.right <= innerWidth + 1 &&
+        keys.bottom <= innerHeight + 1 &&
+        !['auto', 'scroll'].includes(getComputedStyle(score).overflowY) &&
+        !['auto', 'scroll'].includes(getComputedStyle(score).overflowX) &&
+        score.scrollTop === 0 &&
+        score.scrollLeft === 0
+      );
+    });
+  await expect.poll(fits).toBe(true);
+  await page
+    .getByRole('button', { name: 'Next score page', exact: true })
+    .click();
+  await expect(page.locator('.score')).toContainText('Chöpf');
+  await expect.poll(fits).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(fits).toBe(true);
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect.poll(fits).toBe(true);
+  await page.getByLabel('Multiline', { exact: true }).uncheck();
+  await expect(page.locator('.score')).toContainText('tröpf');
+  await expect.poll(fits).toBe(true);
 });

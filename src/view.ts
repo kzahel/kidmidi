@@ -39,3 +39,47 @@ export function saveViewSettings(settings: ViewSettings) {
     /* The controls still work when browser storage is unavailable. */
   }
 }
+
+export function fitScore(
+  contentWidth: number,
+  contentHeight: number,
+  availableWidth: number,
+  availableHeight: number,
+) {
+  const scale = Math.max(
+    0,
+    Math.min(
+      1,
+      availableWidth / Math.max(1, contentWidth),
+      availableHeight / Math.max(1, contentHeight),
+    ),
+  );
+  return { scale, width: contentWidth * scale, height: contentHeight * scale };
+}
+
+export function practicePage(
+  phraseCount: number,
+  currentPhrase: number,
+  multiline: boolean,
+  size: ScoreSize,
+  width: number,
+  height: number,
+  requestedPage: number | null = null,
+) {
+  const roomy =
+    size === 'kid'
+      ? width >= 1000 && height >= 780
+      : width >= 720 && height >= 600;
+  const capacity = multiline && roomy ? 2 : 1;
+  const count = Math.max(1, Math.ceil(phraseCount / capacity));
+  const index = Math.max(
+    0,
+    Math.min(count - 1, requestedPage ?? Math.floor(currentPhrase / capacity)),
+  );
+  return {
+    index,
+    count,
+    start: index * capacity,
+    end: Math.min(phraseCount, (index + 1) * capacity),
+  };
+}

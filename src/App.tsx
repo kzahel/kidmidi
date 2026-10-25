@@ -20,7 +20,12 @@ import {
 } from './music';
 import { Score } from './Score';
 import { useMidi } from './useMidi';
-import { loadViewSettings, type ScoreSize, saveViewSettings } from './view';
+import {
+  loadViewSettings,
+  practicePage,
+  type ScoreSize,
+  saveViewSettings,
+} from './view';
 
 const keyboardNotes = Array.from({ length: 25 }, (_, index) => 48 + index);
 const whiteNotes = keyboardNotes.filter(
@@ -45,8 +50,18 @@ export function App() {
   const [take, setTake] = useState<PlayedNote[]>([]);
   const [recorder] = useState(() => new ExploreRecorder(setTake));
   const [view, setView] = useState(loadViewSettings);
-  const wholeNotes = useMemo(() => song.phrases.flat(), [song]);
   const wholeSong = view.multiline;
+  const [screen, setScreen] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
+  const [requestedPage, setRequestedPage] = useState<number | null>(null);
+  useEffect(() => {
+    const update = () =>
+      setScreen({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
   const liveScore = useMemo(
     () => exploreNotation(take, view.multiline),
     [take, view.multiline],
@@ -104,6 +119,7 @@ export function App() {
         } else {
           const next = advance(state.song, state.position, event.note);
           if (next !== state.position) {
+            setRequestedPage(null);
             feedback.start(
               state.position,
               state.song.phrases[state.position.phrase][state.position.note],
@@ -183,6 +199,7 @@ export function App() {
     releaseAll();
     setPosition(startPosition());
     setLastNote(null);
+    setRequestedPage(null);
   }
   function clearTake() {
     releaseAll();
@@ -192,6 +209,22 @@ export function App() {
   const shownPosition = hit?.position ?? position;
   const notes = song.phrases[shownPosition.phrase];
   const expected = notes[shownPosition.note].midi;
+  const page = practicePage(
+    song.phrases.length,
+    shownPosition.phrase,
+    view.multiline,
+    view.size,
+    screen.width,
+    screen.height,
+    view.multiline ? requestedPage : null,
+  );
+  const pageNotes = useMemo(
+    () => song.phrases.slice(page.start, page.end).flat(),
+    [song, page.start, page.end],
+  );
+  const pageContainsCurrent =
+    shownPosition.phrase >= page.start && shownPosition.phrase < page.end;
+  const pageOffset = song.phrases.slice(0, page.start).flat().length;
   const shownCount =
     song.phrases.slice(0, shownPosition.phrase).flat().length +
     shownPosition.note;
@@ -201,6 +234,7 @@ export function App() {
     (position.complete ? 1 : 0);
   const total = song.phrases.flat().length;
   const connected = midi.inputs.find((input) => input.id === midi.selected);
+  const artBounds = song.source?.illustrationViewBox.split(' ').map(Number);
 
   return (
     <main className={`app ${view.size}-view`}>
@@ -233,6 +267,23 @@ export function App() {
             Just explore
           </button>
         </nav>
+        <select
+          className="song-select"
+          aria-label="Song"
+          value={freePlay ? 'explore' : songId}
+          onChange={(event) => {
+            reset();
+            setFreePlay(event.target.value === 'explore');
+            if (event.target.value !== 'explore') setSongId(event.target.value);
+          }}
+        >
+          {songs.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.title}
+            </option>
+          ))}
+          <option value="explore">Just explore</option>
+        </select>
         <section className="connection" aria-label="MIDI connection">
           {midi.inputs.length > 1 && (
             <select
@@ -281,7 +332,10 @@ export function App() {
               <span className="phrase-count">
                 Phrase {shownPosition.phrase + 1} of {song.phrases.length}
               </span>
-              <button type="button" onClick={() => audio.current.hear(notes)}>
+              <button
+                type="button"
+                onClick={() => audio.current.hear(pageNotes)}
+              >
                 <span aria-hidden="true">▷</span> Hear this phrase
               </button>
             </>
@@ -312,6 +366,29 @@ export function App() {
             />
             Multiline
           </label>
+          {!freePlay && view.multiline && page.count > 1 && (
+            <span className="page-controls" aria-label="Score pages">
+              <button
+                type="button"
+                aria-label="Previous score page"
+                disabled={page.index === 0}
+                onClick={() => setRequestedPage(page.index - 1)}
+              >
+                ‹
+              </button>
+              <span>
+                Page {page.index + 1} of {page.count}
+              </span>
+              <button
+                type="button"
+                aria-label="Next score page"
+                disabled={page.index + 1 === page.count}
+                onClick={() => setRequestedPage(page.index + 1)}
+              >
+                ›
+              </button>
+            </span>
+          )}
           {!freePlay && song.source && (
             <a
               className="source-link"
@@ -375,14 +452,15 @@ export function App() {
           <>
             <div className={`score-layout ${song.source ? 'illustrated' : ''}`}>
               <Score
-                notes={wholeSong ? wholeNotes : notes}
-                active={wholeSong ? shownCount : shownPosition.note}
+                notes={pageNotes}
+                active={Math.max(0, shownCount - pageOffset)}
                 complete={shownPosition.complete}
                 song={song}
                 wholeSong={wholeSong}
-                phraseIndex={wholeSong ? 0 : shownPosition.phrase}
-                hit={hit}
-                hint={hintReady}
+                phraseIndex={page.start}
+                endPhrase={page.end}
+                hit={pageContainsCurrent ? hit : null}
+                hint={pageContainsCurrent && hintReady}
                 size={view.size}
               />
               {song.source && (
@@ -393,7 +471,18 @@ export function App() {
                   aria-label={song.source.illustrationAlt}
                 >
                   <title>{song.source.illustrationAlt}</title>
+                  <defs>
+                    <clipPath id="song-illustration-crop">
+                      <rect
+                        x={artBounds?.[0]}
+                        y={artBounds?.[1]}
+                        width={artBounds?.[2]}
+                        height={artBounds?.[3]}
+                      />
+                    </clipPath>
+                  </defs>
                   <image
+                    clipPath="url(#song-illustration-crop)"
                     href={assetUrl(song.source.image)}
                     width="1505"
                     height="2000"
