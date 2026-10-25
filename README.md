@@ -154,6 +154,10 @@ npx playwright install chromium # first time only
 npm run test:browser
 ```
 
+Keep the full Node test suite (`npm test`) under about 10 seconds on a normal
+development machine or cached CI runner. Use deterministic inputs and fake clocks
+instead of real-time waits where possible, and keep regression coverage focused.
+
 Browser checks use Playwright's separate Chromium and simulated MIDI messages.
 They cover real staff rendering/cursor progression, repeated notes, unplugging,
 on-screen input, completion, and a phone viewport. Physical MIDI requires an
@@ -168,6 +172,8 @@ TypeScript and downloadable-score freshness checks), and GitHub Pages deployment
 Everything runs in one job to avoid another runner/queue handoff; no browser
 installation or browser suite blocks a push. You can also deploy manually from
 Actions. Dependency audit/funding network calls are skipped during installation.
+Aim for about 10 seconds for the combined lint, Node tests and build on a cached
+runner; runner setup, dependency installation and Pages deployment add overhead.
 
 The full browser suite and built project-path smoke check remain available locally
 and through the separate **Browser checks** manual Actions workflow
@@ -175,6 +181,10 @@ and through the separate **Browser checks** manual Actions workflow
 when investigating browser behavior. It does not gate the fast Pages deployment.
 Pages uses the **GitHub Actions** publishing source and the `github-pages`
 environment. No deploy credentials or external hosting are required.
+
+After pushing changes to `main`, verify the Pages workflow for that commit and
+report its deployment result. Agent workflow instructions live in [AGENTS.md](AGENTS.md);
+`CLAUDE.md` imports that same file.
 
 CI sets `KIDMIDI_BASE_PATH=/kidmidi/`; local development keeps `/`. Asset links,
 the songbook illustration, MusicXML download and lazy notation renderer follow

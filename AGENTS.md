@@ -27,14 +27,29 @@ Auto-select named MIDI inputs ahead of known virtual routing/blank ports; preser
 explicit manual selections and preferred-keyboard reconnect behavior.
 
 Run `npm run typecheck`, `npm test`, `npm run check`, and `npm run build`.
+Add or update focused regression coverage for behavior changes and bug fixes.
+Keep the full Node test suite under about 10 seconds on a normal development
+machine or cached CI runner. Prefer deterministic inputs and fake clocks over
+real-time waits; investigate slowdowns without dropping meaningful coverage.
 For browser-dependent changes run `npm run test:browser` using bundled Playwright
-Chromium. Mocked MIDI checks do not establish physical keyboard compatibility.
-Keep generated output, recordings, credentials and local state out of Git.
+Chromium; visually inspect desktop and phone layouts for presentation changes.
+Mocked MIDI checks do not establish physical keyboard compatibility.
+Keep build/test output, recordings, credentials and local state out of Git.
+Tracked downloadable scores are maintained generated assets: run
+`npm run scores:export` when their source changes and commit the updated scores.
+Update README.md and relevant `docs/` specifications when behavior changes.
 
 Keep main-push deployment fast: lint, Node unit tests and the typechecked build
 run in the single Pages job. Browser tests and the Pages bundle smoke check belong
 in the separate manual Browser checks workflow; do not add them back to every
-main push without an explicit request.
+main push without an explicit request. Aim for about 10 seconds for the combined
+lint, Node tests and build on a cached runner, excluding setup and deployment.
+Keep browser checks bounded too; avoid unnecessary waits and repeated full runs.
 
+Inspect Git status before editing, preserve unrelated changes, and commit only
+task-related files. Review the final diff and complete required checks before pushing.
 Commit and push completed changes to the current branch by default, unless the
-user explicitly asks otherwise.
+user explicitly asks otherwise. Pushes to main deploy the public site. After
+pushing, monitor the Pages workflow for that commit and address failures caused
+by the change. Report the commit, validation and deployment result; explicitly
+state if deployment could not be verified.
