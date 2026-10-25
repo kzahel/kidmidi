@@ -18,3 +18,8 @@ Run `npm run typecheck`, `npm test`, `npm run check`, and `npm run build`.
 For browser-dependent changes run `npm run test:browser` using bundled Playwright
 Chromium. Mocked MIDI checks do not establish physical keyboard compatibility.
 Keep generated output, recordings, credentials and local state out of Git.
+
+Keep main-push deployment fast: lint, Node unit tests and the typechecked build
+run in the single Pages job. Browser tests and the Pages bundle smoke check belong
+in the separate manual Browser checks workflow; do not add them back to every
+main push without an explicit request.

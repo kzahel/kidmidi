@@ -118,9 +118,17 @@ explicit manual keypress check on the actual keyboard.
 ## GitHub Pages
 
 The public repository is https://github.com/kzahel/kidmidi. Every push to `main`
-runs `.github/workflows/pages.yml`: install, typecheck, unit tests, lint, build,
-bundled Chromium browser checks, and a smoke check of the built project-path
-bundle, then GitHub Pages deployment. You can also run it manually from Actions.
+runs `.github/workflows/pages.yml`: cached dependency installation, Biome lint/
+format checks, Node unit tests, then the production build (which includes
+TypeScript and downloadable-score freshness checks), and GitHub Pages deployment.
+Everything runs in one job to avoid another runner/queue handoff; no browser
+installation or browser suite blocks a push. You can also deploy manually from
+Actions. Dependency audit/funding network calls are skipped during installation.
+
+The full browser suite and built project-path smoke check remain available locally
+and through the separate **Browser checks** manual Actions workflow
+(`.github/workflows/browser-checks.yml`). Run that after renderer/input changes or
+when investigating browser behavior. It does not gate the fast Pages deployment.
 Pages uses the **GitHub Actions** publishing source and the `github-pages`
 environment. No deploy credentials or external hosting are required.
 
