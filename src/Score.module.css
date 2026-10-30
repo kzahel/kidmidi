@@ -108,3 +108,18 @@
     filter: drop-shadow(0 0 4px #d9b35480);
   }
 }
+
+.score .played-note {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.score .played-note,
+.score .played-note * {
+  fill: #536b9e;
+  stroke: #536b9e;
+  animation: none;
+  filter: none;
+}
+.score .played-note text {
+  stroke: none;
+}

@@ -4,6 +4,7 @@ import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
 import { displayKeyRange, keyboardLayout, screenKeyboard } from './keyboard';
 import { advance, type NoteEvent, songs, startPosition } from './music';
 import { PhrasePreview, type PreviewState } from './phrase-preview';
+import type { PlayedAttempt } from './played-note';
 import { SoundOutput } from './sound-output';
 import { loadSoundSettings, saveSoundSettings } from './sound-settings';
 import { useExploreSession } from './useExploreSession';
@@ -87,6 +88,7 @@ export function usePianoSession(
   const [hints, setHints] = useState(true);
   const [pressed, setPressed] = useState(new Set<number>());
   const [lastNote, setLastNote] = useState<number | null>(null);
+  const [attempt, setAttempt] = useState<PlayedAttempt | null>(null);
   const [hit, setHit] = useState<NoteHit | null>(null);
   const [hintReady, setHintReady] = useState(false);
   const [idleHint] = useState(
@@ -135,6 +137,7 @@ export function usePianoSession(
 
   const releaseAll = useCallback(() => {
     dancer.reset();
+    setAttempt(null);
     player.stop();
     preview.stop();
     held.current.clear();
@@ -185,12 +188,21 @@ export function usePianoSession(
         } else if (state.active) {
           const next = advance(state.song, state.position, event.note);
           if (next !== state.position) {
+            setAttempt(null);
             setRequestedPage(null);
             feedback.start(
               state.position,
               state.song.phrases[state.position.phrase][state.position.note],
               id,
             );
+          } else if (!state.position.complete) {
+            setAttempt({
+              position: { ...state.position },
+              midi: event.note,
+              target:
+                state.song.phrases[state.position.phrase][state.position.note]
+                  .midi,
+            });
           }
           current.current = { ...state, position: next };
           setPosition(next);
@@ -411,6 +423,7 @@ export function usePianoSession(
     setHints,
     pressed,
     lastNote,
+    attempt,
     hit,
     hintReady,
     previewState,

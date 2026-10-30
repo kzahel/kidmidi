@@ -46,6 +46,14 @@ losing focus and unplugging clean up highlights/timers. Reduced motion keeps the
 colour feedback without the bloom or sparkle. MIDI sustain-pedal CC64 is not yet
 used; held feedback follows key-down/key-up.
 
+If you miss a song note, a blue-grey note at half opacity shows the pitch you
+played at the waiting target's horizontal position on the same staff. Compare
+its height with the printed note to find your way higher or lower. The latest
+try replaces the ghost, and it stays after release until you find the correct
+note. Correct notes keep their green feedback. This works with MIDI, touch and
+computer keys, including with Idle hints off. The song still waits patiently.
+See [song practice and played-note ghosts](docs/song-practice.md).
+
 During normal playing only struck notes highlight. **Idle hints** adds a faint
 next-note cursor, piano-key dot and note name after 1.8 seconds of inactivity.
 Over the next six seconds, the cursor strengthens, the notehead and piano key

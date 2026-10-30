@@ -9,6 +9,7 @@ export function PracticeScore({ session }: { session: PianoSession }) {
     view,
     wholeSong,
     hit,
+    attempt,
     hintReady,
     shownPosition,
     page,
@@ -39,6 +40,20 @@ export function PracticeScore({ session }: { session: PianoSession }) {
               wholeSong={wholeSong}
               phraseIndex={page.start}
               endPhrase={page.end}
+              attempt={
+                attempt &&
+                attempt.position.phrase >= page.start &&
+                attempt.position.phrase < page.end
+                  ? {
+                      midi: attempt.midi,
+                      target: attempt.target,
+                      index:
+                        song.phrases
+                          .slice(page.start, attempt.position.phrase)
+                          .flat().length + attempt.position.note,
+                    }
+                  : null
+              }
               hit={pageContainsCurrent ? hit : null}
               hint={pageContainsCurrent && hintReady}
               size={view.size}

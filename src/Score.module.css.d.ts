@@ -5,6 +5,7 @@ declare const styles: {
   readonly 'hit-active': string;
   readonly 'hit-held': string;
   readonly 'hit-notehead': string;
+  readonly 'played-note': string;
   readonly 'score': string;
   readonly 'score-host': string;
 };

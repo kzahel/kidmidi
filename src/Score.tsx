@@ -1,7 +1,9 @@
 import type { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useEffect, useRef, useState } from 'react';
 import type { NoteHit } from './feedback';
-import { musicXml, type Note, type Song } from './music';
+import { musicXml, type Note, noteName, octave, type Song } from './music';
+import { paintPlayedNote } from './paint-played-note';
+import type { ScoreAttempt } from './played-note';
 import styles from './Score.module.css';
 import { fitScore, type ScoreSize, scoreZoom } from './view';
 
@@ -10,6 +12,8 @@ type CursorState = {
   complete: boolean;
   hit: NoteHit | null;
   hint: boolean;
+  attempt: ScoreAttempt | null;
+  fifths: number;
 };
 
 function paintCursor(
@@ -19,6 +23,22 @@ function paintCursor(
 ) {
   const cursor = instance.cursor;
   if (!cursor) return;
+  for (const previous of root.querySelectorAll('[data-played-note]'))
+    previous.remove();
+  if (state.attempt) {
+    cursor.reset();
+    for (let i = 0; i < state.attempt.index; i++) cursor.next();
+    const target = cursor
+      .GNotesUnderCursor()
+      .find((note) => !note.sourceNote.isRest());
+    if (target)
+      paintPlayedNote(
+        target,
+        state.attempt,
+        state.fifths,
+        styles['played-note'],
+      );
+  }
   cursor.reset();
   for (let i = 0; i < state.active; i++) cursor.next();
   if (state.complete || (!state.hit && !state.hint)) cursor.hide();
@@ -71,6 +91,7 @@ export function Score({
   endPhrase,
   hit,
   hint,
+  attempt = null,
   size,
   scoreXml,
   flashcard = false,
@@ -85,6 +106,7 @@ export function Score({
   endPhrase?: number;
   hit: NoteHit | null;
   hint: boolean;
+  attempt?: ScoreAttempt | null;
   size: ScoreSize;
   scoreXml?: string;
   flashcard?: boolean;
@@ -92,8 +114,22 @@ export function Score({
 }) {
   const host = useRef<HTMLDivElement>(null);
   const renderer = useRef<OpenSheetMusicDisplay | null>(null);
-  const latest = useRef({ active, complete, hit, hint });
-  latest.current = { active, complete, hit, hint };
+  const latest = useRef({
+    active,
+    complete,
+    hit,
+    hint,
+    attempt,
+    fifths: song.keyFifths ?? 0,
+  });
+  latest.current = {
+    active,
+    complete,
+    hit,
+    hint,
+    attempt,
+    fifths: song.keyFifths ?? 0,
+  };
   const ready = useRef(onReady);
   ready.current = onReady;
   const [error, setError] = useState('');
@@ -259,7 +295,7 @@ export function Score({
   useEffect(() => {
     if (renderer.current && host.current)
       paintCursor(renderer.current, latest.current, host.current);
-  }, [active, complete, hit, hint]);
+  }, [active, complete, hit, hint, attempt, song.keyFifths]);
 
   return (
     <div
@@ -272,7 +308,7 @@ export function Score({
       aria-label={
         scoreXml
           ? 'Live sheet music of what you played.'
-          : `Sheet music: ${notes.map((note) => note.midi).join(', ')}. ${hit ? 'The note you played is highlighted.' : hint ? 'A faint cursor hints at the next note.' : 'Waiting for you to play.'}`
+          : `Sheet music: ${notes.map((note) => note.midi).join(', ')}. ${attempt ? `A faint ${noteName(attempt.midi)}${octave(attempt.midi)} shows what you played at the waiting ${noteName(attempt.target)}${octave(attempt.target)}. Try a little ${attempt.midi < attempt.target ? 'higher' : 'lower'}.` : ''} ${hit ? 'The note you played is highlighted.' : hint ? 'A faint cursor hints at the next note.' : 'Waiting for you to play.'}`
       }
     >
       {error && <p role="alert">{error}</p>}
