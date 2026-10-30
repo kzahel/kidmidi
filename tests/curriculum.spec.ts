@@ -118,7 +118,6 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     page.getByRole('region', { name: 'Lesson complete' }),
   ).not.toContainText('💎');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
-  await page.getByRole('button', { name: 'Next rewards', exact: true }).click();
   await page
     .getByRole('button', { name: 'Preview Puppy friend', exact: true })
     .click();

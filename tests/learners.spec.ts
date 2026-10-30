@@ -111,8 +111,8 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
     page.getByText('0 badges · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Party bow equipped', exact: true }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Take off Party bow', exact: true }),
+  ).toBeEnabled();
   await expect(
     page
       .getByRole('img', { name: 'Fox friend with party bow', exact: true })

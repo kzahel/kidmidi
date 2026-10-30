@@ -26,6 +26,64 @@ export function PetBackdrop({ charm }: { charm: string | null }) {
 
 export function PetAccessories({ charm }: { charm: string | null }) {
   switch (charm) {
+    case 'bow':
+      return (
+        <g fill="#db6995" stroke="#a9426c" strokeWidth="2">
+          <path d="M129 56 Q100 28 106 66 L129 63 Q154 86 155 49 Z" />
+          <circle cx="130" cy="61" r="7" fill="#f6aac8" />
+        </g>
+      );
+    case 'star':
+      return (
+        <>
+          <path
+            d="M70 132 Q100 152 130 132"
+            stroke="#bf9449"
+            strokeWidth="3"
+            fill="none"
+          />
+          <path
+            d="M100 140 L105 151 L117 152 L108 160 L110 172 L100 166 L90 172 L92 160 L83 152 L95 151 Z"
+            fill="#f3c85e"
+            stroke="#b88b34"
+            strokeWidth="2"
+          />
+        </>
+      );
+    case 'scarf':
+      return (
+        <g fill="#62a9a3" stroke="#377e79" strokeWidth="2">
+          <path d="M65 132 Q100 144 135 132 L132 145 Q100 158 68 145 Z" />
+          <path d="M113 145 L128 145 L137 174 L119 178 Z" />
+          <path d="M121 170 L134 167" stroke="#f8eacb" strokeWidth="4" />
+        </g>
+      );
+    case 'crown':
+      return (
+        <path
+          d="M72 59 L65 28 L87 40 L100 20 L113 40 L135 28 L128 59 Z"
+          fill="#f3c85e"
+          stroke="#b88b34"
+          strokeWidth="3"
+          strokeLinejoin="round"
+        />
+      );
+    case 'flower':
+      return (
+        <g
+          transform="translate(129 58)"
+          fill="#fff7d7"
+          stroke="#d7b95e"
+          strokeWidth="1.5"
+        >
+          <ellipse cy="-12" rx="7" ry="12" />
+          <ellipse cy="12" rx="7" ry="12" />
+          <ellipse cx="-12" rx="12" ry="7" />
+          <ellipse cx="12" rx="12" ry="7" />
+          <circle r="8" fill="#e8b846" />
+        </g>
+      );
+
     case 'sunglasses':
       return (
         <g fill="#41576b" stroke="#243c52" strokeWidth="3">

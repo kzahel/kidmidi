@@ -1,6 +1,6 @@
 import styles from './Companion.module.css';
 import type { Dance, DanceMove } from './companion-dance';
-import type { Learner } from './learners';
+import type { Outfit } from './learners';
 import { Pet } from './Pet';
 
 const danceStyles: Record<DanceMove, string> = {
@@ -22,7 +22,7 @@ export function Companion({
   freePlay = false,
   dance,
 }: {
-  learner: Pick<Learner, 'pet' | 'charm'>;
+  learner: Outfit;
   playing?: boolean;
   celebration?: string;
   compact?: boolean;

@@ -88,7 +88,9 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
   await seed(page, gardenGraduate());
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await page.getByRole('button', { name: 'Dress up', exact: true }).click();
-  await page.getByRole('button', { name: 'Next rewards', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Preview Cosy scarf', exact: true })
+    .click();
   await expect(
     page
       .getByLabel('Outfit preview')
@@ -102,7 +104,9 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
       .getByLabel('Outfit preview')
       .getByRole('img', { name: 'Fox friend with daisy crown', exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Next rewards', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Preview Golden crown', exact: true })
+    .click();
   await expect(
     page.getByRole('button', { name: 'Get Golden crown for 48 hearts' }),
   ).toBeEnabled();
@@ -111,13 +115,13 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
     .getByRole('button', { name: 'Get Golden crown for 48 hearts' })
     .click();
   await expect(
-    page.getByRole('button', { name: 'Golden crown equipped' }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Take off Golden crown' }),
+  ).toBeEnabled();
   await expect(
     page.getByText('3 badges · ♥ 48 · 💎 3', { exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Friends', exact: true }).click();
-  await page.getByRole('button', { name: 'Next rewards', exact: true }).click();
+
   await page
     .getByRole('button', { name: 'Preview Puppy friend', exact: true })
     .click();
@@ -184,7 +188,7 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
   ).toBeVisible();
   await page.getByRole('button', { name: 'Dress up', exact: true }).click();
   await page
-    .getByRole('button', { name: 'Take off charm', exact: true })
+    .getByRole('button', { name: 'Take off Golden crown', exact: true })
     .click();
   await expect(
     page.getByRole('button', { name: 'Choose Golden crown', exact: true }),
@@ -193,12 +197,12 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
     .getByRole('button', { name: 'Choose Golden crown', exact: true })
     .click();
   await expect(
-    page.getByRole('button', { name: 'Golden crown equipped' }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Take off Golden crown' }),
+  ).toBeEnabled();
   expect(await purchases(page)).toHaveLength(2);
 });
 
-test('expanded shop pages preview every find, keep gem treasures attainable and save new companions and outfits', async ({
+test('the scrollable gallery previews every find, filters accessories and restores a layered outfit', async ({
   page,
 }) => {
   await page.goto('/');
@@ -214,41 +218,35 @@ test('expanded shop pages preview every find, keep gem treasures attainable and 
   const drawings = new Set<string>();
   for (const category of ['Friends', 'Dress up']) {
     await page.getByRole('button', { name: category, exact: true }).click();
-    const picker = page.getByRole('combobox', {
-      name: 'Reward page',
-      exact: true,
-    });
-    const count = await picker.locator('option').count();
-    expect(count).toBe(category === 'Friends' ? 4 : 9);
-    for (let index = 0; index < count; index++) {
-      await picker.selectOption(String(index));
-      const cards = page.getByRole('button', { name: /^Preview / });
-      for (let card = 0; card < (await cards.count()); card++) {
-        const name = (await cards
-          .nth(card)
-          .getAttribute('aria-label'))!.replace('Preview ', '');
-        await cards.nth(card).click();
-        await expect(
-          page.getByRole('heading', { name, exact: true }),
-        ).toBeVisible();
-        await expect(
-          page.getByLabel('Outfit preview').getByRole('img'),
-        ).toBeVisible();
-        const drawing = await page
-          .getByLabel('Outfit preview')
-          .locator('svg')
-          .innerHTML();
-        expect(drawings.has(drawing), `${name} has its own artwork`).toBe(
-          false,
-        );
-        drawings.add(drawing);
-        await fitted(page);
-      }
+    const cards = page.getByRole('button', { name: /^Preview / });
+    expect(await cards.count()).toBe(category === 'Friends' ? 8 : 17);
+    for (let index = 0; index < (await cards.count()); index++) {
+      const name = (await cards.nth(index).getAttribute('aria-label'))!.replace(
+        'Preview ',
+        '',
+      );
+      await cards.nth(index).click();
+      await expect(
+        page.getByRole('heading', { name, exact: true }),
+      ).toBeVisible();
+      const drawing = await page
+        .getByLabel('Outfit preview')
+        .locator('svg')
+        .innerHTML();
+      expect(drawings.has(drawing), `${name} has distinct artwork`).toBe(false);
+      drawings.add(drawing);
     }
   }
   expect(await purchases(page)).toHaveLength(0);
+  const filter = page.getByRole('combobox', { name: 'Browse accessories' });
+  await filter.selectOption('head');
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(6);
+  await filter.selectOption('face');
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(3);
+  await filter.selectOption('owned');
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(0);
+  await filter.selectOption('all');
   await page.getByRole('button', { name: 'Friends', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('2');
   await page
     .getByRole('button', { name: 'Preview Frog friend', exact: true })
     .click();
@@ -258,32 +256,6 @@ test('expanded shop pages preview every find, keep gem treasures attainable and 
   await expect(
     page.getByRole('button', { name: 'Frog friend equipped' }),
   ).toBeDisabled();
-  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('3');
-  await page
-    .getByRole('button', { name: 'Preview Cherry earrings', exact: true })
-    .click();
-  await page.screenshot({
-    path: 'test-results/shop-frog-earrings-desktop.png',
-    animations: 'disabled',
-  });
-  await page.getByRole('button', { name: 'Friends', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('2');
-  await page
-    .getByRole('button', { name: 'Preview Bird friend', exact: true })
-    .click();
-  await page.screenshot({
-    path: 'test-results/shop-bird-desktop.png',
-    animations: 'disabled',
-  });
-  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('3');
-  await page
-    .getByRole('button', { name: 'Preview Panda friend', exact: true })
-    .click();
-  await page.screenshot({
-    path: 'test-results/shop-panda-desktop.png',
-    animations: 'disabled',
-  });
   await page
     .getByRole('button', { name: 'Preview Little dragon', exact: true })
     .click();
@@ -294,30 +266,72 @@ test('expanded shop pages preview every find, keep gem treasures attainable and 
     page.getByRole('button', { name: 'Little dragon equipped' }),
   ).toBeDisabled();
   await page.getByRole('button', { name: 'Dress up', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('8');
+  for (const name of ['Crystal crown', 'Sunny shades', 'Star charm']) {
+    const choice = rewards.find((item) => item.name === name)!;
+    await page
+      .getByRole('button', { name: `Preview ${name}`, exact: true })
+      .click();
+    await page
+      .getByRole('button', {
+        name: `Get ${name} for ${choice.cost} ${choice.currency}`,
+      })
+      .click();
+    await expect(
+      page.getByRole('button', { name: `Take off ${name}`, exact: true }),
+    ).toBeEnabled();
+  }
+  const stage = page.getByLabel('Outfit preview');
+  const outfit = ['star', 'sunglasses', 'crystal-crown'];
+  async function hasOutfit(ids: string[]) {
+    await expect
+      .poll(() =>
+        stage
+          .locator('[data-accessory]')
+          .evaluateAll((nodes) =>
+            nodes.map((node) => node.getAttribute('data-accessory')),
+          ),
+      )
+      .toEqual(ids);
+  }
+  await hasOutfit(outfit);
+  // Trying another hat preserves glasses and necklace, and does not equip it.
   await page
-    .getByRole('button', { name: 'Get Crystal crown for 6 gems' })
+    .getByRole('button', { name: 'Preview Puddle hat', exact: true })
     .click();
-  await expect(
-    page.getByRole('button', { name: 'Crystal crown equipped' }),
-  ).toBeDisabled();
-  const expected = withPurchase(
-    withPurchase(
-      withPurchase(funded, 'frog', 'frog', 0),
-      'dragon',
-      'dragon',
-      0,
-    ),
-    'crystal-crown',
-    'crown',
-    0,
-  );
+  await hasOutfit(['star', 'sunglasses', 'bucket-hat']);
+  expect(await purchases(page)).toHaveLength(5);
+  await page
+    .getByRole('button', { name: 'Preview Crystal crown', exact: true })
+    .click();
+  await hasOutfit(outfit);
+  await filter.selectOption('wearing');
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(3);
+  await page
+    .getByRole('button', { name: 'Preview Sunny shades', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Take off Sunny shades', exact: true })
+    .click();
+  await hasOutfit(['star', 'crystal-crown']);
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(2);
+  await filter.selectOption('owned');
+  await page
+    .getByRole('button', { name: 'Preview Sunny shades', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Choose Sunny shades', exact: true })
+    .click();
+  await hasOutfit(outfit);
+  let expected = funded;
+  for (const id of ['frog', 'dragon', 'crystal-crown', 'sunglasses', 'star'])
+    expected = withPurchase(expected, id, id, 0);
   await expect(
     page.getByText(
       `${journeyProgress(expected).badges} badges · ♥ ${progress(expected).balance} · 💎 ${journeyProgress(expected).gemBalance}`,
       { exact: true },
     ),
   ).toBeVisible();
+  await filter.selectOption('all');
   for (const [name, viewport] of [
     ['desktop', { width: 1280, height: 800 }],
     ['phone', { width: 390, height: 844 }],
@@ -325,27 +339,41 @@ test('expanded shop pages preview every find, keep gem treasures attainable and 
     ['landscape', { width: 844, height: 390 }],
   ] as const) {
     await page.setViewportSize(viewport);
-    // Check the longest names and every accessory page at each constrained size.
-    for (let index = 0; index < 9; index++) {
-      await page
-        .getByRole('combobox', { name: 'Reward page' })
-        .selectOption(String(index));
-      await fitted(page);
-      for (const choice of rewards
-        .filter((item) => item.slot === 'charm')
-        .slice(index * 2, index * 2 + 2)) {
-        await page
-          .getByRole('button', { name: `Preview ${choice.name}`, exact: true })
-          .click();
-        await fitted(page);
-      }
-    }
+    await fitted(page);
+    const gallery = page.getByRole('region', { name: 'Accessory gallery' });
+    expect(
+      await gallery.evaluate(
+        (node) =>
+          node.scrollHeight > node.clientHeight &&
+          node.scrollWidth <= node.clientWidth,
+      ),
+    ).toBe(true);
+    await page
+      .getByRole('button', { name: 'Preview Crystal crown', exact: true })
+      .click();
+    await gallery.evaluate((node) => {
+      node.scrollTop = 0;
+    });
+    const fixed = await stage.boundingBox();
+    await page
+      .getByRole('button', { name: 'Preview Crystal crown', exact: true })
+      .click();
+    await expect
+      .poll(() => gallery.evaluate((node) => node.scrollTop))
+      .toBeGreaterThan(0);
+    expect(await stage.boundingBox()).toEqual(fixed);
+    await hasOutfit(outfit);
     await page.screenshot({
-      path: `test-results/shop-dragon-${name}.png`,
+      path: `test-results/outfit-gallery-${name}.png`,
       animations: 'disabled',
     });
+    await page
+      .getByRole('button', { name: 'Preview Party bow', exact: true })
+      .focus();
+    await page.keyboard.press('End');
+    await page.keyboard.press('Tab');
+    await fitted(page);
   }
-  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('6');
   await page
     .getByRole('button', { name: 'Preview Moon pendant', exact: true })
     .click();
@@ -355,28 +383,71 @@ test('expanded shop pages preview every find, keep gem treasures attainable and 
   await expect(page.getByRole('dialog').getByRole('status')).toContainText(
     '1 more gem',
   );
-  expect(await purchases(page)).toHaveLength(3);
   await page.keyboard.press('Escape');
   await page.reload();
-  await expect(
-    page
-      .getByRole('img', {
-        name: 'Little dragon with crystal crown',
-        exact: true,
-      })
-      .first(),
-  ).toBeVisible();
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
-  await expect(page.getByRole('combobox', { name: 'Reward page' })).toHaveValue(
-    '3',
-  );
+  await hasOutfit(outfit);
   await page.getByRole('button', { name: 'Dress up', exact: true }).click();
-  await expect(page.getByRole('combobox', { name: 'Reward page' })).toHaveValue(
-    '8',
-  );
+  await page
+    .getByRole('button', { name: 'Take off all accessories', exact: true })
+    .click();
+  await hasOutfit([]);
+  expect(await purchases(page)).toHaveLength(5);
+});
+
+test('legacy single-charm outfits grow into saved combinations and stay isolated between learners', async ({
+  page,
+}) => {
+  await page.goto('/');
   await expect(
-    page.getByRole('button', { name: 'Crystal crown equipped' }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Learners and rewards' }),
+  ).toBeEnabled();
+  const legacy = withPurchase(gardenGraduate(), 'bow', 'legacy-bow', 0);
+  delete legacy.learner.accessories;
+  await seed(page, legacy);
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
+  await expect(
+    page.getByLabel('Outfit preview').getByRole('img'),
+  ).toHaveAttribute('aria-label', 'Fox friend with party bow');
+  await page
+    .getByRole('button', { name: 'Preview Sunny shades', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Get Sunny shades for 36 hearts' })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Take off Sunny shades', exact: true }),
+  ).toBeEnabled();
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  const buddy = page.getByRole('complementary', {
+    name: 'Your piano companion',
+    exact: true,
+  });
+  await expect(buddy.locator('[data-accessory]')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Learners', exact: true }).click();
+  await page
+    .getByRole('textbox', { name: 'New learner name', exact: true })
+    .fill('Little sibling');
+  await page.getByRole('button', { name: 'Add learner', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Little sibling', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(buddy.locator('[data-accessory]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Learners', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'Current learner', exact: true })
+    .selectOption(legacy.learner.id);
+  await page.getByRole('button', { name: 'Rewards', exact: true }).click();
+  await expect(
+    page.getByLabel('Outfit preview').locator('[data-accessory]'),
+  ).toHaveCount(2);
+  expect(await purchases(page)).toHaveLength(2);
 });
 
 test('the equipped companion follows every activity, reacts to playing and updates with the learner', async ({
@@ -592,6 +663,11 @@ async function fitted(page: Page) {
             ),
           ].every((node) => {
             const rect = node.getBoundingClientRect();
+            if (node.closest('[class*="__gallery__"]'))
+              return (
+                !(node instanceof HTMLButtonElement) ||
+                (rect.width >= 48 && rect.height >= 48)
+              );
             return (
               !rect.width ||
               (rect.left >= bounds.left &&

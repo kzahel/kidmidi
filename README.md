@@ -241,7 +241,7 @@ cues, and preserve their existing held-key/1.6-second feedback pacing. The
 prominent **← Lessons** header button returns to the overview. MIDI, touch and computer
 keys work. See [Note hunt behavior](docs/note-hunt.md).
 
-**Learners & rewards** opens a fitted, paged collection with **Rewards**,
+**Learners & rewards** opens a fitted collection with **Rewards**,
 **Learners**, and **Progress** tabs. Rewards has **Friends** and **Dress up**:
 preview companions and outfits without spending, then explicitly buy or choose.
 Original illustrated fox, cat, bunny, puppy, bird, frog, panda and little dragon
@@ -254,10 +254,11 @@ rewards. Seventeen outfits include bows, necklaces, scarves, flowers, crowns,
 sunglasses, cherry earrings, a puddle hat, rainbow bow tie, headphones, raincoat,
 adventure bag, wizard hat, starlight cape and butterfly wings. The preview,
 collection cards and equipped companion use the same artwork. New equipment gives
-a small greeting; reduced motion disables movement and blinking. Four Friends
-pages and nine Dress up pages show two rewards at a time. Back/More controls and a
-labelled page picker let you browse or jump straight to a find, keeping the shop
-and profile/progress tabs within one screen.
+a small greeting; reduced motion disables movement and blinking. Friends and
+Dress up have scrollable thumbnail galleries with prices and wearing/owned marks.
+The preview and purchase controls stay visible while the gallery scrolls. Filter
+Dress up by Hats & hair, Glasses & ears, Clothes & wings, Charms & bags, Yours,
+or Wearing to find a piece quickly.
 
 Each learner keeps their own history, lifetime hearts, badges, purchases, and
 separate heart/gem wallets. The fox is free. Hearts buy permanent friends and
@@ -265,8 +266,12 @@ accessories, from a 12-heart bow to a 160-heart wizard hat. Gem treasures includ
 the moon pendant (2), puppy (3), starlight cape (4), butterfly wings (5), crystal
 crown (6), and little dragon (8). Each is individually attainable from the current
 lesson badges; gems are awarded once per badge, so collecting every gem item
-requires future lessons. One friend and one accessory can be worn at a time. The
-shop shows what is owned/equipped, prices and how much currency is still needed.
+requires future lessons. A friend can wear several compatible accessories at
+once: combine a hat, glasses, earrings, neckwear, necklace, coat, bag and cape or
+wings. A new piece replaces only the piece in the same position. Select a worn
+piece to Take off, or Take all off to clear the outfit. Older single-charm
+outfits carry over. The shop shows what is owned/equipped, prices and how much
+currency is still needed.
 Trying something on never equips it or changes the wallet. Existing friends,
 accessories and earlier world purchases stay saved. Spending never removes badges.
 Profiles and completed rounds persist in local IndexedDB; device settings and the

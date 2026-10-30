@@ -1,5 +1,4 @@
-import type { Learner } from './learners';
-import { rewards } from './learners';
+import { type Outfit, rewards, wearing } from './learners';
 import styles from './Pet.module.css';
 import { PetAccessories, PetBackdrop } from './PetAccessories';
 
@@ -9,11 +8,14 @@ export function Pet({
   learner,
   small = false,
 }: {
-  learner: Pick<Learner, 'pet' | 'charm'>;
+  learner: Outfit;
   small?: boolean;
 }) {
   const pet = rewards.find((item) => item.id === learner.pet);
-  const charm = rewards.find((item) => item.id === learner.charm);
+  const worn = wearing(learner);
+  const charmNames = worn
+    .map((id) => rewards.find((item) => item.id === id)!.name.toLowerCase())
+    .join(', ');
   const cat = learner.pet === 'cat';
   const bunny = learner.pet === 'rabbit';
   const dog = learner.pet === 'dog';
@@ -40,7 +42,7 @@ export function Pet({
     <span
       className={`${styles['pet']} ${small ? styles['small'] : ''}`}
       role="img"
-      aria-label={`${pet?.name ?? 'Fox friend'}${charm ? ` with ${charm.name.toLowerCase()}` : ''}`}
+      aria-label={`${pet?.name ?? 'Fox friend'}${charmNames ? ` with ${charmNames}` : ''}`}
     >
       <svg viewBox="0 0 200 200" aria-hidden="true">
         <ellipse
@@ -51,7 +53,9 @@ export function Pet({
           fill="#38594a"
           opacity=".12"
         />
-        <PetBackdrop charm={learner.charm} />
+        {worn.map((id) => (
+          <PetBackdrop key={id} charm={id} />
+        ))}
         {dragon && (
           <g
             fill="#8d7cb6"
@@ -277,67 +281,18 @@ export function Pet({
             strokeLinecap="round"
           />
         )}
-        {learner.charm === 'bow' && (
-          <g fill="#db6995" stroke="#a9426c" strokeWidth="2">
-            <path d="M129 56 Q100 28 106 66 L129 63 Q154 86 155 49 Z" />
-            <circle cx="130" cy="61" r="7" fill="#f6aac8" />
-          </g>
-        )}
-        {learner.charm === 'star' && (
-          <>
-            <path
-              d="M70 132 Q100 152 130 132"
-              stroke="#bf9449"
-              strokeWidth="3"
-              fill="none"
-            />
-            <path
-              d="M100 140 L105 151 L117 152 L108 160 L110 172 L100 166 L90 172 L92 160 L83 152 L95 151 Z"
-              fill="#f3c85e"
-              stroke="#b88b34"
-              strokeWidth="2"
-            />
-          </>
-        )}
-        {learner.charm === 'scarf' && (
-          <g fill="#62a9a3" stroke="#377e79" strokeWidth="2">
-            <path d="M65 132 Q100 144 135 132 L132 145 Q100 158 68 145 Z" />
-            <path d="M113 145 L128 145 L137 174 L119 178 Z" />
-            <path d="M121 170 L134 167" stroke="#f8eacb" strokeWidth="4" />
-          </g>
-        )}
-        {learner.charm === 'crown' && (
-          <path
-            d="M72 59 L65 28 L87 40 L100 20 L113 40 L135 28 L128 59 Z"
-            fill="#f3c85e"
-            stroke="#b88b34"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-        )}
-        {learner.charm === 'flower' && (
+
+        {worn.map((id) => (
           <g
-            transform="translate(129 58)"
-            fill="#fff7d7"
-            stroke="#d7b95e"
-            strokeWidth="1.5"
+            key={id}
+            data-accessory={id}
+            transform={
+              frog && id === 'sunglasses' ? 'translate(0 -10)' : undefined
+            }
           >
-            <ellipse cy="-12" rx="7" ry="12" />
-            <ellipse cy="12" rx="7" ry="12" />
-            <ellipse cx="-12" rx="12" ry="7" />
-            <ellipse cx="12" rx="12" ry="7" />
-            <circle r="8" fill="#e8b846" />
+            <PetAccessories charm={id} />
           </g>
-        )}
-        <g
-          transform={
-            frog && learner.charm === 'sunglasses'
-              ? 'translate(0 -10)'
-              : undefined
-          }
-        >
-          <PetAccessories charm={learner.charm} />
-        </g>
+        ))}
       </svg>
     </span>
   );

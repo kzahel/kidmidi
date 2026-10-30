@@ -171,7 +171,12 @@ export class IndexedDbLearners implements LearnerRepository {
       withPurchase(state, item, purchaseId, at),
     );
   }
-  equip(id: string, slot: 'pet' | 'charm', item: string | null) {
-    return this.change(id, (state) => withEquipment(state, slot, item));
+  equip(
+    id: string,
+    slot: 'pet' | 'charm',
+    item: string | null,
+    remove = false,
+  ) {
+    return this.change(id, (state) => withEquipment(state, slot, item, remove));
   }
 }

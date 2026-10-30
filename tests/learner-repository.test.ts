@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { journeyProgress } from '../src/curriculum';
 import { IndexedDbLearners } from '../src/learner-repository';
-import { type LearnerSnapshot, progress } from '../src/learners';
+import { type LearnerSnapshot, progress, wearing } from '../src/learners';
 import type { Encounter } from '../src/learning';
 import { lessonEvents, newLearner } from './fixtures/journey';
 
@@ -97,4 +97,43 @@ test('badges, gem awards and world purchases are atomic across retries and tabs'
     state.purchases.filter((purchase) => purchase.itemId === 'dog').length,
     1,
   );
+});
+
+test('concurrent compatible purchases and individual removals retain the rest of the saved outfit', async () => {
+  const first = new IndexedDbLearners();
+  const other = new IndexedDbLearners();
+  const learner = newLearner('outfit-concurrency').learner;
+  await first.create(learner);
+  for (let index = 0; index < 32; index++)
+    await first.record({
+      id: `outfit-fund-${index}`,
+      learnerId: learner.id,
+      target: 60,
+      startedAt: index,
+      day: '2026-10-25',
+      spelling: 'C4',
+      guesses: [60],
+      firstResponseMs: 1000,
+      durationMs: 1000,
+      assistance: 'note-name',
+      input: 'midi',
+      reason: 'practice',
+      reward: 3,
+    });
+  await Promise.all([
+    first.buy(learner.id, 'bow', 'outfit-bow', 0),
+    other.buy(learner.id, 'sunglasses', 'outfit-shades', 0),
+    first.buy(learner.id, 'star', 'outfit-star', 0),
+  ]);
+  let state = await new IndexedDbLearners().load(learner.id);
+  assert.deepEqual(wearing(state.learner), ['star', 'sunglasses', 'bow']);
+  assert.equal(progress(state).balance, 24);
+  await Promise.all([
+    other.equip(learner.id, 'charm', 'sunglasses', true),
+    first.equip(learner.id, 'pet', 'fox'),
+  ]);
+  state = await new IndexedDbLearners().load(learner.id);
+  assert.deepEqual(wearing(state.learner), ['star', 'bow']);
+  assert.equal(state.purchases.length, 3);
+  assert.equal(progress(state).balance, 24);
 });

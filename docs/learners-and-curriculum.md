@@ -23,7 +23,7 @@ curriculum updates commit with the encounter in one transaction. Purchases check
 the current balance in that same transaction, including across browser tabs.
 
 Each learner has a name, fixed IANA learning timezone, unlocked notes and equipped
-pet/charm. Device MIDI identity, keyboard calibration and connection preferences
+pet and outfit. Device MIDI identity, keyboard calibration and connection preferences
 belong to the browser/device, not the learner. Explore recordings currently remain
 a shared local library, separate from learner assessments.
 
@@ -41,13 +41,20 @@ loss, or paid currency.
 
 The Learners & rewards dialog is fitted to the viewport. Rewards, Learners, and
 Progress tabs separate the collection from profile forms and learning evidence.
-The shop has Friends/Dress up categories, two preview cards per page, and explicit
-Back/More buttons and a labelled page picker listing each page’s finds. Friends
-has four pages; Dress up has nine. The stage shows the selected friend wearing the
-selected accessory. Previews never call purchase/equip or alter saved state. The action
-button buys once or equips an owned item; the equipped item is labelled With you.
-Unavailable prices show the remaining hearts/gems. Take off removes equipment,
-not ownership. Profile switching resets the shop to that learner's equipment.
+Friends and Dress up use thumbnail galleries with prices and Yours/Wearing marks.
+Only the gallery scrolls; the outfit preview, category/filter controls and explicit
+buy/choose/take-off action stay in view. The gallery is keyboard-focusable, and
+cards can be reached with Tab as well as touch/pointer scrolling. Dress up filters
+are All accessories, Hats & hair, Glasses & ears, Clothes & wings, Charms & bags,
+Yours and Wearing. Friends can be filtered to All friends, Yours or Wearing.
+
+Selecting a card previews that piece alongside the saved outfit. Previews never
+call purchase/equip or alter saved state. Buying equips once; choosing an owned
+piece is free. A worn accessory's action removes only that piece, while Take all
+off clears the outfit without changing ownership. After removal the stage shows
+the saved outfit until another preview is selected. Unavailable prices show the
+remaining hearts/gems. Profile switching resets the shop to that learner's friend
+and outfit.
 
 Fox, cat, bunny, puppy, bird, frog, panda and little dragon share original vector
 artwork across the stage, collection, home menu and header. The selected learner's equipped companion also
@@ -84,10 +91,25 @@ entrance respect reduced motion. The original vector art is MIT-licensed.
 | Crystal crown                            | 6 gems              |
 | Little dragon                            | 8 gems              |
 
-One friend and one accessory can be equipped at a time. Wings and capes sit
-behind the companion; the other clothes and trinkets share the face/body anchors.
-`Pet.tsx` and `PetAccessories.tsx` own the original artwork; previews, collection
-cards and activity companions all use the same renderer.
+One friend can wear up to eight compatible pieces. Wear positions are headwear
+(bows, flowers, crowns and hats), eyes (sunglasses), ears (earrings or headphones),
+neck (scarf or bow tie), charm (star or moon necklace), body (raincoat), bag
+(satchel), and back (cape or wings). Selecting or buying a different piece in one
+position replaces only that position. Clothes render beneath necklaces and bags;
+backdrops sit behind the companion; face details and headwear stay on top.
+`Pet.tsx` and `PetAccessories.tsx` share this renderer across previews, home,
+headers and every activity. Gallery accessory thumbnails show each individual
+piece on the current friend, while the stage shows the combined outfit.
+
+The optional learner `accessories` array stores the outfit. An absent array falls
+back to the earlier `charm` field; an explicit empty array means no accessories.
+Equipment changes normalize known IDs to one piece per wear position, persist
+the array, and retain `charm` as a compatibility projection of a selected/worn
+piece. No IndexedDB version bump or destructive migration is required. Purchases,
+individual removal, friend changes and outfit updates operate on the current
+learner inside the existing transaction, preserving other compatible pieces even
+when separate browser tabs buy/equip concurrently. Ownership is still checked
+before equipping, and preview data never enters the learner repository.
 
 Existing stable IDs, prices, purchases and equipment remain valid. There are no
 changes to earning rules. Every item is individually attainable from the current
@@ -189,7 +211,7 @@ Focused tests cover free advanced-lesson access, intact pattern decks, balanced
 decks, accuracy/coverage, help, timing, revising assessments, permanent badges, replay farming, legacy records, two wallets,
 idempotency and concurrent transactions. Browser journeys cover actual rendering,
 the Garden badge journey, direct advanced choices, assisted/unassisted reading,
-Quick, profile isolation, settings interruptions, pet purchases, reloads and small-screen fit.
+Quick, profile isolation, settings interruptions, pet purchases, scrollable galleries, combined outfits, individual removal, reloads and small-screen fit.
 
 ## Relaxed Practice learning path
 

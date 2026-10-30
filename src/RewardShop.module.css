@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 8px;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 }
 .categories {
@@ -23,22 +24,26 @@
   font-size: 12px;
   color: #63715b;
 }
-.showcase {
+.browse {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  align-items: center;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+}
+.showcase {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 10px;
 }
 .stage {
   position: relative;
-  align-self: stretch;
+  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 0;
+  min-height: 120px;
   border-radius: 24px;
   background:
     radial-gradient(ellipse at 50% 120%, #d2e4b5 0 38%, transparent 39%),
@@ -49,20 +54,20 @@
   animation: friend-hello 450ms ease-out;
 }
 .stage .companion > span {
-  width: clamp(100px, 24vh, 200px);
-  height: clamp(100px, 24vh, 200px);
+  width: clamp(110px, 21vh, 180px);
+  height: clamp(110px, 21vh, 180px);
 }
 .stage-note {
   position: absolute;
   top: 8%;
   right: 12%;
-  font-size: 28px;
+  font-size: 24px;
   color: #a69664;
   rotate: 15deg;
 }
 .preview-label {
   position: absolute;
-  bottom: 8px;
+  bottom: 6px;
   font-size: 12px;
   font-weight: 650;
   color: #4e6651;
@@ -70,18 +75,17 @@
 .detail {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 .detail h3 {
-  font-size: clamp(20px, 3vw, 28px);
+  font-size: 23px;
   margin: 0;
 }
 .detail p {
   margin: 0;
   color: #65715c;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
 }
 .detail .choose {
@@ -89,6 +93,7 @@
   border: 2px solid #84a578;
   font-weight: 750;
   width: 100%;
+  padding-inline: 8px;
 }
 .detail .choose:disabled {
   opacity: 1;
@@ -100,56 +105,73 @@
   font-size: 12px;
   color: #65715c;
 }
-.shelf {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.collection {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex-shrink: 0;
 }
-.shelf button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
+.filter select {
+  width: 100%;
   min-width: 0;
-  padding: 8px;
-  border: 2px solid #e0e4d6;
 }
-.shelf button[aria-pressed="true"] {
-  border-color: #648a67;
-  background: #edf3e5;
-}
-.shelf button > span[role="img"] {
-  width: 64px;
-  height: 64px;
-}
-.shelf button > span:last-child {
-  display: grid;
-  gap: 6px;
-}
-.shelf strong {
-  font-size: 14px;
-}
-.shelf small {
+.filter span {
   font-size: 12px;
   color: #65715c;
 }
-.pagination button {
-  flex-shrink: 0;
-  padding-inline: 8px;
-}
-.pagination select {
-  min-width: 0;
-  max-width: 290px;
-  flex: 1;
-  width: 100%;
-}
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: 8px;
-  flex-shrink: 0;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 3px;
+  border: 1px solid #e0e4d6;
+  border-radius: 14px;
+  background: #f4f6ee;
+}
+.gallery button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 4px;
+  text-align: center;
+  border: 2px solid #e0e4d6;
+  border-radius: 12px;
+}
+.gallery button[aria-pressed="true"] {
+  border-color: #648a67;
+  background: #edf3e5;
+}
+.gallery button > span[role="img"] {
+  width: 64px;
+  height: 64px;
+}
+.gallery strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.gallery small {
+  font-size: 12px;
+  color: #65715c;
+}
+.gallery p {
+  grid-column: 1 / -1;
+  margin: 8px;
   font-size: 13px;
 }
 
@@ -169,129 +191,124 @@
 }
 
 @media (width <= 640px) {
-  .showcase {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(100px, 1fr) auto;
+  .browse {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 160px minmax(0, 1fr);
     gap: 8px;
   }
-  .detail {
+  .showcase {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 4px 8px;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 8px;
+  }
+  .stage {
+    min-height: 0;
+    border-radius: 16px;
+  }
+  .stage .companion > span {
+    width: 120px;
+    height: 120px;
+  }
+  .detail {
+    justify-content: center;
+    gap: 5px;
   }
   .detail h3 {
-    font-size: 20px;
+    font-size: 18px;
   }
   .detail p {
-    grid-column: 1 / -1;
-    font-size: 13px;
+    display: none;
   }
   .detail .choose {
-    grid-column: 2;
-    grid-row: 1;
     font-size: 12px;
-    padding-inline: 8px;
   }
-  .ownership {
-    grid-column: 1 / -1;
+  .preview-label {
+    font-size: 10px;
+    bottom: 3px;
   }
-  .shelf button {
-    gap: 4px;
-    padding: 4px;
-  }
-  .shelf button > span[role="img"] {
-    width: 44px;
-    height: 44px;
-  }
-  .shelf strong {
-    font-size: 12px;
+  .stage-note {
+    font-size: 18px;
   }
   .categories button {
     min-width: 75px;
-    padding-inline: 10px;
+    padding-inline: 9px;
   }
   .categories > span {
     font-size: 11px;
   }
-  .stage .companion > span {
-    width: 150px;
-    height: 150px;
+  .filter {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .filter select {
+    flex: 1;
+    width: 50%;
+  }
+  .filter span {
+    width: 90px;
+    font-size: 11px;
+  }
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gallery button > span[role="img"] {
+    width: 56px;
+    height: 56px;
   }
 }
 
 @media (width <= 640px) and (height <= 680px) {
+  .browse {
+    grid-template-rows: 130px minmax(0, 1fr);
+  }
   .stage .companion > span {
-    width: 100px;
-    height: 100px;
+    width: 98px;
+    height: 98px;
   }
   .detail h3 {
-    font-size: 17px;
+    font-size: 16px;
   }
-  .detail p {
-    display: none;
-  }
-  .stage-note {
-    font-size: 20px;
-  }
-  .preview-label {
+  .ownership {
     font-size: 11px;
-    bottom: 2px;
   }
 }
 
 @media (height <= 500px) and (width >= 641px) {
-  .shop {
-    display: grid;
+  .browse {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: 48px minmax(0, 1fr) 48px;
-    gap: 6px 12px;
-  }
-  .categories {
-    grid-column: 1 / -1;
+    gap: 12px;
   }
   .showcase {
-    grid-row: 2 / -1;
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
     gap: 8px;
   }
-  .detail h3 {
-    font-size: 19px;
-  }
-  .detail p {
-    display: none;
-  }
-  .detail {
-    gap: 4px;
-  }
-  .detail .choose {
-    padding-inline: 6px;
-    font-size: 12px;
+  .stage {
+    min-height: 0;
   }
   .stage .companion > span {
-    width: 115px;
-    height: 115px;
+    width: 92px;
+    height: 92px;
   }
-  .shelf {
-    grid-column: 2;
-    grid-row: 2;
+  .detail {
+    justify-content: center;
   }
-  .shelf button {
-    flex-direction: row;
-    gap: 4px;
-    text-align: left;
-    padding: 4px;
+  .detail h3 {
+    font-size: 17px;
   }
-  .shelf button > span[role="img"] {
-    width: 44px;
-    height: 44px;
+  .detail p,
+  .filter span {
+    display: none;
   }
-  .shelf strong {
+  .detail .choose {
     font-size: 12px;
   }
-  .shelf button > span:last-child {
-    gap: 3px;
+  .preview-label {
+    font-size: 10px;
   }
-  .pagination {
-    grid-column: 2;
-    grid-row: 3;
+  .gallery button > span[role="img"] {
+    width: 44px;
+    height: 44px;
   }
 }

@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { journeyProgress } from './curriculum';
-import { progress, rewards } from './learners';
+import {
+  accessory,
+  previewAccessory,
+  progress,
+  rewards,
+  wearing,
+} from './learners';
 import { Pet } from './Pet';
 import styles from './RewardShop.module.css';
 import type { LearnersController } from './useLearners';
@@ -15,47 +21,73 @@ const fox = {
 } as const;
 const friends = [fox, ...rewards.filter((item) => item.slot === 'pet')];
 const charms = rewards.filter((item) => item.slot === 'charm');
-const pageSize = 2;
+const collections = [
+  { id: 'all', name: 'All accessories', slots: [] },
+  { id: 'head', name: 'Hats & hair', slots: ['head'] },
+  { id: 'face', name: 'Glasses & ears', slots: ['eyes', 'ears'] },
+  { id: 'clothes', name: 'Clothes & wings', slots: ['body', 'neck', 'back'] },
+  { id: 'trinkets', name: 'Charms & bags', slots: ['charm', 'bag'] },
+  { id: 'owned', name: 'Yours', slots: [] },
+  { id: 'wearing', name: 'Wearing', slots: [] },
+];
 
 export function RewardShop({ controller }: { controller: LearnersController }) {
   const { snapshot, busy, pendingCount } = controller;
   const [category, setCategory] = useState<'pet' | 'charm'>('pet');
   const [selected, setSelected] = useState(snapshot?.learner.pet ?? 'fox');
-  const [page, setPage] = useState(() =>
-    Math.floor(
-      Math.max(
-        0,
-        friends.findIndex((item) => item.id === snapshot?.learner.pet),
-      ) / pageSize,
-    ),
-  );
+  const [collection, setCollection] = useState('all');
+  const [trying, setTrying] = useState(true);
   if (!snapshot) return null;
   const { learner, purchases } = snapshot;
+  const worn = wearing(learner);
   const items = category === 'pet' ? friends : charms;
   const item = items.find((candidate) => candidate.id === selected) ?? items[0];
   const owned = (id: string) =>
     id === 'fox' || purchases.some((purchase) => purchase.itemId === id);
-  const equipped = learner[item.slot] === item.id;
+  const isWorn = (id: string) => id === learner.pet || worn.includes(id);
+  const equipped = isWorn(item.id);
   const balance =
     item.currency === 'gems'
       ? journeyProgress(snapshot).gemBalance
       : progress(snapshot).balance;
   const remaining = Math.max(0, item.cost - balance);
   const disabled = busy || pendingCount > 0;
-  const preview = { ...learner, [item.slot]: item.id };
-  function changeCategory(slot: 'pet' | 'charm') {
-    const list = slot === 'pet' ? friends : charms;
-    const index = Math.max(
-      0,
-      list.findIndex((candidate) => candidate.id === learner[slot]),
+  const preview =
+    item.slot === 'pet'
+      ? { ...learner, pet: item.id }
+      : trying
+        ? previewAccessory(learner, item.id)
+        : learner;
+  const replacement =
+    item.slot === 'charm'
+      ? worn
+          .map(accessory)
+          .find((old) => old?.wear === item.wear && old.id !== item.id)
+      : undefined;
+  const filters =
+    category === 'pet'
+      ? collections
+          .filter((filter) => ['all', 'owned', 'wearing'].includes(filter.id))
+          .map((filter) =>
+            filter.id === 'all' ? { ...filter, name: 'All friends' } : filter,
+          )
+      : collections;
+  function matches(id: string, filter: string) {
+    if (filter === 'owned') return owned(id);
+    if (filter === 'wearing') return isWorn(id);
+    if (filter === 'all') return true;
+    return (
+      collections
+        .find((group) => group.id === filter)
+        ?.slots.includes(accessory(id)?.wear ?? '') ?? false
     );
-    setCategory(slot);
-    setSelected(list[index].id);
-    setPage(Math.floor(index / pageSize));
   }
-  function changePage(next: number) {
-    setPage(next);
-    setSelected(items[next * pageSize].id);
+  const choices = items.filter((choice) => matches(choice.id, collection));
+  function changeCategory(slot: 'pet' | 'charm') {
+    setTrying(true);
+    setCategory(slot);
+    setCollection('all');
+    setSelected(slot === 'pet' ? learner.pet : (learner.charm ?? charms[0].id));
   }
   return (
     <section className={styles['shop']} aria-label="Reward shop">
@@ -74,138 +106,173 @@ export function RewardShop({ controller }: { controller: LearnersController }) {
         >
           Dress up
         </button>
-        {category === 'charm' && learner.charm ? (
+        {category === 'charm' && worn.length > 0 ? (
           <button
             type="button"
-            aria-label="Take off charm"
+            aria-label="Take off all accessories"
             disabled={disabled}
-            onClick={() => void controller.equip('charm', null)}
+            onClick={() => {
+              setTrying(false);
+              void controller.equip('charm', null);
+            }}
           >
-            Take off
+            Take all off
           </button>
         ) : (
           <span>
-            {items.filter((candidate) => owned(candidate.id)).length}/
-            {items.length} collected
+            {items.filter((choice) => owned(choice.id)).length}/{items.length}{' '}
+            collected
           </span>
         )}
       </nav>
-      <div className={styles['showcase']}>
-        <div className={styles['stage']} aria-label="Outfit preview">
-          <span className={styles['stage-note']} aria-hidden="true">
-            ♫
-          </span>
-          <div
-            key={`${preview.pet}-${preview.charm}`}
-            className={styles['companion']}
-          >
-            <Pet learner={preview} />
-          </div>
-          <span className={styles['preview-label']}>
-            {equipped ? 'Playing with you' : 'Try it on'}
-          </span>
-        </div>
-        <div className={styles['detail']}>
-          <h3>{item.name}</h3>
-          <p>{item.description}</p>
-          <button
-            type="button"
-            className={styles['choose']}
-            disabled={
-              disabled || equipped || (!owned(item.id) && remaining > 0)
-            }
-            aria-label={
-              equipped
-                ? `${item.name} equipped`
-                : owned(item.id)
-                  ? `Choose ${item.name}`
-                  : `Get ${item.name} for ${item.cost} ${item.currency}`
-            }
-            onClick={() =>
-              void (owned(item.id)
-                ? controller.equip(item.slot, item.id)
-                : controller.buy(item.id))
-            }
-          >
-            {equipped
-              ? '✓ With you'
-              : owned(item.id)
-                ? 'Choose · yours'
-                : `${item.currency === 'gems' ? '💎' : '♥'} ${item.cost} · Make it yours`}
-          </button>
-          <span className={styles['ownership']} role="status">
-            {owned(item.id)
-              ? 'Yours forever'
-              : remaining > 0
-                ? `${remaining} more ${remaining === 1 ? (item.currency === 'gems' ? 'gem' : 'heart') : item.currency} to collect`
-                : 'Ready to join you'}
-          </span>
-        </div>
-      </div>
-      <div
-        className={styles['shelf']}
-        aria-label={
-          category === 'pet' ? 'Friend collection' : 'Charm collection'
-        }
-      >
-        {items.slice(page * pageSize, (page + 1) * pageSize).map((choice) => (
-          <button
-            type="button"
-            key={choice.id}
-            aria-label={`Preview ${choice.name}`}
-            aria-pressed={choice.id === item.id}
-            onClick={() => setSelected(choice.id)}
-          >
-            <Pet learner={{ ...learner, [choice.slot]: choice.id }} />
-            <span>
-              <strong>{choice.name}</strong>
-              <small>
-                {owned(choice.id)
-                  ? learner[choice.slot] === choice.id
-                    ? '✓ With you'
-                    : '✓ Yours'
-                  : `${choice.currency === 'gems' ? '💎' : '♥'} ${choice.cost}`}
-              </small>
+      <div className={styles['browse']}>
+        <div className={styles['showcase']}>
+          <div className={styles['stage']} aria-label="Outfit preview">
+            <span className={styles['stage-note']} aria-hidden="true">
+              ♫
             </span>
-          </button>
-        ))}
+            <div
+              key={`${preview.pet}-${wearing(preview).join('-')}`}
+              className={styles['companion']}
+            >
+              <Pet learner={preview} />
+            </div>
+            <span className={styles['preview-label']}>
+              {equipped
+                ? 'Playing with you'
+                : trying
+                  ? 'Try it on'
+                  : 'Your outfit'}
+            </span>
+          </div>
+          <div className={styles['detail']}>
+            <h3>{item.name}</h3>
+            <p>
+              {item.description}
+              {replacement
+                ? ` Replaces ${replacement.name.toLowerCase()}.`
+                : ''}
+            </p>
+            <button
+              type="button"
+              className={styles['choose']}
+              disabled={
+                disabled ||
+                (equipped && item.slot === 'pet') ||
+                (!owned(item.id) && remaining > 0)
+              }
+              aria-label={
+                equipped
+                  ? item.slot === 'charm'
+                    ? `Take off ${item.name}`
+                    : `${item.name} equipped`
+                  : owned(item.id)
+                    ? `Choose ${item.name}`
+                    : `Get ${item.name} for ${item.cost} ${item.currency}`
+              }
+              onClick={() => {
+                if (equipped && item.slot === 'charm') {
+                  setTrying(false);
+                  void controller.equip('charm', item.id, true);
+                } else if (owned(item.id)) {
+                  void controller.equip(item.slot, item.id);
+                } else {
+                  void controller.buy(item.id);
+                }
+              }}
+            >
+              {equipped
+                ? item.slot === 'charm'
+                  ? 'Take off · wearing'
+                  : '✓ With you'
+                : owned(item.id)
+                  ? 'Choose · yours'
+                  : `${item.currency === 'gems' ? '💎' : '♥'} ${item.cost} · Make it yours`}
+            </button>
+            <span className={styles['ownership']} role="status">
+              {owned(item.id)
+                ? 'Yours forever'
+                : remaining > 0
+                  ? `${remaining} more ${remaining === 1 ? (item.currency === 'gems' ? 'gem' : 'heart') : item.currency} to collect`
+                  : 'Ready to join you'}
+            </span>
+          </div>
+        </div>
+        <div className={styles['collection']}>
+          <label className={styles['filter']}>
+            <select
+              aria-label={
+                category === 'pet' ? 'Browse friends' : 'Browse accessories'
+              }
+              value={collection}
+              onChange={(event) => {
+                const next = event.target.value;
+                setTrying(true);
+                setCollection(next);
+                setSelected(
+                  items.find((choice) => matches(choice.id, next))?.id ??
+                    item.id,
+                );
+              }}
+            >
+              {filters.map((filter) => (
+                <option key={filter.id} value={filter.id}>
+                  {filter.name}
+                  {filter.id === 'wearing'
+                    ? ` (${category === 'pet' ? 1 : worn.length})`
+                    : ''}
+                </option>
+              ))}
+            </select>
+            <span>
+              {choices.length} {category === 'pet' ? 'friends' : 'finds'} ·
+              scroll to browse
+            </span>
+          </label>
+          <section
+            className={styles['gallery']}
+            aria-label={
+              category === 'pet' ? 'Friend gallery' : 'Accessory gallery'
+            }
+            tabIndex={0}
+          >
+            {choices.map((choice) => (
+              <button
+                type="button"
+                key={choice.id}
+                aria-label={`Preview ${choice.name}`}
+                aria-pressed={choice.id === item.id}
+                onClick={() => {
+                  setTrying(true);
+                  setSelected(choice.id);
+                }}
+              >
+                <Pet
+                  learner={
+                    choice.slot === 'pet'
+                      ? { ...learner, pet: choice.id }
+                      : { pet: learner.pet, charm: choice.id }
+                  }
+                />
+                <strong>{choice.name}</strong>
+                <small>
+                  {isWorn(choice.id)
+                    ? '✓ Wearing'
+                    : owned(choice.id)
+                      ? '✓ Yours'
+                      : `${choice.currency === 'gems' ? '💎' : '♥'} ${choice.cost}`}
+                </small>
+              </button>
+            ))}
+            {choices.length === 0 && (
+              <p>
+                No pieces here yet. Try All accessories to find something you
+                like.
+              </p>
+            )}
+          </section>
+        </div>
       </div>
-      <nav className={styles['pagination']} aria-label="Reward pages">
-        <button
-          type="button"
-          aria-label="Previous rewards"
-          disabled={page === 0}
-          onClick={() => changePage(page - 1)}
-        >
-          ← Back
-        </button>
-        <select
-          aria-label="Reward page"
-          value={page}
-          onChange={(event) => changePage(Number(event.target.value))}
-        >
-          {Array.from(
-            { length: Math.ceil(items.length / pageSize) },
-            (_, index) => (
-              <option key={index} value={index}>
-                {index + 1} / {Math.ceil(items.length / pageSize)} ·{' '}
-                {items
-                  .slice(index * pageSize, (index + 1) * pageSize)
-                  .map((choice) => choice.name)
-                  .join(' & ')}
-              </option>
-            ),
-          )}
-        </select>
-        <button
-          type="button"
-          aria-label="Next rewards"
-          disabled={(page + 1) * pageSize >= items.length}
-          onClick={() => changePage(page + 1)}
-        >
-          More →
-        </button>
-      </nav>
     </section>
   );
 }

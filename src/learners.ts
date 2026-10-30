@@ -32,6 +32,7 @@ export const rewards = [
   },
   {
     id: 'bow',
+    wear: 'head',
     name: 'Party bow',
     icon: '🎀',
     description: 'A bright bow for your friend.',
@@ -41,6 +42,7 @@ export const rewards = [
   },
   {
     id: 'star',
+    wear: 'charm',
     name: 'Star charm',
     icon: '🌟',
     description: 'Wear a little bit of starlight.',
@@ -59,6 +61,7 @@ export const rewards = [
   },
   {
     id: 'scarf',
+    wear: 'neck',
     name: 'Cosy scarf',
     icon: '🧣',
     description: 'A soft teal scarf for piano days.',
@@ -68,6 +71,7 @@ export const rewards = [
   },
   {
     id: 'flower',
+    wear: 'head',
     name: 'Daisy crown',
     icon: '🌼',
     description: 'A flower picked just for your friend.',
@@ -77,6 +81,7 @@ export const rewards = [
   },
   {
     id: 'crown',
+    wear: 'head',
     name: 'Golden crown',
     icon: '👑',
     description: 'Every little musician can be royalty.',
@@ -122,6 +127,7 @@ export const rewards = [
   },
   {
     id: 'sunglasses',
+    wear: 'eyes',
     name: 'Sunny shades',
     icon: '🕶️',
     description: 'Cool blue glasses for sunny-day tunes.',
@@ -131,6 +137,7 @@ export const rewards = [
   },
   {
     id: 'earrings',
+    wear: 'ears',
     name: 'Cherry earrings',
     icon: '🍒',
     description: 'A tiny pair of cherries for each cheek.',
@@ -140,6 +147,7 @@ export const rewards = [
   },
   {
     id: 'bucket-hat',
+    wear: 'head',
     name: 'Puddle hat',
     icon: '👒',
     description: 'A yellow hat for rainy-day adventures.',
@@ -149,6 +157,7 @@ export const rewards = [
   },
   {
     id: 'bow-tie',
+    wear: 'neck',
     name: 'Rainbow bow tie',
     icon: '🌈',
     description: 'Dress up for your very own piano concert.',
@@ -158,6 +167,7 @@ export const rewards = [
   },
   {
     id: 'headphones',
+    wear: 'ears',
     name: 'Jam headphones',
     icon: '🎧',
     description: 'Big purple ear cups, just for pretend.',
@@ -167,6 +177,7 @@ export const rewards = [
   },
   {
     id: 'raincoat',
+    wear: 'body',
     name: 'Rainy-day coat',
     icon: '🧥',
     description: 'A little yellow coat with room for a song.',
@@ -176,6 +187,7 @@ export const rewards = [
   },
   {
     id: 'satchel',
+    wear: 'bag',
     name: 'Adventure bag',
     icon: '🎒',
     description: 'A tiny satchel for imaginary treasures.',
@@ -185,6 +197,7 @@ export const rewards = [
   },
   {
     id: 'wizard-hat',
+    wear: 'head',
     name: 'Wizard hat',
     icon: '🧙',
     description: 'Every melody can be a little spell.',
@@ -194,6 +207,7 @@ export const rewards = [
   },
   {
     id: 'moon',
+    wear: 'charm',
     name: 'Moon pendant',
     icon: '🌙',
     description: 'Carry a crescent from the bedtime sky.',
@@ -203,6 +217,7 @@ export const rewards = [
   },
   {
     id: 'cape',
+    wear: 'back',
     name: 'Starlight cape',
     icon: '✨',
     description: 'A midnight-blue cape dotted with stars.',
@@ -212,6 +227,7 @@ export const rewards = [
   },
   {
     id: 'wings',
+    wear: 'back',
     name: 'Butterfly wings',
     icon: '🦋',
     description: 'A pair of rosy wings for musical daydreams.',
@@ -221,6 +237,7 @@ export const rewards = [
   },
   {
     id: 'crystal-crown',
+    wear: 'head',
     name: 'Crystal crown',
     icon: '💎',
     description: 'An icy-blue crown for a grand piano parade.',
@@ -237,6 +254,7 @@ export type Learner = {
   unlocked: number;
   pet: string;
   charm: string | null;
+  accessories?: string[];
   badges?: LessonBadge[];
 };
 export type Purchase = {
@@ -286,6 +304,7 @@ export interface LearnerRepository {
     learnerId: string,
     slot: 'pet' | 'charm',
     itemId: string | null,
+    remove?: boolean,
   ): Promise<LearnerSnapshot>;
 }
 
@@ -432,7 +451,10 @@ export function withPurchase(
     throw new Error(`Keep collecting ${item.currency} for this reward.`);
   return {
     ...snapshot,
-    learner: { ...snapshot.learner, [item.slot]: item.id },
+    learner:
+      item.slot === 'pet'
+        ? { ...snapshot.learner, pet: item.id }
+        : previewAccessory(snapshot.learner, item.id),
     purchases: [
       ...snapshot.purchases,
       {
@@ -451,6 +473,7 @@ export function withEquipment(
   snapshot: LearnerSnapshot,
   slot: 'pet' | 'charm',
   itemId: string | null,
+  remove = false,
 ): LearnerSnapshot {
   const free =
     (slot === 'pet' && itemId === 'fox') ||
@@ -465,5 +488,73 @@ export function withEquipment(
     )
   )
     throw new Error('Collect this reward before using it.');
-  return { ...snapshot, learner: { ...snapshot.learner, [slot]: itemId } };
+  if (slot === 'pet') {
+    if (remove) throw new Error('Choose a friend to play with.');
+    return { ...snapshot, learner: { ...snapshot.learner, pet: itemId! } };
+  }
+  const accessories =
+    itemId === null
+      ? []
+      : remove
+        ? wearing(snapshot.learner).filter((id) => id !== itemId)
+        : wearing(previewAccessory(snapshot.learner, itemId));
+  return {
+    ...snapshot,
+    learner: {
+      ...snapshot.learner,
+      accessories,
+      charm: remove || itemId === null ? (accessories.at(-1) ?? null) : itemId,
+    },
+  };
+}
+
+export type Outfit = Pick<Learner, 'pet' | 'charm' | 'accessories'>;
+export type Accessory = Extract<(typeof rewards)[number], { slot: 'charm' }>;
+export function accessory(id: string) {
+  return rewards.find(
+    (item): item is Accessory => item.slot === 'charm' && item.id === id,
+  );
+}
+
+// Read older single-charm saves without a destructive database migration. Later
+// choices win within a wear position; a fixed layer order keeps clothes beneath
+// necklaces and headwear, regardless of the order the child puts them on.
+export function wearing(
+  learner: Pick<Learner, 'charm' | 'accessories'>,
+): string[] {
+  const saved = Array.isArray(learner.accessories)
+    ? learner.accessories
+    : learner.charm
+      ? [learner.charm]
+      : [];
+  const slots = new Map<string, string>();
+  for (const id of saved) {
+    const item = accessory(id);
+    if (item) slots.set(item.wear, id);
+  }
+  return [
+    'back',
+    'body',
+    'neck',
+    'charm',
+    'bag',
+    'ears',
+    'eyes',
+    'head',
+  ].flatMap((slot) => (slots.has(slot) ? [slots.get(slot)!] : []));
+}
+
+export function previewAccessory<
+  T extends Pick<Learner, 'charm' | 'accessories'>,
+>(learner: T, id: string): T {
+  const choice = accessory(id);
+  if (!choice) return learner;
+  return {
+    ...learner,
+    charm: id,
+    accessories: [
+      ...wearing(learner).filter((old) => accessory(old)?.wear !== choice.wear),
+      id,
+    ],
+  };
 }
