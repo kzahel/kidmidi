@@ -58,6 +58,9 @@ The complete score and piano remain visible without overlap or scrolling.
 The companion sways for live playing/recording playback, and cheers for song hits
 or completed Note Hunt cards/patterns. It stays through lesson results, follows
 profile/equipment changes immediately and restores the saved outfit on reload.
+Free play also has live musical dance discoveries: scales, echoes, alternating
+notes, arpeggios, octave leaps and chromatic walks trigger different tricks.
+See [Free play companion behavior](explore-transcription.md#musical-companion-discoveries).
 Companion presentation cannot advance practice, capture notes or award currency.
 Reduced motion keeps the companion/reaction symbols and suppresses movement.
 Accessories are drawn in the same coordinate

@@ -158,7 +158,7 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/learning.ts` / `src/useHuntSession.ts`: daily review and adaptive Note Hunt sessions.
 - `src/lesson-catalog.ts` / `src/curriculum.ts`: editable, versioned lessons and pure badge/deck policy.
 - `src/LearningMap.tsx`: labelled, paged lessons and badge progress.
-- `src/Companion.tsx`: equipped companion and local playing/success reactions, outside notation and piano keys.
+- `src/Companion.tsx` / `src/companion-dance.ts`: equipped companion, live Free play discoveries and playing/success reactions, outside notation and piano keys.
 - `src/learners.ts` / `src/learner-repository.ts` / `src/useLearners.ts`: profiles, rewards and asynchronous IndexedDB storage.
 - Component-owned `*.module.css`: scoped styles with exact generated typings and unused-class checks.
 
@@ -175,6 +175,16 @@ Phones show one measure; wider screens fit more, and Multiline can reserve anoth
 row. Reaching the end starts a clean visual page while the full recording continues.
 **Clear page** also clears only the drawing. **New recording** (↺) archives the
 current session and starts a new one.
+
+Your Free play friend bounces on fresh notes, leans with pitch direction, and
+climbs a little as a melody rises. Musical discoveries reveal bigger tricks:
+play a whole C-to-C scale for a flip, come back down for a backflip, repeat a note
+four times for echo hops, or alternate two notes five times for a twirl. Octave
+leaps, major/minor arpeggios and little chromatic walks have surprises too.
+Major and natural minor scales work in any key or octave. Tricks finish while
+you keep playing; they never interrupt the music. Reduced motion keeps the
+little discovery names and sparkles with a still pet. Discoveries are local,
+live reactions and do not award hearts/gems or change the saved recording.
 
 Recording is automatic and local to this browser. **Save** flushes pending writes;
 **Recordings** loads or plays a session, downloads/opens a recording JSON file, or

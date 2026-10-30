@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CompanionDance, type Dance } from './companion-dance';
 import { IdleHint, NoteFeedback, type NoteHit } from './feedback';
 import { displayKeyRange, keyboardLayout, screenKeyboard } from './keyboard';
 import { advance, type NoteEvent, songs, startPosition } from './music';
@@ -47,6 +48,15 @@ export function usePianoSession(
   const [soundSettings, setSoundSettings] = useState(loadSoundSettings);
   const [soundError, setSoundError] = useState('');
   const [sound] = useState(() => new SoundOutput(undefined, setSoundError));
+  const [dance, setDance] = useState<Dance | null>(null);
+  const [dancer] = useState(
+    () =>
+      new CompanionDance(setDance, {
+        now: () => performance.now(),
+        schedule: (callback, delay) => window.setTimeout(callback, delay),
+        cancel: (timer) => window.clearTimeout(timer),
+      }),
+  );
   const explore = useExploreSession(freePlay, sound);
   const {
     libraryState,
@@ -124,6 +134,7 @@ export function usePianoSession(
   };
 
   const releaseAll = useCallback(() => {
+    dancer.reset();
     player.stop();
     preview.stop();
     held.current.clear();
@@ -131,7 +142,7 @@ export function usePianoSession(
     sound.stopAll();
     feedback.cancel();
     recorder.releaseAll(performance.now());
-  }, [feedback, recorder, player, preview, sound]);
+  }, [dancer, feedback, recorder, player, preview, sound]);
   const play = useCallback(
     (event: NoteEvent, source: string) => {
       const id = `${source}:${event.channel}:${event.note}`;
@@ -170,6 +181,7 @@ export function usePianoSession(
           huntController.current.guess(event.note, source);
         } else if (state.freePlay) {
           recorder.noteOn(id, event.note, atMs, event.velocity);
+          dancer.noteOn(event.note, atMs);
         } else if (state.active) {
           const next = advance(state.song, state.position, event.note);
           if (next !== state.position) {
@@ -186,7 +198,7 @@ export function usePianoSession(
       }
       setPressed(new Set(held.current.values()));
     },
-    [feedback, recorder, player, preview, sound],
+    [dancer, feedback, recorder, player, preview, sound],
   );
   const midi = useMidi((event) => {
     if (preview.midiPlaying && event.type === 'on') return;
@@ -292,12 +304,13 @@ export function usePianoSession(
       window.removeEventListener('keyup', handle);
       window.removeEventListener('blur', releaseAll);
       document.removeEventListener('visibilitychange', hidden);
+      dancer.dispose();
       feedback.dispose();
       sound.close();
       player.dispose();
       preview.dispose();
     };
-  }, [play, releaseAll, feedback, player, preview, sound]);
+  }, [dancer, play, releaseAll, feedback, player, preview, sound]);
 
   function hearPhrase() {
     releaseAll();
@@ -374,6 +387,7 @@ export function usePianoSession(
     setSongId,
     song,
     freePlay,
+    dance,
     hunting,
     hunt,
     huntSession,

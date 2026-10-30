@@ -44,6 +44,47 @@ dependency). The same SVG/staves remain mounted while a note layer fills in.
 - Newest noteheads are green. The piano continues to show physically held notes.
   The whole drawing fits the viewport without scrolling or layout animation.
 
+## Musical companion discoveries
+
+`companion-dance.ts` owns a bounded, ephemeral memory of up to eight live attacks.
+`usePianoSession` feeds it only fresh Free play note-ons after audition, calibration,
+MIDI-echo and duplicate-held-input routing. Note releases never create steps.
+Imported/restored recordings and playback do not feed discovery. The companion
+continues its ordinary listening sway during playback.
+
+Every live attack restarts a 550ms hop. Pitch direction changes the lean, and a
+run of rising semitone/tone steps lifts the hop in four small increments. There
+is no velocity, rhythm, speed or musical-quality score. A pause longer than ten
+seconds starts a new musical phrase. Distinct notes in an 80ms attack group are
+chords rather than melodic patterns; a fresh repeated pitch starts another group,
+matching capture's grouping boundary without sharing or mutating recorder state.
+
+| Played shape                                                 | Pet discovery |
+| ------------------------------------------------------------ | ------------- |
+| Eight-note major or natural minor scale, ascending           | Scale flip!   |
+| The same scale descending                                    | Backflip!     |
+| Four fresh attacks on one pitch                              | Echo hops!    |
+| Five alternating attacks on two distinct pitches (A B A B A) | Twirl!        |
+| A major/minor arpeggio through the octave, either direction  | Star spin!    |
+| A leap of exactly one octave, either direction               | Octave leap!  |
+| Six chromatic notes in one direction                         | Tiptoe!       |
+
+Scales and arpeggios use relative intervals, so transposition and other octaves
+work. Discoveries consume their matched phrase, keeping the last pitch as a new
+start. A 1.4-second trick finishes even if more input arrives; capture and musical
+memory continue, while ordinary hops cannot cut the trick short. A special move
+is a local visual response, not a badge or a purchase, and can be found again.
+
+The dance uses the existing companion dock with a bounded stage. Jumps, spins
+and flips keep the score, piano, keyboard controls and viewport geometry fixed.
+Reduced motion disables all movement while keeping the discovery caption and
+symbols. A discovery caption is announced as a status; individual hops are not.
+Reset/new recording, visual Clear page, navigation, profile/settings entry,
+focus loss, unplugging and playback loading cancel pending tricks and phrase
+memory. Component teardown cancels its timer. No discovery state is persisted or
+uploaded, and wallet, curriculum, practice recognition and recording timestamps
+remain independent.
+
 ## Export interpretation
 
 Full MusicXML export runs on request, not on each key. It retains the earlier
@@ -93,6 +134,12 @@ the take. Recordings retain notes and timing, and are replayed with the current
 sound rather than embedding a sound preset in the recording file.
 
 ## Validation
+
+Node dance coverage checks transposed/descending scales, other motifs, chords,
+contour following, slow playing, interruptions and timer cleanup using a fake
+clock. Browser journeys check actual live dance triggers, duplicate held inputs,
+continued capture, unchanged wallets, playback isolation, interruptions, reduced
+motion and sampled flip geometry on desktop and phones.
 
 Node coverage checks immutable capture, repeated/chord attacks, explicit page
 breaks within a chord window, unchanged slot positions, page wrapping, bounded UI

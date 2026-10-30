@@ -259,6 +259,8 @@ export function Piano({
           <div className={styles['companion-dock']}>
             <Companion
               learner={learner}
+              freePlay={freePlay}
+              dance={freePlay ? session.dance : null}
               playing={pressed.size > 0 || playback.active.size > 0}
               celebration={
                 hunting
