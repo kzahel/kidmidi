@@ -1,7 +1,13 @@
 import { expect, type Page, test } from '@playwright/test';
-import { type LearnerSnapshot, withPurchase } from '../src/learners';
+import { journeyProgress, lessons } from '../src/curriculum';
+import {
+  type LearnerSnapshot,
+  progress,
+  rewards,
+  withPurchase,
+} from '../src/learners';
 import { noteName, octave } from '../src/music';
-import { gardenGraduate } from './fixtures/journey';
+import { finishLesson, gardenGraduate, newLearner } from './fixtures/journey';
 
 test('back to lessons stays prominent on small screens and returns to the chosen lesson group', async ({
   page,
@@ -190,6 +196,187 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
     page.getByRole('button', { name: 'Golden crown equipped' }),
   ).toBeDisabled();
   expect(await purchases(page)).toHaveLength(2);
+});
+
+test('expanded shop pages preview every find, keep gem treasures attainable and save new companions and outfits', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Note hunt', exact: true }),
+  ).toBeEnabled();
+  const funded = lessons.reduce(
+    (state, lesson) => finishLesson(state, lesson.id),
+    newLearner(),
+  );
+  await seed(page, funded);
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  const drawings = new Set<string>();
+  for (const category of ['Friends', 'Dress up']) {
+    await page.getByRole('button', { name: category, exact: true }).click();
+    const picker = page.getByRole('combobox', {
+      name: 'Reward page',
+      exact: true,
+    });
+    const count = await picker.locator('option').count();
+    expect(count).toBe(category === 'Friends' ? 4 : 9);
+    for (let index = 0; index < count; index++) {
+      await picker.selectOption(String(index));
+      const cards = page.getByRole('button', { name: /^Preview / });
+      for (let card = 0; card < (await cards.count()); card++) {
+        const name = (await cards
+          .nth(card)
+          .getAttribute('aria-label'))!.replace('Preview ', '');
+        await cards.nth(card).click();
+        await expect(
+          page.getByRole('heading', { name, exact: true }),
+        ).toBeVisible();
+        await expect(
+          page.getByLabel('Outfit preview').getByRole('img'),
+        ).toBeVisible();
+        const drawing = await page
+          .getByLabel('Outfit preview')
+          .locator('svg')
+          .innerHTML();
+        expect(drawings.has(drawing), `${name} has its own artwork`).toBe(
+          false,
+        );
+        drawings.add(drawing);
+        await fitted(page);
+      }
+    }
+  }
+  expect(await purchases(page)).toHaveLength(0);
+  await page.getByRole('button', { name: 'Friends', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('2');
+  await page
+    .getByRole('button', { name: 'Preview Frog friend', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Get Frog friend for 60 hearts' })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Frog friend equipped' }),
+  ).toBeDisabled();
+  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('3');
+  await page
+    .getByRole('button', { name: 'Preview Cherry earrings', exact: true })
+    .click();
+  await page.screenshot({
+    path: 'test-results/shop-frog-earrings-desktop.png',
+    animations: 'disabled',
+  });
+  await page.getByRole('button', { name: 'Friends', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('2');
+  await page
+    .getByRole('button', { name: 'Preview Bird friend', exact: true })
+    .click();
+  await page.screenshot({
+    path: 'test-results/shop-bird-desktop.png',
+    animations: 'disabled',
+  });
+  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('3');
+  await page
+    .getByRole('button', { name: 'Preview Panda friend', exact: true })
+    .click();
+  await page.screenshot({
+    path: 'test-results/shop-panda-desktop.png',
+    animations: 'disabled',
+  });
+  await page
+    .getByRole('button', { name: 'Preview Little dragon', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Get Little dragon for 8 gems' })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Little dragon equipped' }),
+  ).toBeDisabled();
+  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('8');
+  await page
+    .getByRole('button', { name: 'Get Crystal crown for 6 gems' })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Crystal crown equipped' }),
+  ).toBeDisabled();
+  const expected = withPurchase(
+    withPurchase(
+      withPurchase(funded, 'frog', 'frog', 0),
+      'dragon',
+      'dragon',
+      0,
+    ),
+    'crystal-crown',
+    'crown',
+    0,
+  );
+  await expect(
+    page.getByText(
+      `${journeyProgress(expected).badges} badges · ♥ ${progress(expected).balance} · 💎 ${journeyProgress(expected).gemBalance}`,
+      { exact: true },
+    ),
+  ).toBeVisible();
+  for (const [name, viewport] of [
+    ['desktop', { width: 1280, height: 800 }],
+    ['phone', { width: 390, height: 844 }],
+    ['small-phone', { width: 320, height: 568 }],
+    ['landscape', { width: 844, height: 390 }],
+  ] as const) {
+    await page.setViewportSize(viewport);
+    // Check the longest names and every accessory page at each constrained size.
+    for (let index = 0; index < 9; index++) {
+      await page
+        .getByRole('combobox', { name: 'Reward page' })
+        .selectOption(String(index));
+      await fitted(page);
+      for (const choice of rewards
+        .filter((item) => item.slot === 'charm')
+        .slice(index * 2, index * 2 + 2)) {
+        await page
+          .getByRole('button', { name: `Preview ${choice.name}`, exact: true })
+          .click();
+        await fitted(page);
+      }
+    }
+    await page.screenshot({
+      path: `test-results/shop-dragon-${name}.png`,
+      animations: 'disabled',
+    });
+  }
+  await page.getByRole('combobox', { name: 'Reward page' }).selectOption('6');
+  await page
+    .getByRole('button', { name: 'Preview Moon pendant', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Get Moon pendant for 2 gems' }),
+  ).toBeDisabled();
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText(
+    '1 more gem',
+  );
+  expect(await purchases(page)).toHaveLength(3);
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await expect(
+    page
+      .getByRole('img', {
+        name: 'Little dragon with crystal crown',
+        exact: true,
+      })
+      .first(),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await expect(page.getByRole('combobox', { name: 'Reward page' })).toHaveValue(
+    '3',
+  );
+  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Reward page' })).toHaveValue(
+    '8',
+  );
+  await expect(
+    page.getByRole('button', { name: 'Crystal crown equipped' }),
+  ).toBeDisabled();
 });
 
 test('the equipped companion follows every activity, reacts to playing and updates with the learner', async ({

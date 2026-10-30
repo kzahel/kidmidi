@@ -137,7 +137,7 @@ export function RewardShop({ controller }: { controller: LearnersController }) {
             {owned(item.id)
               ? 'Yours forever'
               : remaining > 0
-                ? `${remaining} more ${item.currency} to collect`
+                ? `${remaining} more ${remaining === 1 ? (item.currency === 'gems' ? 'gem' : 'heart') : item.currency} to collect`
                 : 'Ready to join you'}
           </span>
         </div>
@@ -179,9 +179,24 @@ export function RewardShop({ controller }: { controller: LearnersController }) {
         >
           ← Back
         </button>
-        <span>
-          {page + 1} / {Math.ceil(items.length / pageSize)}
-        </span>
+        <select
+          aria-label="Reward page"
+          value={page}
+          onChange={(event) => changePage(Number(event.target.value))}
+        >
+          {Array.from(
+            { length: Math.ceil(items.length / pageSize) },
+            (_, index) => (
+              <option key={index} value={index}>
+                {index + 1} / {Math.ceil(items.length / pageSize)} ·{' '}
+                {items
+                  .slice(index * pageSize, (index + 1) * pageSize)
+                  .map((choice) => choice.name)
+                  .join(' & ')}
+              </option>
+            ),
+          )}
+        </select>
         <button
           type="button"
           aria-label="Next rewards"

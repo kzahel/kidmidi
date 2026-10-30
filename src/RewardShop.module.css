@@ -134,11 +134,21 @@
   font-size: 12px;
   color: #65715c;
 }
+.pagination button {
+  flex-shrink: 0;
+  padding-inline: 8px;
+}
+.pagination select {
+  min-width: 0;
+  max-width: 290px;
+  flex: 1;
+  width: 100%;
+}
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex-shrink: 0;
   font-size: 13px;
 }

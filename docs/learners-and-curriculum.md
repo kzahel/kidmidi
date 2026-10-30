@@ -42,14 +42,15 @@ loss, or paid currency.
 The Learners & rewards dialog is fitted to the viewport. Rewards, Learners, and
 Progress tabs separate the collection from profile forms and learning evidence.
 The shop has Friends/Dress up categories, two preview cards per page, and explicit
-Back/More buttons. The stage shows the selected friend wearing the selected
-accessory. Previews never call purchase/equip or alter saved state. The action
+Back/More buttons and a labelled page picker listing each page’s finds. Friends
+has four pages; Dress up has nine. The stage shows the selected friend wearing the
+selected accessory. Previews never call purchase/equip or alter saved state. The action
 button buys once or equips an owned item; the equipped item is labelled With you.
 Unavailable prices show the remaining hearts/gems. Take off removes equipment,
 not ownership. Profile switching resets the shop to that learner's equipment.
 
-Fox, cat, bunny and puppy share original vector artwork across the stage,
-collection, home menu and header. The selected learner's equipped companion also
+Fox, cat, bunny, puppy, bird, frog, panda and little dragon share original vector
+artwork across the stage, collection, home menu and header. The selected learner's equipped companion also
 accompanies song selection and the lesson browser, and sits beside the piano
 in songs, Note Hunt, Pattern Hunt and Free play. Desktop layouts reserve a side
 column; phones reserve space above the keys beside compact keyboard controls.
@@ -63,16 +64,33 @@ Accessories are drawn in the same coordinate
 space, so previews match the worn outfit. Blinking and the short equipment
 entrance respect reduced motion. The original vector art is MIT-licensed.
 
-| Accessory             | Hearts |
-| --------------------- | ------ |
-| Party bow             | 12     |
-| Star charm (necklace) | 24     |
-| Cosy scarf            | 18     |
-| Daisy crown           | 24     |
-| Golden crown          | 48     |
+| Find                                     | Price               |
+| ---------------------------------------- | ------------------- |
+| Cat friend / Bunny friend                | 18 / 30 hearts      |
+| Bird friend / Frog friend / Panda friend | 42 / 60 / 96 hearts |
+| Party bow / Star charm                   | 12 / 24 hearts      |
+| Cosy scarf / Daisy crown / Golden crown  | 18 / 24 / 48 hearts |
+| Sunny shades / Cherry earrings           | 36 / 40 hearts      |
+| Puddle hat / Rainbow bow tie             | 54 / 64 hearts      |
+| Jam headphones / Rainy-day coat          | 80 / 100 hearts     |
+| Adventure bag / Wizard hat               | 120 / 160 hearts    |
+| Moon pendant                             | 2 gems              |
+| Puppy friend                             | 3 gems              |
+| Starlight cape                           | 4 gems              |
+| Butterfly wings                          | 5 gems              |
+| Crystal crown                            | 6 gems              |
+| Little dragon                            | 8 gems              |
 
-Existing stable IDs, prices, purchases and equipment remain valid. Cat costs
-18 hearts, bunny 30 hearts, puppy 3 gems. There are no changes to earning rules.
+One friend and one accessory can be equipped at a time. Wings and capes sit
+behind the companion; the other clothes and trinkets share the face/body anchors.
+`Pet.tsx` and `PetAccessories.tsx` own the original artwork; previews, collection
+cards and activity companions all use the same renderer.
+
+Existing stable IDs, prices, purchases and equipment remain valid. There are no
+changes to earning rules. Every item is individually attainable from the current
+15-gem badge catalog, including the most expensive 8-gem dragon. Gems are finite:
+learners choose treasures to save for, and collecting all gem finds would require
+future lessons. Hearts remain replayable. There are no paid or random purchases.
 The Progress tab pages through recent single-note evidence or lesson badges.
 
 ## Lessons and progress
@@ -119,8 +137,8 @@ earned, with replay and map buttons. These initial thresholds need playtesting;
 they are not validated learning-efficacy measures.
 
 A new badge grants gems once per stable lesson ID. Replays award hearts but cannot
-farm gems. Three gems buy a permanent puppy friend. Heart and gem spending are
-separate ledgers. Badges (including their original gem award) commit with the final
+farm gems. Gem prices range from a two-gem moon pendant to an eight-gem little
+dragon. Heart and gem spending are separate ledgers. Badges (including their original gem award) commit with the final
 encounter in the same IndexedDB transaction; retries and competing tabs cannot
 double-award a badge or overspend either wallet. A storage failure keeps pending
 encounters in the tab for retry; purchases wait until they save.

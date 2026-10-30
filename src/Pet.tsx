@@ -1,6 +1,7 @@
 import type { Learner } from './learners';
 import { rewards } from './learners';
 import styles from './Pet.module.css';
+import { PetAccessories, PetBackdrop } from './PetAccessories';
 
 // Original vector companions: accessories share the same coordinates at every
 // size, so the preview and the equipped friend always wear the same outfit.
@@ -16,7 +17,25 @@ export function Pet({
   const cat = learner.pet === 'cat';
   const bunny = learner.pet === 'rabbit';
   const dog = learner.pet === 'dog';
-  const fur = cat ? '#dba86f' : bunny ? '#e5ddd1' : dog ? '#bd926f' : '#dd8750';
+  const bird = learner.pet === 'bird';
+  const frog = learner.pet === 'frog';
+  const panda = learner.pet === 'panda';
+  const dragon = learner.pet === 'dragon';
+  const fur = bird
+    ? '#82bdd0'
+    : frog
+      ? '#8fbd73'
+      : panda
+        ? '#f3eee2'
+        : dragon
+          ? '#b4a1d2'
+          : cat
+            ? '#dba86f'
+            : bunny
+              ? '#e5ddd1'
+              : dog
+                ? '#bd926f'
+                : '#dd8750';
   return (
     <span
       className={`${styles['pet']} ${small ? styles['small'] : ''}`}
@@ -32,7 +51,19 @@ export function Pet({
           fill="#38594a"
           opacity=".12"
         />
-        {!bunny && (
+        <PetBackdrop charm={learner.charm} />
+        {dragon && (
+          <g
+            fill="#8d7cb6"
+            stroke="#655486"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          >
+            <path d="M65 143 L22 99 L23 141 L40 135 L43 160 Z" />
+            <path d="M135 143 L178 99 L177 141 L160 135 L157 160 Z" />
+          </g>
+        )}
+        {!bunny && !bird && !frog && !panda && (
           <path
             d="M137 143 Q194 113 179 163 Q173 188 135 176"
             fill={fur}
@@ -68,7 +99,30 @@ export function Pet({
           stroke="#704c38"
           strokeWidth="3"
         />
-        {bunny ? (
+        {bird && (
+          <g fill="#599bb8" stroke="#3e7e99" strokeWidth="2">
+            <path d="M63 130 Q37 141 61 165 Q79 160 75 141" />
+            <path d="M137 130 Q163 141 139 165 Q121 160 125 141" />
+            <path d="M91 58 Q73 27 95 37 L103 53 Q105 29 117 40 L110 59" />
+          </g>
+        )}
+        {panda ? (
+          <g fill="#4c4f52" stroke="#393d40" strokeWidth="3">
+            <circle cx="59" cy="61" r="20" />
+            <circle cx="141" cy="61" r="20" />
+            <ellipse cx="72" cy="178" rx="20" ry="10" />
+            <ellipse cx="128" cy="178" rx="20" ry="10" />
+          </g>
+        ) : frog ? (
+          <g fill={fur} stroke="#648550" strokeWidth="3">
+            <circle cx="77" cy="84" r="22" />
+            <circle cx="123" cy="84" r="22" />
+          </g>
+        ) : dragon ? (
+          <g fill="#f0d68d" stroke="#9c8152" strokeWidth="2">
+            <path d="M66 70 Q52 51 63 29 Q67 49 83 57 Z M134 70 Q148 51 137 29 Q133 49 117 57 Z" />
+          </g>
+        ) : bird ? null : bunny ? (
           <>
             <ellipse
               cx="75"
@@ -142,12 +196,16 @@ export function Pet({
           </>
         )}
         <path
-          d="M100 55 C39 55 39 126 72 136 Q100 149 128 136 C161 126 161 55 100 55"
+          d={
+            frog
+              ? 'M100 79 C56 65 30 91 45 118 Q100 157 155 118 C170 91 144 65 100 79'
+              : 'M100 55 C39 55 39 126 72 136 Q100 149 128 136 C161 126 161 55 100 55'
+          }
           fill={fur}
           stroke="#704c38"
           strokeWidth="3"
         />
-        {!cat && (
+        {!cat && !panda && !frog && !bird && !dragon && (
           <path
             d="M53 92 Q74 96 100 122 Q125 96 147 92 C146 151 54 151 53 92"
             fill="#fff2dd"
@@ -161,15 +219,51 @@ export function Pet({
             strokeLinecap="round"
           />
         )}
-        <g className={styles['eyes']} fill="#3d3c38">
-          <ellipse cx="77" cy="97" rx="4.5" ry="6" />
-          <ellipse cx="123" cy="97" rx="4.5" ry="6" />
+        {panda && (
+          <g fill="#4c4f52">
+            <ellipse
+              cx="77"
+              cy="97"
+              rx="13"
+              ry="17"
+              transform="rotate(20 77 97)"
+            />
+            <ellipse
+              cx="123"
+              cy="97"
+              rx="13"
+              ry="17"
+              transform="rotate(-20 123 97)"
+            />
+          </g>
+        )}
+        <g className={styles['eyes']} fill={panda ? '#fff6df' : '#3d3c38'}>
+          <ellipse cx="77" cy={frog ? 87 : 97} rx="4.5" ry="6" />
+          <ellipse cx="123" cy={frog ? 87 : 97} rx="4.5" ry="6" />
         </g>
         <ellipse cx="65" cy="111" rx="9" ry="5" fill="#eaa09b" opacity=".65" />
         <ellipse cx="135" cy="111" rx="9" ry="5" fill="#eaa09b" opacity=".65" />
-        <path d="M94 110 Q100 107 106 110 L100 116 Z" fill="#59463e" />
+        {bird ? (
+          <path
+            d="M89 109 L100 103 L111 109 L100 120 Z"
+            fill="#edbf58"
+            stroke="#ab7d32"
+            strokeWidth="2"
+          />
+        ) : frog ? (
+          <g fill="#648550">
+            <circle cx="94" cy="108" r="2" />
+            <circle cx="106" cy="108" r="2" />
+          </g>
+        ) : (
+          <path d="M94 110 Q100 107 106 110 L100 116 Z" fill="#59463e" />
+        )}
         <path
-          d="M100 116 Q92 125 86 119 M100 116 Q108 125 114 119"
+          d={
+            frog
+              ? 'M76 115 Q100 136 124 115'
+              : 'M100 116 Q92 125 86 119 M100 116 Q108 125 114 119'
+          }
           fill="none"
           stroke="#59463e"
           strokeWidth="2.5"
@@ -235,6 +329,15 @@ export function Pet({
             <circle r="8" fill="#e8b846" />
           </g>
         )}
+        <g
+          transform={
+            frog && learner.charm === 'sunglasses'
+              ? 'translate(0 -10)'
+              : undefined
+          }
+        >
+          <PetAccessories charm={learner.charm} />
+        </g>
       </svg>
     </span>
   );
