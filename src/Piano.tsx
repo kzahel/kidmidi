@@ -20,6 +20,7 @@ export function Piano({
     setRangeOpen,
     pressed,
     hit,
+    patternHit,
     hintReady,
     releaseAll,
     play,
@@ -153,18 +154,18 @@ export function Piano({
           >
             {keyLayout.keys.map(({ note, black, left, width }) => {
               const active = pressed.has(note) || playback.active.has(note);
+              const pattern = hunting && Boolean(session.huntSession.pattern);
               const keyHit = hunting
-                ? null
+                ? patternHit
                 : freePlay
                   ? displayedTake.at(-1)
                   : hit;
               const hint =
-                hintReady &&
+                (pattern ? session.patternHint : hintReady) &&
                 !freePlay &&
-                !hunting &&
-                !shownPosition.complete &&
-                !hit &&
-                note === expected;
+                (pattern || (!hunting && !shownPosition.complete)) &&
+                !keyHit &&
+                note === (pattern ? session.hunt.target : expected);
               return (
                 <button
                   type="button"
@@ -178,11 +179,11 @@ export function Piano({
                     ' ' +
                     (hint ? styles['expected'] : '') +
                     ' ' +
-                    (freePlay || hunting
+                    (freePlay || (hunting && !pattern)
                       ? active
                         ? styles['hit']
                         : ''
-                      : hit?.midi === note
+                      : keyHit?.midi === note
                         ? styles['hit']
                         : '')
                   }

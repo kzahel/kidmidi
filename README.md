@@ -222,7 +222,12 @@ Alberti bass introduces low–high–middle–high, such as C–G–E–G, in th
 middle-C treble range; no left-hand or bass-clef reading is required yet.
 Each shows an entire two- to six-note shape on the staff, with progress checks
 as you play. Notes within a pattern connect freely; a wrong note waits at that
-position. The completed pattern lingers while keys are held, then for 1.6 seconds
+position and appears as a faint ghost on the same staff, just like song practice.
+Correct notes use the same note-length/held-key green feedback. **Options → Idle
+hints** offers the same 1.8-second pause before a staff cursor, piano-key dot and
+next-note label appear; playing, holds and celebrations suppress these cues.
+The hint toggle is shared with songs for this session, and ghosts work with it
+off. The completed pattern lingers while keys are held, then for 1.6 seconds
 after release, just like individual Note Hunt cards. Rhythm is not scored.
 Bass clef, mixed clefs, accidentals, key signatures and simultaneous notes are
 labelled Coming soon, separate from playable lessons.

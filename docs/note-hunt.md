@@ -84,8 +84,30 @@ with separate permanent badges and one gem each.
 Each set shuffles two visits to each intact pattern. The staff stays fixed within
 a pattern, showing all notes from the start. Completed positions get green checks
 and the latest correct staff note highlights. Wrong pitches leave the current
-position waiting with higher/lower feedback; accepted earlier notes remain.
+position waiting with higher/lower feedback and a blue-grey ghost at 50% opacity
+on that waiting note's horizontal position. The latest wrong pitch replaces the
+ghost, which stays after release until the correct attack. Its geometry,
+accidentals and labelled octave displacement reuse the song renderer; it never
+reflows the written pattern. Accepted earlier notes remain checked.
 Names are shown, rhythm is not assessed and there is no required speed.
+
+**Options → Idle hints** shares the song setting for the current app session.
+After 1.8 seconds of inactivity, a cursor marks the waiting staff note, a piano
+key dot appears, and the bottom label names the next note. Over six seconds the
+staff note and key warm to amber and the label strengthens. Any fresh attack
+restarts the pause, including a wrong guess. Held keys, correct-note feedback,
+dialogs and the final-pattern celebration suppress hints. Turning Idle hints off
+removes target cues without removing wrong-note ghosts, names or progress checks.
+Single-note finding/reading lessons retain their separate target/played cards
+and on-request help; these automatic cues apply only to pattern lessons and songs.
+
+Correct-note feedback also reuses the song controller: a quarter-note hit lasts
+480ms, or through its physical hold, with a short release tail. It highlights the
+played staff position and piano key independently of the next recognition target.
+A wrong next note can show its ghost while the earlier correct note is still
+green. Feedback expires before idle hints can start; it never delays recognition.
+Pattern changes, restart, activity/learner changes, settings, blur and unplugging
+clear live ghosts/hits. Settings retain the recognised position and guesses.
 
 Fresh correct attacks advance inside the visible pattern immediately. Only the
 pattern's final note starts the existing held-key/1.6-second celebration. Further
@@ -139,3 +161,9 @@ Browser checks also exercise full pattern sets, phrase-boundary celebrations, di
 cosmetic equipment, reloads, next-day review resumption, storage failures/retries,
 interrupted clocks and touch-target geometry. Node journeys advance through twenty
 simulated days with seeded randomness rather than real-time waits.
+
+Pattern feedback checks use fake clocks and batched mock MIDI attacks to verify
+waiting-position ghosts, immediate connected-note acceptance, old-release
+isolation, idle staff/key cues, hint opt-out, celebration boundaries, reset,
+settings, unplugging and single-note lesson isolation. Ghosts and hints are
+visually checked on desktop, phones and small landscape screens.

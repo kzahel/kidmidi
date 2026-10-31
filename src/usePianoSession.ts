@@ -89,6 +89,7 @@ export function usePianoSession(
   const [pressed, setPressed] = useState(new Set<number>());
   const [lastNote, setLastNote] = useState<number | null>(null);
   const [attempt, setAttempt] = useState<PlayedAttempt | null>(null);
+  const feedbackPatternId = useRef<string | null>(null);
   const [hit, setHit] = useState<NoteHit | null>(null);
   const [hintReady, setHintReady] = useState(false);
   const [idleHint] = useState(
@@ -181,7 +182,19 @@ export function usePianoSession(
         if (state.audition) {
           // Settings are a sound playground, never a performance or an attempt.
         } else if (state.hunting) {
-          huntController.current.guess(event.note, source);
+          const result = huntController.current.guess(event.note, source);
+          if (result) {
+            if (feedbackPatternId.current !== result.patternId)
+              feedback.cancel();
+            feedbackPatternId.current = result.patternId;
+            const position = { phrase: 0, note: result.index, complete: false };
+            if (result.matched) {
+              setAttempt(null);
+              feedback.start(position, { midi: event.note, beats: 1 }, id);
+            } else {
+              setAttempt({ position, midi: event.note, target: result.target });
+            }
+          }
         } else if (state.freePlay) {
           recorder.noteOn(id, event.note, atMs, event.velocity);
           dancer.noteOn(event.note, atMs);
@@ -239,16 +252,23 @@ export function usePianoSession(
     () => keyboardLayout(displayedRange),
     [displayedRange.low, displayedRange.high],
   );
+  const pattern = hunting ? huntSession.pattern : null;
+  const patternId = pattern?.id ?? null;
+  useEffect(() => {
+    if (feedbackPatternId.current === patternId) return;
+    feedbackPatternId.current = patternId;
+    setAttempt(null);
+    feedback.cancel();
+  }, [patternId, feedback]);
+  const patternWaiting = Boolean(pattern) && !hunt.found && !huntSession.result;
 
   useEffect(() => {
     idleHint.update(
       !hints ||
         blocked ||
-        !active ||
-        freePlay ||
-        hunting ||
+        (!active && !patternWaiting) ||
         Boolean(hit) ||
-        position.complete ||
+        (active && position.complete) ||
         pressed.size > 0 ||
         document.hidden,
     );
@@ -257,8 +277,9 @@ export function usePianoSession(
     blocked,
     active,
     hints,
-    freePlay,
-    hunting,
+    patternWaiting,
+    pattern?.id,
+    pattern?.index,
     hit,
     position.complete,
     pressed,
@@ -393,6 +414,8 @@ export function usePianoSession(
     (position.complete ? 1 : 0);
   const total = song.phrases.flat().length;
   const artBounds = song.source?.illustrationViewBox.split(' ').map(Number);
+  const samePattern =
+    Boolean(patternId) && feedbackPatternId.current === patternId;
 
   return {
     songId,
@@ -425,6 +448,17 @@ export function usePianoSession(
     lastNote,
     attempt,
     hit,
+    patternHit: samePattern ? hit : null,
+    patternHint:
+      hintReady && patternWaiting && !hit && !blocked && pressed.size === 0,
+    patternAttempt:
+      samePattern && attempt
+        ? {
+            index: attempt.position.note,
+            midi: attempt.midi,
+            target: attempt.target,
+          }
+        : null,
     hintReady,
     previewState,
     preview,

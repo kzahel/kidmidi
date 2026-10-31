@@ -382,6 +382,26 @@
   min-height: 48px;
   gap: 12px;
 }
+.pattern-hunt .hunt-controls {
+  flex-wrap: nowrap;
+}
+.pattern-hunt .lesson-count {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+}
+.pattern-hint-name {
+  animation: pattern-idle-label 6s ease-in-out both;
+}
+
+@keyframes pattern-idle-label {
+  from {
+    color: #6e796b;
+  }
+  to {
+    color: #906216;
+  }
+}
 .pattern-card > [role="img"] {
   flex: 1;
 }

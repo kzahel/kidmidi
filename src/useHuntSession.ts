@@ -205,6 +205,17 @@ export function useHuntSession(
     const activeRun = run.current;
     const lesson = activeRun ? lessonById(activeRun.lessonId) : undefined;
     const next = guessHunt(model.current, midi, lesson?.heartMultiplier ?? 1);
+    // Return the synchronously recognised position, before begin() advances it.
+    // MIDI may deliver several attacks before React renders another frame.
+    const feedback =
+      activeRun && lesson?.patterns
+        ? {
+            patternId: `${activeRun.id}-${Math.floor(activeRun.completed / patternSize(lesson)) * patternSize(lesson)}`,
+            index: activeRun.completed % patternSize(lesson),
+            target: next.target,
+            matched: next.found,
+          }
+        : undefined;
     model.current = next;
     setState(next);
     if (next.found) {
@@ -270,6 +281,7 @@ export function useHuntSession(
       )
         begin(nextHunt(next), next.target);
     }
+    return feedback;
   }
   function chooseLesson(id: string) {
     const lesson = lessonById(id);

@@ -1,4 +1,5 @@
 import { ActivityControls } from './ActivityControls';
+import { ActivityOptions } from './ActivityOptions';
 import { ExploreScore } from './ExploreScore';
 import type { Learner } from './learners';
 import { NoteHunt } from './NoteHunt';
@@ -34,6 +35,14 @@ export function PianoWorkspace({
         <NoteHunt
           state={hunt}
           pattern={huntSession.pattern}
+          patternHit={session.patternHit}
+          patternAttempt={session.patternAttempt}
+          hint={session.patternHint}
+          options={
+            huntSession.pattern ? (
+              <ActivityOptions session={session} />
+            ) : undefined
+          }
           adaptive={huntSession.adaptive}
           roundId={huntSession.roundId}
           detail={huntSession.choice.detail}

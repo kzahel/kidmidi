@@ -429,9 +429,14 @@ test('patterns can be tried first, accept connected notes and keep the celebrati
     await playPitch(page, 60); // Extra celebration input cannot score twice.
     await page.clock.runFor(50);
     await page.clock.fastForward(1000);
-    await expect(
-      card.getByRole('img', { name: previous!, exact: true }),
-    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const label = await card
+          .getByRole('img', { name: /^Sheet music:/ })
+          .getAttribute('aria-label');
+        return label!.match(/Sheet music: ([\d, ]+)/)![1];
+      })
+      .toBe(previous!.match(/Sheet music: ([\d, ]+)/)![1]);
     await page.clock.fastForward(650);
     await page.clock.runFor(50);
     if (phrase < 3)
@@ -555,6 +560,9 @@ for (const [name, id, size] of [
     }
     await page.setViewportSize({ width: 390, height: 844 });
     for (let phrase = 0; phrase < 4; phrase++) {
+      await expect(
+        page.getByLabel(`0 of ${size} pattern notes found`, { exact: true }),
+      ).toBeVisible();
       const score = card.getByRole('img', { name: /^Sheet music:/ });
       await expect(score.locator('svg')).toBeVisible();
       const label = await score.getAttribute('aria-label');

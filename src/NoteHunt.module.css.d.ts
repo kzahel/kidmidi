@@ -21,6 +21,7 @@ declare const styles: {
   readonly 'note-hunt': string;
   readonly 'pattern-card': string;
   readonly 'pattern-done': string;
+  readonly 'pattern-hint-name': string;
   readonly 'pattern-hunt': string;
   readonly 'pattern-progress': string;
   readonly 'played-card': string;

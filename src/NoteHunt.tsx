@@ -1,11 +1,13 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import activityControlsStyles from './ActivityControls.module.css';
 import { type Lesson, lessonLength } from './curriculum';
+import type { NoteHit } from './feedback';
 import { type HuntLevel, type HuntState, huntLevels } from './hunt';
 import { type Note, noteName, octave, type Song } from './music';
 import styles from './NoteHunt.module.css';
 import pianoWorkspaceStyles from './PianoWorkspace.module.css';
+import type { ScoreAttempt } from './played-note';
 import { Score } from './Score';
 import type { LessonResult } from './useHuntSession';
 
@@ -90,11 +92,17 @@ function PatternCard({
   found,
   onReady,
   played,
+  hit,
+  attempt,
+  hint,
 }: {
   pattern: { pitches: number[]; index: number };
   found: boolean;
   onReady(): void;
   played: number | null;
+  hit: NoteHit | null;
+  attempt: ScoreAttempt | null;
+  hint: boolean;
 }) {
   const [pitches] = useState(pattern.pitches);
   const song = useMemo<Song>(
@@ -104,21 +112,6 @@ function PatternCard({
       timeSignature: { beats: pitches.length, beatType: 4 },
     }),
     [pitches],
-  );
-  const hit = useMemo(
-    () =>
-      pattern.index > 0
-        ? {
-            id: pattern.index,
-            inputId: 'pattern',
-            position: { phrase: 0, note: pattern.index - 1, complete: false },
-            midi: pitches[pattern.index - 1],
-            startedAt: 0,
-            durationMs: 480,
-            released: true,
-          }
-        : null,
-    [pattern.index, pitches],
   );
   const notes = useMemo<Note[]>(
     () => pitches.map((midi) => ({ midi, beats: 1 })),
@@ -134,11 +127,14 @@ function PatternCard({
       </span>
       <Score
         notes={notes}
-        active={Math.max(0, pattern.index - 1)}
-        complete={false}
+        active={
+          hit?.position.note ?? Math.min(pattern.index, pitches.length - 1)
+        }
+        complete={found && !hit}
         song={song}
         hit={hit}
-        hint={false}
+        attempt={attempt}
+        hint={hint}
         size="kid"
         flashcard
         onReady={onReady}
@@ -157,10 +153,14 @@ function PatternCard({
           </span>
         ))}
       </div>
-      <span className={styles['hunt-note-name']}>
-        {played === null
-          ? 'Follow the shape ↑ ↓'
-          : `You played ${label(played)}`}
+      <span
+        className={`${styles['hunt-note-name']} ${hint ? styles['pattern-hint-name'] : ''}`}
+      >
+        {hint
+          ? `Next: ${label(pitches[pattern.index])}`
+          : played === null
+            ? 'Follow the shape ↑ ↓'
+            : `You played ${label(played)}`}
       </span>
     </section>
   );
@@ -180,9 +180,17 @@ export function NoteHunt({
   onHelp,
   onMap,
   pattern,
+  patternHit,
+  patternAttempt,
+  hint,
+  options,
 }: {
   state: HuntState;
   pattern: { pitches: number[]; index: number; id: string } | null;
+  patternHit: NoteHit | null;
+  patternAttempt: ScoreAttempt | null;
+  hint: boolean;
+  options?: ReactNode;
   onLevel: (level: HuntLevel | 'adaptive') => void;
   adaptive: boolean;
   roundId: string;
@@ -308,6 +316,7 @@ export function NoteHunt({
             💡
           </button>
         )}
+        {options}
         <button
           type="button"
           className={activityControlsStyles['restart']}
@@ -326,6 +335,9 @@ export function NoteHunt({
           found={state.found}
           onReady={onReady}
           played={state.played}
+          hit={patternHit}
+          attempt={patternAttempt}
+          hint={hint}
         />
       ) : (
         <div className={styles['hunt-cards']}>

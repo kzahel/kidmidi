@@ -22,6 +22,13 @@ note-ons cannot produce attempts. MIDI, on-screen and computer keys use the same
 input path. Ghosts are played feedback and remain available with Idle hints off;
 next-note cursor/key hints still wait for inactivity.
 
+Pattern lessons reuse this ghost renderer and the same held-note/idle feedback
+controllers. Their Options menu shares the song Idle hints setting for the app
+session. The full pattern and its progress checks remain visible; the wrong-note
+ghost follows the waiting position independently of the last green hit. See
+[Pattern hunt](note-hunt.md#pattern-hunt) for the separate phrase celebrations
+and exercise rewards.
+
 Ghosts remember the recognition position at the moment of the attack, independent
 of a previous note's lingering green feedback. If that position is on another
 printed page, the ghost waits for its page to appear. Browsing another page hides
