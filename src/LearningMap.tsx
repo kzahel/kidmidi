@@ -90,7 +90,7 @@ export function LearningMap({
       <div className={styles['map-heading']}>
         <div>
           <h1>Lessons</h1>
-          <p>Choose any lesson. Start wherever you like.</p>
+          <p>💎 +1 for every set with no mistakes. Take your time.</p>
         </div>
         <button
           type="button"
@@ -161,7 +161,10 @@ export function LearningMap({
                     {lesson.patterns
                       ? `${lessonLength(lesson) / lesson.patterns[0].length} patterns`
                       : `${lessonLength(lesson)} notes`}{' '}
-                    · {badge ? '🏅 Badge earned' : '▶ Ready to play'}
+                    ·{' '}
+                    {badge
+                      ? '🏅 Badge earned'
+                      : `First badge: 💎 ${lesson.gems}`}
                   </small>
                 </button>
               );

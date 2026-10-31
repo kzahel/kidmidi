@@ -61,6 +61,7 @@ test('IndexedDB persists selection and isolates learners; concurrent rewards and
 test('badges, gem awards and world purchases are atomic across retries and tabs', async () => {
   const first = new IndexedDbLearners();
   const other = new IndexedDbLearners();
+  await first.create(newLearner('journey-sibling').learner);
   let state: LearnerSnapshot = await first.create(
     newLearner('journey').learner,
   );
@@ -73,13 +74,14 @@ test('badges, gem awards and world purchases are atomic across retries and tabs'
     ]);
     state = await other.load('journey');
   }
-  assert.equal(journeyProgress(state).gems, 3);
+  assert.equal(journeyProgress(state).gems, 6);
+  assert.equal(state.learner.runRewards!.length, 3);
   assert.equal(state.encounters.length, 32);
   await Promise.all([
     first.buy('journey', 'dog', 'puppy-one', 0),
     other.buy('journey', 'dog', 'puppy-two', 0),
   ]);
-  assert.equal(journeyProgress(await other.load('journey')).gemBalance, 0);
+  assert.equal(journeyProgress(await other.load('journey')).gemBalance, 3);
   const spending = await Promise.allSettled([
     first.buy('journey', 'gate-treehouse', 'gate', 0),
     other.buy('journey', 'rabbit', 'rabbit', 0),
@@ -91,12 +93,23 @@ test('badges, gem awards and world purchases are atomic across retries and tabs'
   );
   state = await other.load('journey');
   assert.ok(progress(state).balance >= 0);
-  assert.equal(journeyProgress(state).gems, 3);
+  assert.equal(journeyProgress(state).gems, 6);
   assert.equal(state.learner.badges?.length, 3);
   assert.equal(
     state.purchases.filter((purchase) => purchase.itemId === 'dog').length,
     1,
   );
+  const replay = lessonEvents(state, 'find-three');
+  await Promise.all(replay.map((event) => first.record(event)));
+  await Promise.all([
+    first.record(replay.at(-1)!),
+    other.record(replay.at(-1)!),
+  ]);
+  state = await new IndexedDbLearners().load('journey');
+  assert.equal(journeyProgress(state).gems, 7);
+  assert.equal(state.learner.badges!.length, 3);
+  assert.equal(state.learner.runRewards!.length, 4);
+  assert.equal(journeyProgress(await other.load('journey-sibling')).gems, 0);
 });
 
 test('concurrent compatible purchases and individual removals retain the rest of the saved outfit', async () => {

@@ -128,18 +128,18 @@ learner inside the existing transaction, preserving other compatible pieces even
 when separate browser tabs buy/equip concurrently. Ownership is still checked
 before equipping, and preview data never enters the learner repository.
 
-Existing stable IDs, prices, purchases and equipment remain valid. There are no
-changes to earning rules. Every item is individually attainable from the current
-15-gem badge catalog, including the most expensive 8-gem dragon. Gems are finite:
-learners choose treasures to save for, and collecting all gem finds would require
-future lessons. Hearts remain replayable. There are no paid or random purchases.
+Existing stable IDs, prices, purchases and equipment remain valid. Gems come from
+first badges and repeatable mistake-free lesson sets. Every gem reward, including
+the 8-gem dragon, can be collected through play. Hearts remain replayable too.
+There are no paid or random purchases.
 The Progress tab pages through recent single-note evidence or lesson badges.
 
 ## Lessons and progress
 
 Note Hunt opens **Lessons**. Labelled group buttons switch Find notes (Garden),
 Read notes (Treehouse), Patterns (River), and Coming soon. Cards show the concrete
-skill/range, assistance, set length, and Ready to play or Badge earned. No playable
+skill/range, assistance, set length, and first-badge gem reward or Badge earned. The
+overview states the one-gem reward for each set with no mistakes. No playable
 card is disabled by curriculum order. The catalog order suggests a progression,
 while learners can skip ahead or experiment freely. Pets do not select levels.
 The prominent ← Lessons button in the main header returns to the active
@@ -159,7 +159,7 @@ are unimplemented directions, clearly separate from playable choices.
 | Patterns                  | Step up; Step down; Skip a key; Out and back | Always        | 3/2/1 per note           | 1 each         |
 
 Each single-note lesson generates a balanced, shuffled set with two visits per
-pitch (6, 10 or 16 cards). Pattern lessons shuffle two intact three- or five-note
+pitch (6, 10 or 16 cards). Pattern lessons shuffle two intact two- to six-note
 shapes twice (four patterns per set); badge assessment also verifies complete
 pattern sequences, rather than just pitch totals. Normal mixed single-note cards
 never immediately repeat. A badge requires:
@@ -178,18 +178,31 @@ streak loss. The ending shows hearts, qualifying finds and a badge/new gems when
 earned, with replay and map buttons. These initial thresholds need playtesting;
 they are not validated learning-efficacy measures.
 
-A new badge grants gems once per stable lesson ID. Replays award hearts but cannot
-farm gems. Gem prices range from a two-gem moon pendant to an eight-gem little
-dragon. Heart and gem spending are separate ledgers. Badges (including their original gem award) commit with the final
-encounter in the same IndexedDB transaction; retries and competing tabs cannot
-double-award a badge or overspend either wallet. A storage failure keeps pending
+A new badge grants gems once per stable lesson ID. Each complete lesson run also
+grants one gem if every target was found on its first attempt. This is independent
+of badge qualification: name help, long pauses, null/interrupted response timing
+and Quick's fluency threshold do not affect it. Pattern runs must contain every
+complete written shape, not just the right pitch totals. Mistake-free replays
+earn one gem each; mistakes and incomplete runs keep hearts without a run gem.
+Songs, open-ended Free practice and Free play do not award run gems.
+
+The result displays total gems plus separate "No mistakes" and "First badge"
+amounts. For example, a first clean Find notes set gives two gems (one badge + one
+run); its next clean replay gives one. A slow or helped clean reading/Quick set
+can earn a run gem without a badge. Gem prices range from a two-gem moon pendant
+to an eight-gem little dragon. Heart and gem spending are separate ledgers.
+Badges and `learner.runRewards` commit with the completing encounter in the same
+IndexedDB transaction. Each run reward stores lesson ID/revision, stable run ID,
+award time and one gem. Duplicate encounter/run checks prevent replaying a save
+from duplicating the award; competing tabs cannot overspend either wallet.
+A storage failure keeps pending
 encounters in the tab for retry; purchases wait until they save.
 
 Opening settings/profiles suspends a lesson card/pattern position, preserving its
 guesses and help state and invalidating its response timing. Switching learners cancels the old
 lesson and callbacks. Returning to the map/restarting begins a new run; refresh
 also resets the unfinished run. Already completed finds/hearts always persist,
-but partial sets do not earn badges. Practice rounds retain their earlier reset
+but partial sets do not earn badges or run gems. Practice rounds retain their earlier reset
 behavior. Transport, held-key celebration and song practice remain independent.
 
 ### Editing and adding content
@@ -228,14 +241,16 @@ Edit **`src/lesson-catalog.ts`**, rather than UI or persistence code:
   as purchasable previews.
 
 Old version-1 IndexedDB records need no destructive migration: absent `badges`
-means none, absent purchase `currency` means hearts, and encounters without lesson
+or `runRewards` means none, absent purchase `currency` means hearts, and encounters without lesson
 metadata remain practice evidence. Completed lesson encounters include stable
 lesson/revision/run IDs, card index and explicit assistance. Badge awards live on
 the learner projection; existing records and all device/recording stores remain
-untouched. Later remote sync must reconcile badge awards as well as encounters.
+untouched. Historical completed runs are not credited retroactively; newly
+completed mistake-free sets receive the bonus. Later remote sync must reconcile
+badge and run awards as well as encounters.
 
 Focused tests cover free advanced-lesson access, intact pattern decks, balanced
-decks, accuracy/coverage, help, timing, revising assessments, permanent badges, replay farming, legacy records, two wallets,
+decks, accuracy/coverage, help, timing, revising assessments, permanent badges, repeatable run rewards, legacy records, two wallets,
 idempotency and concurrent transactions. Browser journeys cover actual rendering,
 the Garden badge journey, direct advanced choices, assisted/unassisted reading,
 Quick, profile isolation, settings interruptions, pet purchases, scrollable galleries, combined outfits, individual removal, reloads and small-screen fit.
@@ -286,7 +301,7 @@ An eventual remote repository/sync adapter will need an outbox, server-side
 idempotency for encounter and purchase IDs, authorization per account/learner,
 schema migrations, deletion/export, and explicit conflict resolution for profile
 edits and simultaneous offline spending. The server must validate awards and
-prices, including badges and one-time gems; local transactional protection is
+prices, including badge and run gems; local transactional protection is
 not server authority. Prefer merging
 immutable encounters/purchases and rebuilding projections over last-write-wins
 heart totals. Device calibration stays local. Profile history includes learning

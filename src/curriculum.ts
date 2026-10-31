@@ -5,6 +5,7 @@ import { type Lesson, lessons, type World, worlds } from './lesson-catalog';
 export {
   type Lesson,
   type LessonBadge,
+  type LessonRunReward,
   lessons,
   type World,
   worlds,
@@ -42,7 +43,12 @@ export function patternSize(lesson: Lesson) {
 }
 export function journeyProgress(snapshot: LearnerSnapshot) {
   const badges = snapshot.learner.badges ?? [];
-  const gems = badges.reduce((sum, badge) => sum + badge.gems, 0);
+  const gems =
+    badges.reduce((sum, badge) => sum + badge.gems, 0) +
+    (snapshot.learner.runRewards ?? []).reduce(
+      (sum, reward) => sum + reward.gems,
+      0,
+    );
   const spent = snapshot.purchases
     .filter((purchase) => purchase.currency === 'gems')
     .reduce((sum, purchase) => sum + purchase.cost, 0);
@@ -126,6 +132,8 @@ export function assessLesson(
   );
   return {
     complete,
+    mistakeFree:
+      complete && rounds.every((event) => event.guesses.length === 1),
     successes: successes.length,
     length,
     earned:

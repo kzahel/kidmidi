@@ -3,6 +3,7 @@ import {
   hasBadge,
   journeyProgress,
   type LessonBadge,
+  type LessonRunReward,
   lessonById,
   lessonLength,
   lessonOpen,
@@ -322,6 +323,7 @@ export type Learner = {
   charm: string | null;
   accessories?: string[];
   badges?: LessonBadge[];
+  runRewards?: LessonRunReward[];
 };
 export type Purchase = {
   id: string;
@@ -441,16 +443,35 @@ export function withEncounter(
     (a, b) => a.startedAt - b.startedAt || a.id.localeCompare(b.id),
   );
   const badges = snapshot.learner.badges ?? [];
-  const award =
+  const runRewards = snapshot.learner.runRewards ?? [];
+  const assessment = lesson
+    ? assessLesson(lesson, encounters, event.lesson!.runId)
+    : undefined;
+  const award = lesson && !hasBadge(snapshot, lesson.id) && assessment?.earned;
+  const runAward =
     lesson &&
-    !hasBadge(snapshot, lesson.id) &&
-    assessLesson(lesson, encounters, event.lesson!.runId).earned;
+    assessment?.mistakeFree &&
+    !runRewards.some((reward) => reward.runId === event.lesson!.runId);
   return {
     ...snapshot,
     encounters,
     learner: {
       ...snapshot.learner,
       unlocked: advanceCurriculum(snapshot.learner.unlocked, encounters),
+      ...(runAward
+        ? {
+            runRewards: [
+              ...runRewards,
+              {
+                lessonId: lesson.id,
+                revision: lesson.revision,
+                runId: event.lesson!.runId,
+                at: event.startedAt,
+                gems: 1 as const,
+              },
+            ],
+          }
+        : {}),
       ...(award
         ? {
             badges: [

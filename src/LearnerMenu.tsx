@@ -114,18 +114,17 @@ function LearningProgress({ controller }: { controller: LearnersController }) {
         {view === 'about' ? (
           <>
             <article>
-              <strong>First-try finds</strong>
+              <strong>Lesson badges</strong>
               <span>
-                Finish a complete set: 80% first try and one success for every
-                pitch. New badges give gems once. Replays earn hearts.
+                80% first try, with a success for every pitch. First badges give
+                gems once. Reading needs no help; Quick adds 4-second finds.
               </span>
             </article>
             <article>
-              <strong>Reading & Quick</strong>
+              <strong>No mistakes: 💎 +1</strong>
               <span>
-                Reading badges need finds without name help. Optional Quick adds
-                a four-second threshold. Other lessons ignore speed. Pauses
-                never cost hearts.
+                Every complete lesson set with no wrong notes earns one gem,
+                including replays. Name help and pauses are allowed.
               </span>
             </article>
           </>

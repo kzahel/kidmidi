@@ -24,6 +24,7 @@ declare const styles: {
   readonly 'pattern-hunt': string;
   readonly 'pattern-progress': string;
   readonly 'played-card': string;
+  readonly 'result-gems': string;
   readonly 'result-icon': string;
 };
 export default styles;

@@ -205,8 +205,9 @@ There is no 512-note capture limit. See [live notation and recording behavior](d
 **Note hunt** opens **Lessons**, a labelled browser with **Find notes**, **Read
 notes**, **Patterns**, and **Coming soon** groups. Choose any implemented lesson
 immediately, including Quick and patterns: no earlier badge or heart purchase is
-required. Cards show the pitch range, name support, set length, and **Ready to
-play** or **Badge earned**. Pages show four cards, or two on narrow/short phones;
+required. Cards show the pitch range, name support, set length, and first-badge
+gem reward or **Badge earned**. The overview explains the repeatable no-mistakes
+bonus. Pages show four cards, or two on narrow/short phones;
 Back/More buttons reveal the rest without scrolling. Returning from a lesson
 reopens its group. Pets are companions and rewards, not lesson levels.
 
@@ -231,7 +232,11 @@ written shapes twice. Badges require a complete set, at least 80% first-try find
 and one for every pitch; reading badges require those finds without help.
 Pattern badges also require the complete written sequences, and do not establish
 independent single-note reading. The optional Quick badge adds a four-second
-response threshold. New badges give gems once; replaying always earns hearts.
+response threshold. New badges give gems once. Every complete lesson set played
+without a wrong note also earns **one gem**, including replays, in addition to
+any first-badge gems. Name help, slow playing and interrupted timing do not affect
+this bonus, even in Quick. The result shows the no-mistakes and first-badge awards
+separately. Unfinished sets and sets with mistakes still keep their earned hearts.
 Garden and Patterns pay 3/2/1 hearts by attempt, Treehouse pays 6/4/2, and Quick
 pays 9/6/3. Long pauses never reduce those rewards. See the
 [curriculum and editing guide](docs/learners-and-curriculum.md).
@@ -272,9 +277,9 @@ Each learner keeps their own history, lifetime hearts, badges, purchases, and
 separate heart/gem wallets. The fox is free. Hearts buy permanent friends and
 accessories, from a 12-heart bow to a 160-heart wizard hat. Gem treasures include
 the moon pendant (2), puppy (3), starlight cape (4), butterfly wings (5), crystal
-crown (6), and little dragon (8). Each is individually attainable from the current
-lesson badges; gems are awarded once per badge, so collecting every gem item
-requires future lessons. A friend can wear several compatible accessories at
+crown (6), and little dragon (8). Gems come from first badges and repeatable
+no-mistakes lesson sets, so every gem item can be collected through play.
+A friend can wear several compatible accessories at
 once: combine a hat, glasses, earrings, neckwear, necklace, coat, bag and cape or
 wings. A new piece replaces only the piece in the same position. Select a worn
 piece to Take off, or Take all off to clear the outfit. Older single-charm

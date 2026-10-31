@@ -27,6 +27,13 @@ export type LessonBadge = {
   at: number;
   gems: number;
 };
+export type LessonRunReward = {
+  lessonId: string;
+  revision: number;
+  runId: string;
+  at: number;
+  gems: 1;
+};
 export type World = {
   id: string;
   name: string;

@@ -11,14 +11,15 @@ Treehouse hides names until 💡 or a match. See the [lesson catalog and assessm
 - Note Hunt opens **Lessons**, with labelled Find notes (Garden), Read notes
   (Treehouse), Patterns (River) and Coming soon groups. Every implemented lesson
   can be selected immediately: badges and hearts never block experimentation.
-  Cards show range/support, length and Ready to play/Badge earned. Groups contain
+  Cards show range/support, length and first-badge gem rewards/Badge earned. Groups contain
   at most four visible cards per page, with explicit Back/More controls when
   needed. The complete browser fits the viewport without scrollbars, including
   tablet portrait/landscape and phones. The prominent ← Lessons header button returns to the active group, on
   desktop and phones. Home stays available.
   Future topics are noninteractive Coming soon previews, not locked lessons.
   Existing badges and earlier gate purchases stay saved. New badges grant gems
-  once; replays still earn hearts. The puppy costs three gems.
+  once. Every complete lesson set with no wrong notes grants one additional gem,
+  including replays. The puppy costs three gems.
 - **🎹 Free practice** opens the original relaxed game. Its default is **My learning
   path**: C4/E4/G4 anchors, daily review, then gradual
   expansion through D4/F4/A4/B4/C5. Review completion and unlocked notes persist
@@ -96,6 +97,18 @@ not evidence of independent single-note reading. Pattern encounters are excluded
 from adaptive single-note review/expansion. Settings preserve the current position
 and guesses; switching learners discards unfinished runs. Completed finds and
 awards persist, including through reload; partial runs do not earn badges.
+
+All finite single-note and pattern lessons also award one gem per complete
+mistake-free set. Every accepted target must be a first-attempt find across the
+whole set, not just one pattern/card. This bonus ignores name help, response
+speed and interrupted timing; Quick can award it without awarding a fluency
+badge. Repeating an exercise can earn another gem. A first badge and the bonus
+can be earned together, and the result names both awards separately. Wrong-note
+and unfinished runs retain their normal hearts but do not earn this bonus.
+Relaxed Free practice is open-ended and has no set-completion gem; songs and
+Free play remain separate. The lesson overview and Progress explanation state
+the gem rules. Rewards save once per learner/run with the completing encounter;
+retries, reloads and competing tabs do not duplicate them.
 
 ## Rendering and validation
 

@@ -84,7 +84,7 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
   expect(await purchases(page)).toHaveLength(0);
   await page.keyboard.press('Escape');
 
-  // A completed Garden funds a crown and its three gems fund the puppy.
+  // Garden's badge and no-mistakes gems fund the puppy as well as the crown.
   await seed(page, gardenGraduate());
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await page.getByRole('button', { name: 'Dress up', exact: true }).click();
@@ -118,7 +118,7 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
     page.getByRole('button', { name: 'Take off Golden crown' }),
   ).toBeEnabled();
   await expect(
-    page.getByText('3 badges · ♥ 48 · 💎 3', { exact: true }),
+    page.getByText('3 badges · ♥ 48 · 💎 6', { exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Friends', exact: true }).click();
 
@@ -139,7 +139,7 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
   ).toBeDisabled();
   expect(await purchases(page)).toHaveLength(2);
   await expect(
-    page.getByText('3 badges · ♥ 48 · 💎 0', { exact: true }),
+    page.getByText('3 badges · ♥ 48 · 💎 3', { exact: true }),
   ).toBeVisible();
 
   for (const [name, viewport] of [
@@ -218,11 +218,6 @@ test('the scrollable gallery previews every find, filters accessories and restor
     'read-three',
     'read-five',
     'read-octave',
-    'fluent-octave',
-    'steps-up',
-    'steps-down',
-    'skips',
-    'returns',
   ].reduce((state, id) => finishLesson(state, id), newLearner());
   await seed(page, funded);
   await page.getByRole('button', { name: 'Learners and rewards' }).click();

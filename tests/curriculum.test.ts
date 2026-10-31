@@ -126,21 +126,23 @@ test('all implemented lessons can be chosen immediately without spending or earl
   assert.equal(lessonOpen(state, lessonById('read-five')!), true);
 });
 
-test('one balanced run earns a permanent badge and gems once; repeats still earn hearts', () => {
+test('one balanced run earns a permanent badge once; mistake-free replays earn another gem', () => {
   let state = newLearner();
   const events = lessonEvents(state, 'find-three');
   for (const event of events.slice(0, -1)) state = withEncounter(state, event);
   assert.equal(hasBadge(state, 'find-three'), false);
   const last = events.at(-1)!;
   state = withEncounter(state, last);
-  assert.equal(journeyProgress(state).gems, 1);
+  assert.equal(journeyProgress(state).gems, 2);
   assert.equal(withEncounter(state, last), state);
   assert.throws(
     () => withEncounter(state, { ...last, id: 'duplicate-card' }),
     /already/,
   );
   state = finishLesson(state, 'find-three');
-  assert.equal(journeyProgress(state).gems, 1);
+  assert.equal(journeyProgress(state).gems, 3);
+  assert.equal(state.learner.badges!.length, 1);
+  assert.equal(state.learner.runRewards!.length, 2);
   assert.equal(progress(state).earned, 36);
   assert.equal(lessonOpen(state, lessonById('find-five')!), true);
   assert.equal(hasBadge(state, 'find-three'), true);
@@ -229,7 +231,7 @@ test('gem purchases use their own wallet and cannot remove badges or close a wor
   state = withPurchase(state, 'dog', 'puppy', 0);
   assert.equal(state.learner.pet, 'dog');
   assert.equal(progress(state).balance, hearts);
-  assert.equal(journeyProgress(state).gemBalance, 0);
+  assert.equal(journeyProgress(state).gemBalance, 3);
   assert.equal(journeyProgress(state).badges, 3);
   state = withPurchase(state, 'gate-treehouse', 'gate', 0);
   assert.equal(worldOpen(state, worlds[1]), true);
@@ -279,11 +281,63 @@ test('pattern decks preserve complete shapes; badges require every phrase and su
       target: events[(index + 1) % events.length].target,
     }));
     assert.equal(assessLesson(lesson, reordered, run).earned, false);
+    assert.equal(assessLesson(lesson, reordered, run).mistakeFree, false);
     const completed = events.reduce(withEncounter, state);
     assert.equal(hasBadge(completed, lesson.id), true);
-    assert.equal(journeyProgress(completed).gems, 1);
-    assert.equal(journeyProgress(finishLesson(completed, lesson.id)).gems, 1);
+    assert.equal(journeyProgress(completed).gems, 2);
+    assert.equal(journeyProgress(finishLesson(completed, lesson.id)).gems, 3);
   }
+});
+
+test('every complete mistake-free lesson gives a gem independently of help, timing and badges', () => {
+  for (const lesson of lessons) {
+    const events = lessonEvents(newLearner(), lesson.id, (event) => ({
+      ...event,
+      assistance: 'note-name',
+      firstResponseMs: null,
+      durationMs: null,
+    }));
+    const partial = events.slice(0, -1).reduce(withEncounter, newLearner());
+    assert.equal(partial.learner.runRewards?.length ?? 0, 0);
+    const complete = withEncounter(partial, events.at(-1)!);
+    assert.equal(complete.learner.runRewards!.length, 1);
+    assert.equal(complete.learner.runRewards![0].gems, 1);
+    assert.equal(
+      assessLesson(lesson, events, events[0].lesson!.runId).mistakeFree,
+      true,
+    );
+    const before = journeyProgress(complete).gems;
+    const replay = finishLesson(complete, lesson.id, (event) => ({
+      ...event,
+      assistance: 'note-name',
+      firstResponseMs: 60000,
+      durationMs: 60000,
+    }));
+    assert.equal(journeyProgress(replay).gems, before + 1);
+    const missed = finishLesson(replay, lesson.id, (event, index) =>
+      index === 0
+        ? {
+            ...event,
+            guesses: [61, event.target],
+            reward: 2 * lesson.heartMultiplier,
+          }
+        : event,
+    );
+    assert.equal(missed.learner.runRewards!.length, 2);
+    assert.ok(progress(missed).earned > progress(replay).earned);
+  }
+});
+
+test('older saves retain their gem balance and only new complete runs earn repeatable rewards', () => {
+  const legacy = finishLesson(newLearner(), 'find-three');
+  delete legacy.learner.runRewards;
+  assert.equal(journeyProgress(legacy).gems, 1);
+  const replay = finishLesson(legacy, 'find-three');
+  assert.equal(journeyProgress(replay).gems, 2);
+  assert.equal(replay.learner.badges!.length, 1);
+  const practice = { ...lessonEvents(replay, 'find-three')[0] };
+  delete practice.lesson;
+  assert.equal(journeyProgress(withEncounter(replay, practice)).gems, 2);
 });
 
 test('pattern following does not enter the independent-note adaptive path', () => {

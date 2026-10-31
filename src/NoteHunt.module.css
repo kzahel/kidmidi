@@ -20,7 +20,15 @@
 .lesson-result {
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: clamp(4px, 1.2vh, 12px);
+}
+.result-gems {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  font-size: 14px;
+  text-align: center;
 }
 .result-icon {
   font-size: clamp(48px, 12vh, 100px);

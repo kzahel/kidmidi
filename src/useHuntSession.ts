@@ -22,6 +22,8 @@ import { noteName, octave } from './music';
 export type LessonResult = {
   hearts: number;
   gems: number;
+  badgeGems: number;
+  runGems: number;
   badge: boolean;
   successes: number;
   length: number;
@@ -242,12 +244,16 @@ export function useHuntSession(
             activeRun.events,
             activeRun.id,
           );
+          const badgeGems =
+            assessment.earned && !hasBadge(profile, lesson.id)
+              ? lesson.gems
+              : 0;
+          const runGems = assessment.mistakeFree ? 1 : 0;
           activeRun.result = {
             hearts: activeRun.points,
-            gems:
-              assessment.earned && !hasBadge(profile, lesson.id)
-                ? lesson.gems
-                : 0,
+            gems: badgeGems + runGems,
+            badgeGems,
+            runGems,
             badge: assessment.earned,
             successes: assessment.successes,
             length: assessment.length,

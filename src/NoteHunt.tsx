@@ -213,6 +213,14 @@ export function NoteHunt({
           ♥ +{result.hearts}{' '}
           {result.gems > 0 && <span>· 💎 +{result.gems}</span>}
         </p>
+        {(result.runGems > 0 || result.badgeGems > 0) && (
+          <span className={styles['result-gems']}>
+            {result.runGems > 0 && <span>No mistakes · 💎 +1</span>}
+            {result.badgeGems > 0 && (
+              <span>First badge · 💎 +{result.badgeGems}</span>
+            )}
+          </span>
+        )}
         <span
           aria-label={`${result.successes} of ${result.length} badge finds`}
         >

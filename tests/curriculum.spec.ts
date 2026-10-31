@@ -62,6 +62,27 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     await expect(
       page.getByRole('region', { name: 'Lesson complete' }),
     ).toContainText('💎 +1');
+    await expect(
+      page.getByRole('region', { name: 'Lesson complete' }),
+    ).toContainText('No mistakes · 💎 +1');
+    if (name === '3 notes') {
+      for (const [layout, viewport] of [
+        ['desktop', { width: 1280, height: 800 }],
+        ['phone', { width: 390, height: 844 }],
+        ['small-phone', { width: 320, height: 568 }],
+        ['landscape', { width: 844, height: 390 }],
+      ] as const) {
+        await page.setViewportSize(viewport);
+        await fits(
+          page,
+          '[aria-label="Lesson complete"], [aria-label="Lesson complete"] > *, [class*="__keyboard__"]',
+        );
+        await page.screenshot({
+          path: `test-results/gem-result-${layout}.png`,
+        });
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+    }
     await page
       .getByRole('button', { name: 'Back to lessons', exact: true })
       .click();
@@ -73,7 +94,7 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     ).toBeEnabled();
   }
   await expect(
-    page.getByLabel('96 hearts, 3 gems', { exact: true }),
+    page.getByLabel('96 hearts, 6 gems', { exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Read notes', exact: true }).click();
   await page
@@ -104,19 +125,28 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
   await playLesson(page, 6, 6, true);
   await expect(
     page.getByRole('region', { name: 'Lesson complete' }),
-  ).not.toContainText('💎');
+  ).toContainText('No mistakes · 💎 +1');
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).not.toContainText('First badge');
   await page.getByRole('button', { name: 'Play lesson again' }).click();
   await playLesson(page, 6, 6);
   await expect(
     page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('💎 +2');
+  ).toContainText('First badge · 💎 +2');
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).toContainText('No mistakes · 💎 +1');
   await page.screenshot({ path: 'test-results/curriculum-result-phone.png' });
   await fits(page, '[aria-label="Lesson complete"], [class*="__keyboard__"]');
   await page.getByRole('button', { name: 'Play lesson again' }).click();
   await playLesson(page, 6, 6);
   await expect(
     page.getByRole('region', { name: 'Lesson complete' }),
-  ).not.toContainText('💎');
+  ).toContainText('No mistakes · 💎 +1');
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).not.toContainText('First badge');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await page
     .getByRole('button', { name: 'Preview Puppy friend', exact: true })
@@ -125,7 +155,7 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     .getByRole('button', { name: 'Get Puppy friend for 3 gems', exact: true })
     .click();
   await expect(
-    page.getByText('4 badges · ♥ 204 · 💎 2', { exact: true }),
+    page.getByText('4 badges · ♥ 204 · 💎 8', { exact: true }),
   ).toBeVisible();
   await page.keyboard.press('Escape');
   await page.reload();
@@ -138,7 +168,7 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     }),
   ).toBeEnabled();
   await expect(
-    page.getByLabel('204 hearts, 2 gems', { exact: true }),
+    page.getByLabel('204 hearts, 8 gems', { exact: true }),
   ).toBeVisible();
   await expect(
     page
@@ -206,7 +236,7 @@ test('help and guesses survive settings; switching learner discards the old less
   expect(sibling.learner.badges ?? []).toHaveLength(0);
 });
 
-test('optional fluency waits indefinitely and never shows a countdown; quick accurate finds earn its badge', async ({
+test('optional fluency waits indefinitely; mistake-free sets earn gems even without a quick badge', async ({
   page,
 }) => {
   await page.clock.install();
@@ -222,7 +252,10 @@ test('optional fluency waits indefinitely and never shows a countdown; quick acc
   await playLesson(page, 16, 9, false, 60000);
   await expect(
     page.getByRole('region', { name: 'Lesson complete' }),
-  ).not.toContainText('💎');
+  ).toContainText('No mistakes · 💎 +1');
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).not.toContainText('First badge');
   expect(
     (await saved(page)).learner.badges?.some(
       (badge) => badge.lessonId === 'fluent-octave',
@@ -232,7 +265,7 @@ test('optional fluency waits indefinitely and never shows a countdown; quick acc
   await playLesson(page, 16, 9, false, 1000);
   await expect(
     page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('💎 +2');
+  ).toContainText('First badge · 💎 +2');
   expect(
     (await saved(page)).learner.badges?.some(
       (badge) => badge.lessonId === 'fluent-octave',
@@ -279,6 +312,7 @@ test('a failed final badge save can be retried without blocking experimentation 
   await expect(page.getByRole('alert')).toHaveCount(0);
   const savedState = await saved(page);
   expect(savedState.learner.badges).toHaveLength(3);
+  expect(savedState.learner.runRewards).toHaveLength(3);
   expect(
     savedState.learner.badges!.reduce((sum, badge) => sum + badge.gems, 0),
   ).toBe(3);
@@ -410,6 +444,7 @@ test('patterns can be tried first, accept connected notes and keep the celebrati
   ).toContainText('💎 +1');
   await expect.poll(async () => (await saved(page)).encounters.length).toBe(20);
   const snapshot = await saved(page);
+  expect(snapshot.learner.runRewards ?? []).toHaveLength(0);
   expect(snapshot.learner.badges?.map((badge) => badge.lessonId)).toEqual([
     'returns',
   ]);
@@ -549,6 +584,7 @@ for (const [name, id, size] of [
       .poll(async () => (await saved(page)).encounters.length)
       .toBe(size * 4);
     const snapshot = await saved(page);
+    expect(snapshot.learner.runRewards ?? []).toHaveLength(0);
     expect(snapshot.learner.badges?.map((badge) => badge.lessonId)).toEqual([
       id,
     ]);
