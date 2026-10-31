@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { journeyProgress } from '../src/curriculum';
+import { journeyProgress, lessons } from '../src/curriculum';
 import {
   type LearnerSnapshot,
   progress,
@@ -230,7 +230,7 @@ test('the scrollable gallery previews every find, filters accessories and restor
   for (const category of ['Friends', 'Dress up']) {
     await page.getByRole('button', { name: category, exact: true }).click();
     const cards = page.getByRole('button', { name: /^Preview / });
-    expect(await cards.count()).toBe(category === 'Friends' ? 8 : 17);
+    expect(await cards.count()).toBe(category === 'Friends' ? 8 : 23);
     for (let index = 0; index < (await cards.count()); index++) {
       const name = (await cards.nth(index).getAttribute('aria-label'))!.replace(
         'Preview ',
@@ -251,7 +251,7 @@ test('the scrollable gallery previews every find, filters accessories and restor
   expect(await purchases(page)).toHaveLength(0);
   const filter = page.getByRole('combobox', { name: 'Browse accessories' });
   await filter.selectOption('head');
-  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(6);
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(7);
   await filter.selectOption('face');
   await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(3);
   await filter.selectOption('owned');
@@ -404,6 +404,136 @@ test('the scrollable gallery previews every find, filters accessories and restor
     .click();
   await hasOutfit([]);
   expect(await purchases(page)).toHaveLength(5);
+});
+
+test('Halloween outfits preview freely, combine across friends and persist into play', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Note hunt', exact: true }),
+  ).toBeEnabled();
+  let funded = lessons.reduce(
+    (state, lesson) => finishLesson(state, lesson.id),
+    newLearner(),
+  );
+  for (const reward of rewards.filter((item) => item.slot === 'pet'))
+    funded = withPurchase(funded, reward.id, reward.id, 0);
+  funded = withPurchase(funded, 'sunglasses', 'shades', 0);
+  await seed(page, funded);
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Dress up', exact: true }).click();
+  const filter = page.getByRole('combobox', { name: 'Browse accessories' });
+  await filter.selectOption('halloween');
+  await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(6);
+  const stage = page.getByLabel('Outfit preview');
+  for (const item of rewards.filter(
+    (choice) => 'theme' in choice && choice.theme === 'halloween',
+  )) {
+    await page
+      .getByRole('button', { name: `Preview ${item.name}`, exact: true })
+      .click();
+    await expect(stage.locator(`[data-accessory="${item.id}"]`)).toHaveCount(1);
+    // The equipped header keeps the earlier outfit until the explicit purchase.
+    await expect(
+      page
+        .getByRole('button', { name: 'Learners and rewards' })
+        .locator(`[data-accessory="${item.id}"]`),
+    ).toHaveCount(0);
+    await page.screenshot({
+      path: `test-results/halloween-${item.id}-preview.png`,
+      animations: 'disabled',
+    });
+    await page
+      .getByRole('button', {
+        name: `Get ${item.name} for ${item.cost} hearts`,
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByRole('button', { name: `Take off ${item.name}`, exact: true }),
+    ).toBeEnabled();
+  }
+  expect(await purchases(page)).toHaveLength(funded.purchases.length + 6);
+  // Both capes and wings use the back position; selecting owned wings is free.
+  await page
+    .getByRole('button', { name: 'Preview Bat wings', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Choose Bat wings', exact: true })
+    .click();
+  const outfit = [
+    'bat-wings',
+    'pumpkin-suit',
+    'ghost-charm',
+    'pumpkin-pail',
+    'sunglasses',
+    'witch-hat',
+  ];
+  const checkOutfit = async () => {
+    await expect
+      .poll(() =>
+        stage
+          .locator('[data-accessory]')
+          .evaluateAll((nodes) =>
+            nodes.map((node) => node.getAttribute('data-accessory')),
+          ),
+      )
+      .toEqual(outfit);
+  };
+  await checkOutfit();
+  for (const [layout, viewport] of [
+    ['desktop', { width: 1280, height: 800 }],
+    ['phone', { width: 390, height: 844 }],
+    ['small-phone', { width: 320, height: 568 }],
+    ['landscape', { width: 844, height: 390 }],
+  ] as const) {
+    await page.setViewportSize(viewport);
+    await fitted(page);
+    await page.screenshot({
+      path: `test-results/halloween-shop-${layout}.png`,
+      animations: 'disabled',
+    });
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.getByRole('button', { name: 'Friends', exact: true }).click();
+  for (const [id, name] of [
+    ['fox', 'Fox friend'],
+    ...rewards
+      .filter((item) => item.slot === 'pet')
+      .map((item) => [item.id, item.name]),
+  ]) {
+    await page
+      .getByRole('button', { name: `Preview ${name}`, exact: true })
+      .click();
+    await checkOutfit();
+    await page.screenshot({
+      path: `test-results/halloween-friend-${id}.png`,
+      animations: 'disabled',
+    });
+  }
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await page.getByRole('button', { name: 'Just explore', exact: true }).click();
+  const companion = page.getByRole('complementary', {
+    name: 'Your piano companion',
+    exact: true,
+  });
+  await expect
+    .poll(() =>
+      companion
+        .locator('[data-accessory]')
+        .evaluateAll((nodes) =>
+          nodes.map((node) => node.getAttribute('data-accessory')),
+        ),
+    )
+    .toEqual(outfit);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: 'test-results/halloween-play-phone.png',
+    animations: 'disabled',
+  });
+  expect(await purchases(page)).toHaveLength(funded.purchases.length + 6);
 });
 
 test('legacy single-charm outfits grow into saved combinations and stay isolated between learners', async ({

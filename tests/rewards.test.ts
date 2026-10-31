@@ -126,3 +126,55 @@ test('legacy charm saves keep their piece when another accessory is equipped, wi
   for (const item of rewards.filter((reward) => reward.slot === 'charm'))
     assert.ok(item.wear);
 });
+
+test('Halloween pieces use earned hearts, layer with existing outfits and stay owned after a costume change', () => {
+  const halloween = rewards.filter(
+    (item) => 'theme' in item && item.theme === 'halloween',
+  );
+  assert.equal(halloween.length, 6);
+  const funded = withPurchase(
+    withPurchase(graduate(), 'sunglasses', 'shades', 0),
+    'bow-tie',
+    'tie',
+    0,
+  );
+  const dressed = halloween.reduce((state, item) => {
+    assert.equal(item.currency, 'hearts');
+    assert.equal(item.slot, 'charm');
+    return withPurchase(state, item.id, item.id, 0);
+  }, funded);
+  assert.equal(
+    progress(dressed).balance,
+    progress(funded).balance -
+      halloween.reduce((total, item) => total + item.cost, 0),
+  );
+  assert.equal(
+    journeyProgress(dressed).gemBalance,
+    journeyProgress(funded).gemBalance,
+  );
+  assert.deepEqual(wearing(dressed.learner), [
+    'vampire-cape',
+    'pumpkin-suit',
+    'bow-tie',
+    'ghost-charm',
+    'pumpkin-pail',
+    'sunglasses',
+    'witch-hat',
+  ]);
+  const bat = withEquipment(dressed, 'charm', 'bat-wings');
+  assert.deepEqual(
+    wearing(bat.learner),
+    wearing(dressed.learner).map((id) =>
+      id === 'vampire-cape' ? 'bat-wings' : id,
+    ),
+  );
+  assert.deepEqual(bat.purchases, dressed.purchases);
+  const removed = withEquipment(bat, 'charm', 'witch-hat', true);
+  assert.ok(!wearing(removed.learner).includes('witch-hat'));
+  assert.deepEqual(withPurchase(removed, 'witch-hat', 'retry', 0), removed);
+  assert.ok(
+    wearing(withEquipment(removed, 'charm', 'witch-hat').learner).includes(
+      'witch-hat',
+    ),
+  );
+});

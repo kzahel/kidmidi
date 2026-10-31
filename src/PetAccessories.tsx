@@ -1,5 +1,33 @@
 // Original vector dress-up pieces, aligned to the shared companion coordinates.
 export function PetBackdrop({ charm }: { charm: string | null }) {
+  if (charm === 'bat-wings')
+    return (
+      <g fill="#544066" stroke="#35293f" strokeWidth="3" strokeLinejoin="round">
+        <path d="M86 142 Q57 101 13 99 L20 151 Q34 133 45 159 Q58 144 68 173 L89 161 Z" />
+        <path d="M114 142 Q143 101 187 99 L180 151 Q166 133 155 159 Q142 144 132 173 L111 161 Z" />
+        <path
+          d="M17 104 L84 151 M17 104 Q43 120 45 155 M183 104 L116 151 M183 104 Q157 120 155 155"
+          fill="none"
+          stroke="#a18ab2"
+          strokeWidth="2"
+        />
+      </g>
+    );
+  if (charm === 'vampire-cape')
+    return (
+      <g stroke="#41283d" strokeWidth="3" strokeLinejoin="round">
+        <path
+          d="M71 129 L48 110 L58 147 L39 183 Q100 195 161 183 L142 147 L152 110 L129 129 Z"
+          fill="#492d50"
+        />
+        <path d="M71 136 L51 180 Q100 189 149 180 L129 136 Z" fill="#a04460" />
+        <path
+          d="M72 149 L65 179 M128 149 L135 179"
+          stroke="#cb7185"
+          fill="none"
+        />
+      </g>
+    );
   if (charm === 'wings')
     return (
       <g fill="#e8a3cd" stroke="#a55b91" strokeWidth="3">
@@ -26,6 +54,113 @@ export function PetBackdrop({ charm }: { charm: string | null }) {
 
 export function PetAccessories({ charm }: { charm: string | null }) {
   switch (charm) {
+    case 'witch-hat':
+      return (
+        <g stroke="#362744" strokeWidth="3" strokeLinejoin="round">
+          <path
+            d="M64 61 L87 29 Q93 5 123 12 L110 27 L137 61 Z"
+            fill="#655087"
+          />
+          <path d="M70 49 Q100 58 129 49 L137 63 H64 Z" fill="#8fa65f" />
+          <path
+            d="M51 63 Q95 74 143 58 L157 73 Q105 91 43 76 Z"
+            fill="#554070"
+          />
+          <rect
+            x="95"
+            y="52"
+            width="15"
+            height="12"
+            rx="2"
+            fill="#efbc60"
+            strokeWidth="2"
+          />
+          <path d="M102 55 V61" stroke="#655087" />
+        </g>
+      );
+    case 'pumpkin-suit':
+      return (
+        <g stroke="#b75b2b" strokeWidth="2.5" strokeLinejoin="round">
+          <path
+            d="M70 132 Q100 143 130 132 Q154 149 139 175 Q100 195 61 175 Q46 149 70 132 Z"
+            fill="#ed923c"
+          />
+          <path
+            d="M84 140 Q70 158 83 181 M116 140 Q130 158 117 181"
+            fill="none"
+            stroke="#d5732b"
+          />
+          <path
+            d="M68 132 L80 127 L91 138 L100 131 L109 138 L120 127 L132 132 L122 145 L109 140 L100 146 L91 140 L78 145 Z"
+            fill="#739755"
+            stroke="#4e733c"
+          />
+          <path
+            d="M75 156 L86 147 L90 158 Z M110 158 L114 147 L125 156 Z M78 165 Q100 183 122 165 L115 167 L113 172 L104 173 L103 168 L96 168 L95 173 L87 170 L85 166 Z"
+            fill="#634132"
+            stroke="none"
+          />
+        </g>
+      );
+    case 'ghost-charm':
+      return (
+        <g stroke="#897c9c" strokeWidth="2" strokeLinejoin="round">
+          <path
+            d="M70 132 Q100 153 130 132"
+            fill="none"
+            stroke="#9d87b6"
+            strokeWidth="3"
+          />
+          <path
+            d="M88 160 Q87 146 100 146 Q113 146 112 160 L116 175 L108 171 L104 176 L99 171 L94 176 L85 173 Z"
+            fill="#fff9ec"
+          />
+          <g fill="#51415e" stroke="none">
+            <ellipse cx="96" cy="157" rx="2" ry="3" />
+            <ellipse cx="105" cy="157" rx="2" ry="3" />
+          </g>
+          <path
+            d="M97 164 Q100 168 104 164"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      );
+    case 'pumpkin-pail':
+      return (
+        <g stroke="#a95c30" strokeWidth="2.5" strokeLinejoin="round">
+          <path
+            d="M124 154 C114 124 155 124 146 154"
+            fill="none"
+            stroke="#65506d"
+            strokeWidth="4"
+          />
+          <path
+            d="M116 152 Q135 143 154 152 L151 177 Q135 188 119 177 Z"
+            fill="#f0a047"
+          />
+          <path
+            d="M126 154 Q121 167 126 180 M143 154 Q149 167 143 180"
+            fill="none"
+            stroke="#d78032"
+          />
+          <path
+            d="M123 163 L129 156 L132 164 Z M138 164 L141 156 L148 163 Z M125 169 Q135 180 145 169 L138 170 L137 174 L132 174 L131 170 Z"
+            fill="#634132"
+            stroke="none"
+          />
+        </g>
+      );
+    case 'vampire-cape':
+      return (
+        <g stroke="#623548" strokeWidth="2" strokeLinejoin="round">
+          <path
+            d="M65 129 L85 151 L100 139 L115 151 L135 129 L118 139 L100 136 L82 139 Z"
+            fill="#a04460"
+          />
+          <circle cx="100" cy="141" r="5" fill="#efcc78" stroke="#b88b47" />
+        </g>
+      );
     case 'bow':
       return (
         <g fill="#db6995" stroke="#a9426c" strokeWidth="2">

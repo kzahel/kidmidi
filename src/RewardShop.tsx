@@ -23,6 +23,7 @@ const friends = [fox, ...rewards.filter((item) => item.slot === 'pet')];
 const charms = rewards.filter((item) => item.slot === 'charm');
 const collections = [
   { id: 'all', name: 'All accessories', slots: [] },
+  { id: 'halloween', name: '🎃 Halloween', slots: [] },
   { id: 'head', name: 'Hats & hair', slots: ['head'] },
   { id: 'face', name: 'Glasses & ears', slots: ['eyes', 'ears'] },
   { id: 'clothes', name: 'Clothes & wings', slots: ['body', 'neck', 'back'] },
@@ -76,6 +77,10 @@ export function RewardShop({ controller }: { controller: LearnersController }) {
     if (filter === 'owned') return owned(id);
     if (filter === 'wearing') return isWorn(id);
     if (filter === 'all') return true;
+    if (filter === 'halloween') {
+      const piece = accessory(id);
+      return !!piece && 'theme' in piece && piece.theme === 'halloween';
+    }
     return (
       collections
         .find((group) => group.id === filter)

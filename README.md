@@ -255,14 +255,17 @@ lesson browser. During songs, Note Hunt, Pattern Hunt and Free play, your equipp
 friend has a visible spot beside the piano (above the keys on phones), wearing the
 same accessories. It sways while notes sound and cheers for correct song notes and
 completed hunt cards/patterns. Those reactions never affect recognition, pacing or
-rewards. Seventeen outfits include bows, necklaces, scarves, flowers, crowns,
+rewards. Twenty-three dress-up pieces include bows, necklaces, scarves, flowers, crowns,
 sunglasses, cherry earrings, a puddle hat, rainbow bow tie, headphones, raincoat,
-adventure bag, wizard hat, starlight cape and butterfly wings. The preview,
+adventure bag, wizard hat, starlight cape and butterfly wings. The **🎃 Halloween**
+collection adds a witch hat, bat wings, pumpkin suit, smiling ghost charm, pumpkin
+pail and vampire cape for 18–72 earned hearts. These stay available year-round,
+and you can combine them with existing outfits. The preview,
 collection cards and equipped companion use the same artwork. New equipment gives
 a small greeting; reduced motion disables movement and blinking. Friends and
 Dress up have scrollable thumbnail galleries with prices and wearing/owned marks.
 The preview and purchase controls stay visible while the gallery scrolls. Filter
-Dress up by Hats & hair, Glasses & ears, Clothes & wings, Charms & bags, Yours,
+Dress up by Halloween, Hats & hair, Glasses & ears, Clothes & wings, Charms & bags, Yours,
 or Wearing to find a piece quickly.
 
 Each learner keeps their own history, lifetime hearts, badges, purchases, and

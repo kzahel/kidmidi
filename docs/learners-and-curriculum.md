@@ -45,7 +45,7 @@ Friends and Dress up use thumbnail galleries with prices and Yours/Wearing marks
 Only the gallery scrolls; the outfit preview, category/filter controls and explicit
 buy/choose/take-off action stay in view. The gallery is keyboard-focusable, and
 cards can be reached with Tab as well as touch/pointer scrolling. Dress up filters
-are All accessories, Hats & hair, Glasses & ears, Clothes & wings, Charms & bags,
+are All accessories, Halloween, Hats & hair, Glasses & ears, Clothes & wings, Charms & bags,
 Yours and Wearing. Friends can be filtered to All friends, Yours or Wearing.
 
 Selecting a card previews that piece alongside the saved outfit. Previews never
@@ -90,6 +90,23 @@ entrance respect reduced motion. The original vector art is MIT-licensed.
 | Butterfly wings                          | 5 gems              |
 | Crystal crown                            | 6 gems              |
 | Little dragon                            | 8 gems              |
+| Witch hat                                | 36 hearts           |
+| Bat wings                                | 60 hearts           |
+| Pumpkin suit                             | 48 hearts           |
+| Ghost charm                              | 18 hearts           |
+| Pumpkin pail                             | 30 hearts           |
+| Vampire cape                             | 72 hearts           |
+
+The six Halloween pieces are original vector artwork with the same preview,
+thumbnail and equipped rendering as the existing collection. A Halloween filter
+groups their catalog theme tags; each also appears in its ordinary wear-position
+category. They cost earned hearts, remain available year-round and stay owned
+after taking them off. Witch hat uses headwear, pumpkin suit uses body, ghost
+charm uses necklace, pumpkin pail uses bag, and bat wings/vampire cape share the
+back position. Choosing one replaces only that position, preserving compatible
+pieces. Wings and cape fabric sit behind the companion; the cape collar and
+other pieces follow the existing front layer order. The full outfit works on
+all eight friends and follows the learner into piano activities.
 
 One friend can wear up to eight compatible pieces. Wear positions are headwear
 (bows, flowers, crowns and hats), eyes (sunglasses), ears (earrings or headphones),
