@@ -162,7 +162,11 @@ export function useLearners(repository: LearnerRepository = defaultRepository) {
           Date.now(),
         ),
       ),
-    equip: (slot: 'pet' | 'charm', item: string | null, remove = false) =>
+    equip: (
+      slot: 'pet' | 'charm' | 'backdrop',
+      item: string | null,
+      remove = false,
+    ) =>
       change(() =>
         repository.equip(current.current!.learner.id, slot, item, remove),
       ),

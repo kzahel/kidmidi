@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityMenu } from './ActivityMenu';
 import styles from './App.module.css';
+import { WardrobeArt } from './ChoiceArt';
 import { journeyProgress } from './curriculum';
 import { DeviceSettings } from './DeviceSettings';
 import { LearnerMenu } from './LearnerMenu';
@@ -8,6 +9,7 @@ import { LearningMap } from './LearningMap';
 import { progress } from './learners';
 import { Pet } from './Pet';
 import { PianoWorkspace } from './PianoWorkspace';
+import { stopSpokenHelp } from './SpokenHelp';
 import { soundRoutes } from './sound-settings';
 import { useHuntSession } from './useHuntSession';
 import { useLearners } from './useLearners';
@@ -16,10 +18,11 @@ import { type Activity, usePianoSession } from './usePianoSession';
 export function App() {
   const [mode, setMode] = useState<Activity>('home');
   const [learnersOpen, setLearnersOpen] = useState(false);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const learners = useLearners();
   const playing = mode === 'practice' || mode === 'explore' || mode === 'hunt';
-  const blocked = learnersOpen || settingsOpen;
+  const blocked = learnersOpen || wardrobeOpen || settingsOpen;
   const hunt = useHuntSession(
     learners.snapshot,
     learners.record,
@@ -40,12 +43,20 @@ export function App() {
         : soundRoute.label;
   const stats = learners.snapshot ? progress(learners.snapshot) : null;
   function navigate(next: Activity) {
+    stopSpokenHelp();
     session.sound.speaker.unlock();
     session.reset();
     session.setRecordingsOpen(false);
     session.keyboard.cancelLearning();
     session.setRangeOpen(false);
     setMode(next);
+  }
+  function openWardrobe() {
+    stopSpokenHelp();
+    session.releaseAll();
+    session.keyboard.cancelLearning();
+    session.setRangeOpen(false);
+    setWardrobeOpen(true);
   }
   return (
     <main className={styles['app']}>
@@ -58,9 +69,8 @@ export function App() {
           onClick={() => navigate('home')}
           aria-label="Home"
         >
-          {playing || mode === 'songs' || mode === 'path'
-            ? '‹ Home'
-            : '♫ Kidmidi'}
+          <span aria-hidden="true">⌂</span>
+          <span className={styles['nav-label']}>Home</span>
         </button>
         {mode === 'hunt' ? (
           <button
@@ -69,7 +79,8 @@ export function App() {
             aria-label="Back to lessons"
             onClick={() => navigate('path')}
           >
-            ← Lessons
+            <span aria-hidden="true">←</span>
+            <span className={styles['nav-label']}>Lessons</span>
           </button>
         ) : (
           <span className={styles['activity-title']}>
@@ -83,6 +94,15 @@ export function App() {
         <div className={styles['header-actions']}>
           <button
             type="button"
+            className={styles['wardrobe-button']}
+            aria-label="Wardrobe"
+            disabled={!learners.snapshot}
+            onClick={openWardrobe}
+          >
+            <WardrobeArt />
+          </button>
+          <button
+            type="button"
             className={styles['device-button']}
             aria-label="Sound and settings"
             aria-description={`${soundLabel}. ${session.soundSettings.sound.name}.`}
@@ -92,15 +112,13 @@ export function App() {
               session.releaseAll();
               session.keyboard.cancelLearning();
               session.setRangeOpen(false);
+              stopSpokenHelp();
               setSettingsOpen(true);
             }}
           >
             <span className={styles['device-icon']} aria-hidden="true">
-              {soundRoute.icon}
+              🔊
             </span>
-            <span className={styles['device-label']}>{soundLabel}</span>
-            <span className={styles['route-label']}>{soundRoute.label}</span>
-            <span aria-hidden="true">{session.soundSettings.sound.emoji}</span>
             <span aria-hidden="true">⚙</span>
           </button>
           <button
@@ -112,6 +130,7 @@ export function App() {
               session.releaseAll();
               session.keyboard.cancelLearning();
               session.setRangeOpen(false);
+              stopSpokenHelp();
               setLearnersOpen(true);
             }}
           >
@@ -129,14 +148,6 @@ export function App() {
           </button>
         </div>
       </header>
-      {(!session.midi.supported ||
-        (!session.connected && session.midi.status)) && (
-        <p className={styles['midi-status']} role="status">
-          {session.midi.supported
-            ? session.midi.status
-            : 'MIDI needs Chrome and HTTPS or localhost.'}
-        </p>
-      )}
       {learners.error && (
         <div className={styles['save-warning']} role="alert">
           {learners.error}{' '}
@@ -175,12 +186,28 @@ export function App() {
         <ActivityMenu
           snapshot={learners.snapshot}
           choosingSong={mode === 'songs'}
+          onWardrobe={openWardrobe}
+          onListen={session.hearSong}
+          listening={
+            session.previewState.playing ? session.listeningSong : null
+          }
+          stopListening={() => session.preview.stop()}
           onChoose={(activity) =>
             navigate(activity === 'hunt' ? 'path' : activity)
           }
           onSong={(id) => {
             session.setSongId(id);
             navigate('practice');
+          }}
+        />
+      )}
+      {wardrobeOpen && (
+        <LearnerMenu
+          controller={learners}
+          wardrobe
+          onClose={() => {
+            stopSpokenHelp();
+            setWardrobeOpen(false);
           }}
         />
       )}

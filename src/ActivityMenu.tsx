@@ -1,8 +1,11 @@
 import styles from './ActivityMenu.module.css';
+import { PetScene } from './Backdrop';
+import { ActivityArt, WardrobeArt } from './ChoiceArt';
 import { journeyProgress } from './curriculum';
 import type { LearnerSnapshot } from './learners';
 import { songs } from './music';
 import { Pet } from './Pet';
+import { SpokenHelp } from './SpokenHelp';
 import type { Activity } from './usePianoSession';
 
 export function ActivityMenu({
@@ -10,11 +13,19 @@ export function ActivityMenu({
   choosingSong,
   onChoose,
   onSong,
+  onWardrobe,
+  onListen,
+  listening,
+  stopListening,
 }: {
   snapshot: LearnerSnapshot | null;
   choosingSong: boolean;
   onChoose(activity: Activity): void;
   onSong(id: string): void;
+  onWardrobe(): void;
+  onListen(id: string): void;
+  listening: string | null;
+  stopListening(): void;
 }) {
   const journey = snapshot ? journeyProgress(snapshot) : null;
   return (
@@ -24,46 +35,80 @@ export function ActivityMenu({
     >
       <div className={styles['welcome']}>
         <div>
-          <p className={styles['eyebrow']}>A LITTLE PIANO TIME</p>
           <h1>
             {choosingSong
               ? 'Pick a song'
-              : `Hello, ${snapshot?.learner.name ?? 'piano friend'}!`}
+              : `Hello, ${snapshot?.learner.name ?? 'friend'}!`}
           </h1>
-          <p>
-            {choosingSong
-              ? 'Play together, one note at a time.'
-              : 'What shall we play today?'}
-          </p>
           {journey && (
             <div className={styles['level']}>
               <span
                 aria-label={`${journey.stars} stars, ${journey.gemBalance} gems`}
               >
-                ★ {journey.stars} stars · 💎 {journey.gemBalance}
+                ★ {journey.stars} · 💎 {journey.gemBalance}
               </span>
             </div>
           )}
+          <SpokenHelp
+            beforeSpeak={stopListening}
+            text={
+              choosingSong
+                ? 'Tap a picture to play a song. Tap the speaker to listen first.'
+                : 'Choose a song, make your own music, or find some notes. Tap the wardrobe to dress your friend and choose a place.'
+            }
+          />
         </div>
-        {snapshot && <Pet learner={snapshot.learner} />}
+        {snapshot && (
+          <div className={styles['pet-home']}>
+            <PetScene id={snapshot.learner.backdrop}>
+              <Pet learner={snapshot.learner} />
+            </PetScene>
+            <button
+              type="button"
+              aria-label="Open wardrobe"
+              onClick={onWardrobe}
+            >
+              <WardrobeArt />
+              <span>Dress up</span>
+            </button>
+          </div>
+        )}
       </div>
       <div className={styles['activities']}>
         {choosingSong ? (
           songs.map((song) => (
-            <button
-              type="button"
-              className={styles['song']}
-              key={song.id}
-              onClick={() => onSong(song.id)}
-              aria-label={song.title}
-            >
-              <span className={styles['icon']} aria-hidden="true">
-                {song.icon}
-              </span>
-              <strong>{song.title}</strong>
-              <span>At your own pace</span>
-              <b aria-hidden="true">↗</b>
-            </button>
+            <article className={styles['song-card']} key={song.id}>
+              <button
+                type="button"
+                className={styles['song']}
+                onClick={() => onSong(song.id)}
+                aria-label={song.title}
+              >
+                <span className={styles['picture']}>
+                  <ActivityArt kind={song.id} />
+                </span>
+                <strong>{song.title}</strong>
+                <b aria-hidden="true">▶</b>
+              </button>
+              <button
+                type="button"
+                className={styles['listen']}
+                aria-label={
+                  listening === song.id
+                    ? `Stop listening to ${song.title}`
+                    : `Listen to ${song.title}`
+                }
+                aria-pressed={listening === song.id}
+                onClick={() =>
+                  listening === song.id ? stopListening() : onListen(song.id)
+                }
+              >
+                <span aria-hidden="true">
+                  {listening === song.id ? '■' : '🔊'}
+                </span>
+                <span>{listening === song.id ? 'Stop' : 'Listen'}</span>
+              </button>
+            </article>
           ))
         ) : (
           <>
@@ -73,12 +118,11 @@ export function ActivityMenu({
               onClick={() => onChoose('songs')}
               aria-label="Play a song"
             >
-              <span className={styles['icon']} aria-hidden="true">
-                ♫
+              <span className={styles['picture']}>
+                <ActivityArt kind="twinkle" />
               </span>
-              <strong>Play a song</strong>
-              <span>A melody, one note at a time</span>
-              <b aria-hidden="true">↗</b>
+              <strong>Songs</strong>
+              <b aria-hidden="true">▶</b>
             </button>
             <button
               type="button"
@@ -86,12 +130,11 @@ export function ActivityMenu({
               onClick={() => onChoose('explore')}
               aria-label="Just explore"
             >
-              <span className={styles['icon']} aria-hidden="true">
-                ✺
+              <span className={styles['picture']}>
+                <ActivityArt kind="piano" />
               </span>
               <strong>Free play</strong>
-              <span>Make something all your own</span>
-              <b aria-hidden="true">↗</b>
+              <b aria-hidden="true">▶</b>
             </button>
             <button
               type="button"
@@ -100,19 +143,15 @@ export function ActivityMenu({
               onClick={() => onChoose('hunt')}
               aria-label="Note hunt"
             >
-              <span className={styles['icon']} aria-hidden="true">
-                ♥
+              <span className={styles['picture']}>
+                <ActivityArt kind="hunt" />
               </span>
               <strong>Note hunt</strong>
-              <span>Choose a lesson · notes & patterns</span>
-              <b aria-hidden="true">↗</b>
+              <b aria-hidden="true">▶</b>
             </button>
           </>
         )}
       </div>
-      <p className={styles['footnote']}>
-        No rush. There’s always time for another note.
-      </p>
     </section>
   );
 }

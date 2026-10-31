@@ -313,6 +313,38 @@ export const rewards = [
     currency: 'hearts',
     slot: 'charm',
   },
+  {
+    id: 'treehouse-scene',
+    name: 'Treehouse',
+    description: 'A leafy little home.',
+    cost: 60,
+    currency: 'hearts',
+    slot: 'backdrop',
+  },
+  {
+    id: 'moon-scene',
+    name: 'Moon garden',
+    description: 'Stars and sleepy flowers.',
+    cost: 3,
+    currency: 'gems',
+    slot: 'backdrop',
+  },
+  {
+    id: 'ocean-scene',
+    name: 'Underwater',
+    description: 'Bubbles and coral.',
+    cost: 4,
+    currency: 'gems',
+    slot: 'backdrop',
+  },
+  {
+    id: 'castle-scene',
+    name: 'Spooky castle',
+    description: 'A friendly moonlit castle.',
+    cost: 5,
+    currency: 'gems',
+    slot: 'backdrop',
+  },
 ] as const;
 export type Learner = {
   id: string;
@@ -323,6 +355,7 @@ export type Learner = {
   pet: string;
   charm: string | null;
   accessories?: string[];
+  backdrop?: string | null;
   badges?: LessonBadge[];
   runRewards?: LessonRunReward[];
   lessonStars?: LessonStars[];
@@ -372,7 +405,7 @@ export interface LearnerRepository {
   ): Promise<LearnerSnapshot>;
   equip(
     learnerId: string,
-    slot: 'pet' | 'charm',
+    slot: 'pet' | 'charm' | 'backdrop',
     itemId: string | null,
     remove?: boolean,
   ): Promise<LearnerSnapshot>;
@@ -575,7 +608,9 @@ export function withPurchase(
     learner:
       item.slot === 'pet'
         ? { ...snapshot.learner, pet: item.id }
-        : previewAccessory(snapshot.learner, item.id),
+        : item.slot === 'backdrop'
+          ? { ...snapshot.learner, backdrop: item.id }
+          : previewAccessory(snapshot.learner, item.id),
     purchases: [
       ...snapshot.purchases,
       {
@@ -592,13 +627,13 @@ export function withPurchase(
 
 export function withEquipment(
   snapshot: LearnerSnapshot,
-  slot: 'pet' | 'charm',
+  slot: 'pet' | 'charm' | 'backdrop',
   itemId: string | null,
   remove = false,
 ): LearnerSnapshot {
   const free =
     (slot === 'pet' && itemId === 'fox') ||
-    (slot === 'charm' && itemId === null);
+    ((slot === 'charm' || slot === 'backdrop') && itemId === null);
   if (
     !free &&
     !rewards.some(
@@ -613,6 +648,11 @@ export function withEquipment(
     if (remove) throw new Error('Choose a friend to play with.');
     return { ...snapshot, learner: { ...snapshot.learner, pet: itemId! } };
   }
+  if (slot === 'backdrop')
+    return {
+      ...snapshot,
+      learner: { ...snapshot.learner, backdrop: remove ? null : itemId },
+    };
   const accessories =
     itemId === null
       ? []
@@ -629,7 +669,10 @@ export function withEquipment(
   };
 }
 
-export type Outfit = Pick<Learner, 'pet' | 'charm' | 'accessories'>;
+export type Outfit = Pick<
+  Learner,
+  'pet' | 'charm' | 'accessories' | 'backdrop'
+>;
 export type Accessory = Extract<(typeof rewards)[number], { slot: 'charm' }>;
 export function accessory(id: string) {
   return rewards.find(

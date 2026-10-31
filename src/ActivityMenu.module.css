@@ -1,73 +1,77 @@
 .menu {
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  padding: clamp(16px, 4vw, 56px) 4px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 3vh, 28px);
+  padding: clamp(8px, 2vh, 28px) 4px;
 }
 .welcome {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 0 20px 32px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 .welcome h1 {
-  font-size: clamp(28px, 4vw, 44px);
+  font-size: clamp(24px, 4vw, 40px);
   line-height: 1.15;
-  letter-spacing: -0.04em;
-  margin: 8px 0 12px;
-}
-.welcome p {
-  color: #637368;
-  margin: 8px 0;
-}
-.eyebrow {
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.17em;
+  margin: 0 0 8px;
 }
 .level {
-  margin-top: 24px;
-  display: grid;
-  gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: #667465;
+  margin-bottom: 8px;
+}
+.pet-home {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: clamp(104px, 21vh, 170px);
+}
+.pet-home > span {
+  width: clamp(104px, 21vh, 170px);
+}
+.pet-home button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px;
+  background: #ede8da;
+  border-color: #cbb79b;
+  font-size: 12px;
+}
+.pet-home button svg {
+  width: clamp(48px, 8vh, 76px);
+  height: clamp(48px, 8vh, 76px);
 }
 .activities {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
-.activities button {
-  text-align: left;
-  padding: 24px;
-  min-height: 260px;
+.activities > button,
+.song-card > button:first-child {
+  text-align: center;
+  padding: 16px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  position: relative;
+  align-items: center;
+  justify-content: center;
   border-radius: 24px;
-  gap: 12px;
-  transition: transform 150ms;
+  gap: 10px;
   border-color: #0000000b;
-}
-.activities button:hover:not(:disabled) {
-  transform: translateY(-3px);
+  width: 100%;
 }
 .activities strong {
-  font-size: clamp(20px, 2.5vw, 26px);
+  font-size: clamp(18px, 2.5vw, 26px);
   font-weight: 700;
 }
-.activities button > span:not(.icon) {
-  font-size: 14px;
-  opacity: 0.8;
-  line-height: 1.5;
-}
 .activities b {
-  margin-top: auto;
-  align-self: flex-end;
-  font-size: 24px;
-  font-weight: 400;
+  font-size: 22px;
 }
 .song {
   background: #e7eddf;
@@ -81,71 +85,148 @@
   background: #f7e3df;
   color: #9f505d;
 }
-.icon {
-  display: grid;
-  place-items: center;
-  font-size: 44px;
-  width: 72px;
-  height: 72px;
-  background: #ffffff7a;
-  border-radius: 22px;
-  margin-bottom: 8px;
+.picture {
+  display: block;
+  width: min(100%, 240px);
+  min-height: 0;
 }
-.footnote {
-  text-align: center;
-  margin: 28px 0 0;
-  color: #7a8375;
-  font-size: 13px;
+.picture svg {
+  width: 100%;
+  max-height: 25vh;
+  display: block;
+}
+.song-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.song-card > button:first-child {
+  flex: 1;
+}
+.listen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  font-size: 14px;
+}
+.listen[aria-pressed="true"] {
+  background: #dcebcf;
+  border-color: #648a67;
 }
 
 @media (width <= 640px) {
-  .welcome {
-    padding: 0 6px 24px;
+  .menu {
     gap: 12px;
+    padding: 4px;
   }
   .welcome h1 {
-    font-size: 28px;
+    font-size: 24px;
+  }
+  .pet-home {
+    gap: 4px;
+    height: 104px;
+  }
+  .pet-home > span {
+    width: 96px;
+  }
+  .pet-home button svg {
+    width: 44px;
+    height: 52px;
   }
   .activities {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 8px;
   }
-  .activities button {
-    min-height: 124px;
-    display: grid;
-    grid-template-columns: 64px 1fr 18px;
-    gap: 4px 16px;
-    padding: 18px;
+  .activities > button,
+  .song-card > button:first-child {
+    flex-direction: row;
+    gap: 8px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    border-radius: 18px;
   }
-  .icon {
-    grid-row: 1 / 3;
-    width: 60px;
-    height: 60px;
-    font-size: 34px;
-    margin: 0;
+  .picture {
+    width: 100px;
+    flex-shrink: 0;
   }
-  .activities strong {
-    align-self: end;
-    font-size: 21px;
-  }
-  .activities button > span:not(.icon) {
-    grid-column: 2;
-    align-self: start;
-    font-size: 13px;
+  .picture svg {
+    max-height: 86px;
   }
   .activities b {
-    grid-column: 3;
-    grid-row: 1 / 3;
-    align-self: center;
+    margin-left: auto;
   }
-  .level {
-    margin-top: 14px;
+  .song-card {
+    flex-direction: row;
+    gap: 4px;
+  }
+  .song-card > button:first-child {
+    min-width: 0;
+  }
+  .song-card .picture {
+    width: 70px;
+  }
+  .song-card strong {
+    font-size: 15px;
+  }
+  .listen {
+    width: 54px;
+    flex-shrink: 0;
+    flex-direction: column;
+    gap: 2px;
     font-size: 11px;
+    padding: 4px;
+  }
+  .song-card b {
+    display: none;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .activities button {
-    transition: none;
+@media (height <= 500px) and (width >= 641px) {
+  .menu {
+    padding: 0;
+    gap: 8px;
+  }
+  .pet-home {
+    height: 75px;
+  }
+  .pet-home > span {
+    width: 85px;
+  }
+  .pet-home button {
+    flex-direction: row;
+  }
+  .pet-home button svg {
+    width: 44px;
+    height: 52px;
+  }
+  .welcome > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .welcome h1 {
+    font-size: 24px;
+    margin: 0;
+  }
+  .level {
+    margin: 0;
+  }
+  .activities > button,
+  .song-card > button:first-child {
+    flex-direction: row;
+    padding: 8px;
+    gap: 6px;
+  }
+  .picture {
+    width: 80px;
+  }
+  .activities strong {
+    font-size: 17px;
+  }
+  .activities b {
+    display: none;
   }
 }

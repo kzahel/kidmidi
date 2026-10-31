@@ -173,7 +173,7 @@ export class IndexedDbLearners implements LearnerRepository {
   }
   equip(
     id: string,
-    slot: 'pet' | 'charm',
+    slot: 'pet' | 'charm' | 'backdrop',
     item: string | null,
     remove = false,
   ) {

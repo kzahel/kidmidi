@@ -13,18 +13,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
 }
 .map-heading h1 {
   margin: 0;
   font-size: clamp(24px, 4vw, 36px);
-}
-.map-heading p,
-.panel-heading p {
-  margin: 4px 0 0;
-  color: #59664f;
-  font-size: clamp(13px, 1.8vw, 16px);
 }
 .map-heading button {
   background: #e4eaf2;
@@ -39,25 +33,37 @@
 .shelves button {
   background: #f0f0e7;
   border: 2px solid transparent;
-  padding: 10px 6px;
+  padding: 6px;
   font-size: clamp(13px, 2vw, 18px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 .shelves button[aria-pressed="true"] {
   border-color: #648a67;
   background: #e4efda;
 }
-.shelves button > span {
-  font-size: 24px;
+.group-picture {
+  width: 52px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+}
+.group-picture svg {
+  width: 100%;
+  height: 100%;
 }
 .world-panel {
   flex: 1;
   min-height: 0;
   background: #edf2e5;
   border-radius: 24px;
-  padding: clamp(12px, 2vw, 24px);
+  padding: clamp(10px, 2vw, 24px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 .panel-heading h2 {
   margin: 0;
@@ -78,33 +84,43 @@
   background: #fffef8;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: clamp(4px, 1vh, 10px);
-  padding: clamp(10px, 2vw, 20px);
+  gap: 4px;
+  padding: clamp(6px, 1vw, 12px);
   border: 2px solid #d6e0c9;
   border-radius: 18px;
-  text-align: left;
+  text-align: center;
+  position: relative;
+}
+.lesson-picture {
+  display: flex;
+  width: min(100%, 200px);
+  min-height: 0;
+}
+.lesson-picture svg {
+  display: block;
+  width: 100%;
+  max-height: 80px;
 }
 .lesson-icon {
   font-size: clamp(24px, 4vh, 40px);
   line-height: 1;
 }
 .lesson-stars {
-  font-size: clamp(20px, 3vh, 30px);
+  font-size: clamp(20px, 3vh, 28px);
   line-height: 1;
 }
 .lessons strong {
   font-size: clamp(16px, 2.5vw, 22px);
 }
 .description {
-  color: #59664f;
-  font-size: clamp(13px, 1.8vw, 16px);
-}
-.lessons small {
-  color: #477659;
-  font-size: clamp(12px, 1.6vw, 14px);
-  line-height: 1.2;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
 }
 .preview {
   background: #f5f3eb;
@@ -123,61 +139,63 @@
 }
 .pagination button {
   background: #fffef8;
+  min-width: 64px;
+  font-size: 24px;
+}
+.companion-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.companion-summary > span {
+  white-space: nowrap;
+  font-weight: 700;
 }
 
 @media (width <= 640px) {
-  .map-heading {
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .map-heading button {
-    max-width: 110px;
-    font-size: 14px;
-    padding: 8px;
-  }
   .shelves {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
   .shelves button {
+    font-size: 13px;
+  }
+  .map-heading button {
+    max-width: 110px;
+    font-size: 13px;
     padding: 6px;
   }
   .lessons {
     gap: 8px;
   }
-  .lessons button,
-  .preview {
-    padding: 8px;
-    gap: 4px;
-  }
   .world-panel {
     gap: 8px;
   }
-  .panel-heading {
-    gap: 6px;
+  .companion-summary {
+    gap: 4px;
+  }
+  .companion-summary > span {
+    font-size: 12px;
+  }
+}
+
+@media (width <= 360px), (width <= 640px) and (height <= 800px) {
+  .map-footer {
+    display: none;
+  }
+  .lessons {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .lesson-picture svg {
+    max-height: 52px;
+  }
+  .lessons strong {
+    font-size: 16px;
   }
 }
 
 @media (height <= 500px) and (width >= 641px) {
-  .lessons button {
-    display: grid;
-    grid-template-columns: 70px minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-    align-content: center;
-    gap: 2px 6px;
-    padding: 6px;
-  }
-  .lesson-stars {
-    grid-column: 1;
-    grid-row: 1 / 4;
-    align-self: center;
-    font-size: 20px;
-  }
-  .lessons strong,
-  .lessons .description,
-  .lessons small {
-    grid-column: 2;
-  }
   .map {
     display: grid;
     grid-template-columns: 210px minmax(0, 1fr);
@@ -193,12 +211,6 @@
   .map-heading h1 {
     font-size: 24px;
   }
-  .map-heading p {
-    font-size: 12px;
-  }
-  .map-heading button {
-    width: 100%;
-  }
   .shelves {
     grid-column: 1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -206,12 +218,13 @@
     align-content: center;
   }
   .shelves button {
-    padding: 4px;
+    flex-direction: column;
+    gap: 0;
     font-size: 12px;
+    padding: 4px;
   }
-  .shelves button > span {
-    display: block;
-    font-size: 20px;
+  .group-picture {
+    height: 26px;
   }
   .world-panel {
     grid-column: 2;
@@ -222,88 +235,30 @@
   .panel-heading h2 {
     font-size: 20px;
   }
-  .panel-heading p {
-    font-size: 12px;
-  }
   .lessons {
     gap: 6px;
   }
-  .lessons button,
-  .preview {
-    padding: 8px;
+  .lessons button {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    grid-template-rows: auto auto;
     gap: 4px;
+    padding: 6px;
   }
-  .lesson-icon {
-    display: none;
+  .lesson-picture {
+    grid-row: 1 / 3;
+  }
+  .lesson-picture svg {
+    max-height: 48px;
   }
   .lessons strong {
     font-size: 16px;
   }
-  .description,
-  .lessons small,
-  .map-footer {
-    font-size: 12px;
+  .lesson-stars {
+    font-size: 20px;
   }
   .map-footer {
     grid-column: 1;
-  }
-}
-
-@media (width <= 360px), (width <= 640px) and (height <= 800px) {
-  .lesson-length {
-    display: none;
-  }
-  .lessons button {
-    padding: 6px;
-    gap: 3px;
-  }
-  .description {
     font-size: 12px;
-  }
-  .map-heading p,
-  .panel-heading p,
-  .lesson-icon,
-  .map-footer {
-    display: none;
-  }
-  .lessons {
-    grid-template-rows: minmax(0, 1fr);
-  }
-}
-
-.companion-summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.companion-summary > span {
-  white-space: nowrap;
-  font-weight: 700;
-}
-
-@media (width <= 640px) {
-  .companion-summary {
-    flex-direction: column;
-    gap: 0;
-  }
-  .companion-summary > span {
-    font-size: 12px;
-  }
-}
-
-@media (height <= 500px) and (width >= 641px) {
-  .companion-summary {
-    gap: 4px;
-  }
-  .companion-summary > span {
-    font-size: 12px;
-  }
-}
-
-@media (width <= 360px), (width <= 640px) and (height <= 800px) {
-  .companion-summary {
-    flex-direction: row;
-    gap: 4px;
   }
 }

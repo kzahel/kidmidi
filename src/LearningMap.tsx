@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react';
+import { ActivityArt, LessonArt } from './ChoiceArt';
 import { Companion } from './Companion';
-import {
-  bestStars,
-  journeyProgress,
-  lessonLength,
-  lessons,
-  worlds,
-} from './curriculum';
+import { bestStars, journeyProgress, lessons, worlds } from './curriculum';
 import styles from './LearningMap.module.css';
 import { LessonStars } from './LessonStars';
 import { progress } from './learners';
+import { SpokenHelp } from './SpokenHelp';
 import type { LearnersController } from './useLearners';
 
 const shelves = [
@@ -94,8 +90,8 @@ export function LearningMap({
       <div className={styles['map-heading']}>
         <div>
           <h1>Lessons</h1>
-          <p>💎 +1 for every set with no mistakes. Take your time.</p>
         </div>
+        <SpokenHelp text="Choose a picture to play. Notes show the shape to follow. Stars show your best. You can try any exercise. Take your time." />
         <button
           type="button"
           onClick={onPractice}
@@ -109,13 +105,31 @@ export function LearningMap({
           <button
             type="button"
             key={item.id}
+            aria-label={item.name}
             aria-pressed={selected === index}
             onClick={() => {
               setSelected(index);
               setPage(0);
             }}
           >
-            <span aria-hidden="true">{item.icon}</span> {item.name}
+            <span className={styles['group-picture']} aria-hidden="true">
+              {item.id === 'garden' ? (
+                <ActivityArt kind="hunt" />
+              ) : item.id === 'scales' || item.id === 'river' ? (
+                <LessonArt
+                  lesson={
+                    lessons.find(
+                      (lesson) =>
+                        lesson.id ===
+                        (item.id === 'scales' ? 'scale-up' : 'thirds-up'),
+                    )!
+                  }
+                />
+              ) : (
+                item.icon
+              )}
+            </span>
+            <span>{item.name}</span>
           </button>
         ))}
       </nav>
@@ -128,7 +142,6 @@ export function LearningMap({
             <h2>
               {shelf.icon} {shelf.name}
             </h2>
-            <p>{shelf.description}</p>
           </div>
           <div className={styles['companion-summary']}>
             <Companion learner={snapshot.learner} compact />
@@ -142,7 +155,7 @@ export function LearningMap({
         <div className={styles['lessons']}>
           {content
             .slice(page * pageSize, (page + 1) * pageSize)
-            .map((lesson, index) => {
+            .map((lesson) => {
               const stars = bestStars(snapshot, lesson.id);
               const world = worlds.find((world) => world.id === lesson.world)!;
               return (
@@ -153,27 +166,26 @@ export function LearningMap({
                   aria-label={`${world.name}: ${lesson.name}`}
                   aria-describedby={`${lesson.id}-progress`}
                 >
+                  <span className={styles['lesson-picture']}>
+                    <LessonArt lesson={lesson} />
+                  </span>
+                  <strong>{lesson.name}</strong>
                   <span className={styles['lesson-stars']}>
                     <LessonStars stars={stars} />
                   </span>
-                  <strong>
-                    {index + 1 + page * pageSize}. {lesson.name}
-                  </strong>
-                  <span className={styles['description']}>
-                    {lesson.description}
-                  </span>
-                  <small id={`${lesson.id}-progress`}>
-                    <span className={styles['lesson-length']}>
-                      {lessonLength(lesson)} notes ·{' '}
-                    </span>
+                  <span
+                    className={styles['description']}
+                    id={`${lesson.id}-progress`}
+                  >
+                    {lesson.description}.{' '}
                     {stars === 0
-                      ? '★ 60% hearts'
+                      ? 'Finish with 60% hearts'
                       : stars === 1
-                        ? '★★ No mistakes'
+                        ? 'Next: no mistakes'
                         : stars === 2
-                          ? `★★★ ${lesson.patterns ? '4s / 2s' : '4s'} finds`
+                          ? 'Next: fluent finds'
                           : 'All stars earned'}
-                  </small>
+                  </span>
                 </button>
               );
             })}
@@ -198,7 +210,7 @@ export function LearningMap({
               disabled={page === 0}
               onClick={() => setPage(page - 1)}
             >
-              ← Back
+              ←
             </button>
             <span>
               {page + 1} / {pages}
@@ -209,14 +221,14 @@ export function LearningMap({
               disabled={page + 1 === pages}
               onClick={() => setPage(page + 1)}
             >
-              More →
+              →
             </button>
           </nav>
         )}
       </section>
       <footer className={styles['map-footer']}>
         <span>
-          ★ {journey.stars}/{lessons.length * 3} stars
+          ★ {journey.stars}/{lessons.length * 3}
         </span>
         <span
           aria-label={`${stats.balance} hearts, ${journey.gemBalance} gems`}

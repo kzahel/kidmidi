@@ -178,3 +178,26 @@ test('Halloween pieces use earned hearts, layer with existing outfits and stay o
     ),
   );
 });
+
+test('backdrops are permanent learner purchases independent of friends, outfits and wallets', () => {
+  const dressed = withPurchase(graduate(), 'bow', 'bow-scene', 0);
+  const bought = withPurchase(dressed, 'treehouse-scene', 'treehouse', 1);
+  assert.equal(bought.learner.backdrop, 'treehouse-scene');
+  assert.equal(bought.learner.pet, dressed.learner.pet);
+  assert.deepEqual(wearing(bought.learner), wearing(dressed.learner));
+  const cleared = withEquipment(bought, 'backdrop', null);
+  assert.equal(cleared.learner.backdrop, null);
+  assert.deepEqual(cleared.purchases, bought.purchases);
+  assert.deepEqual(progress(cleared), progress(bought));
+  const moon = withPurchase(cleared, 'moon-scene', 'moon', 2);
+  assert.equal(moon.learner.backdrop, 'moon-scene');
+  assert.deepEqual(progress(moon), progress(cleared));
+  const restored = withEquipment(moon, 'backdrop', 'treehouse-scene');
+  assert.equal(restored.learner.backdrop, 'treehouse-scene');
+  assert.deepEqual(restored.purchases, moon.purchases);
+  assert.throws(() => withEquipment(restored, 'backdrop', 'bow'), /Collect/);
+  assert.throws(
+    () => withEquipment(newLearner('sibling'), 'backdrop', 'moon-scene'),
+    /Collect/,
+  );
+});

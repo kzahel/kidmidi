@@ -42,7 +42,7 @@ export function Dialog({
           aria-label={`Close ${title.toLowerCase()}`}
           onClick={onClose}
         >
-          Done
+          <span aria-hidden="true">✓</span>
         </button>
       </div>
       {children}

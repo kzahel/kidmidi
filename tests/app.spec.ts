@@ -141,7 +141,10 @@ test('MIDI permission, device selection, messages and unplugging use the adapter
   await page.evaluate(() =>
     (window as unknown as { unplug: () => void }).unplug(),
   );
+  await openSettings(page);
+  await page.getByRole('tab', { name: 'Keyboard', exact: true }).click();
   await expect(page.getByText(/No MIDI keyboard found/)).toBeVisible();
+  await closeSettings(page);
   await expect(page.locator('[class*="__hit-badge__"]')).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Play C4', exact: true }),
@@ -399,9 +402,12 @@ test('MIDI requests access on load, retries permission, remembers selection and 
     });
   });
   await openPractice(page);
+  await openSettings(page);
+  await page.getByRole('tab', { name: 'Keyboard', exact: true }).click();
   await expect(page.getByRole('status')).toContainText(
     'Click Connect keyboard',
   );
+  await closeSettings(page);
   expect(
     await page.evaluate(() =>
       (window as unknown as { midiRequests(): number }).midiRequests(),

@@ -5,6 +5,7 @@ import { displayKeyRange, keyboardLayout, screenKeyboard } from './keyboard';
 import { advance, type NoteEvent, songs, startPosition } from './music';
 import { PhrasePreview, type PreviewState } from './phrase-preview';
 import type { PlayedAttempt } from './played-note';
+import { stopSpokenHelp } from './SpokenHelp';
 import { SoundOutput } from './sound-output';
 import { loadSoundSettings, saveSoundSettings } from './sound-settings';
 import { useExploreSession } from './useExploreSession';
@@ -108,6 +109,7 @@ export function usePianoSession(
         cancel: (timer) => window.clearTimeout(timer),
       }),
   );
+  const [listeningSong, setListeningSong] = useState<string | null>(null);
   const [previewState, setPreviewState] = useState<PreviewState>({
     playing: false,
     error: '',
@@ -158,6 +160,9 @@ export function usePianoSession(
         feedback.release(id);
         recorder.noteOff(id, atMs);
       } else {
+        if (held.current.has(id)) return;
+        stopSpokenHelp();
+        if (preview.playing) preview.stop();
         if (
           (current.current.blocked && !current.current.audition) ||
           (!current.current.active &&
@@ -166,10 +171,8 @@ export function usePianoSession(
             !current.current.audition)
         )
           return;
-        if (held.current.has(id)) return;
         const state = current.current;
         if (player.playing) player.stop();
-        if (preview.playing) preview.stop();
         held.current.set(id, event.note);
         huntController.current.setHeld(true);
         setLastNote(event.note);
@@ -348,7 +351,23 @@ export function usePianoSession(
     };
   }, [dancer, play, releaseAll, feedback, player, preview, sound]);
 
+  function hearSong(id: string) {
+    const selected = songs.find((candidate) => candidate.id === id);
+    if (!selected) return;
+    stopSpokenHelp();
+    releaseAll();
+    setListeningSong(id);
+    const destination = sound.playbackDestinations;
+    void preview.hear(
+      selected.phrases[0],
+      destination.keyboard ? sound.midiOutput : undefined,
+      destination.screen,
+      soundSettings.route === 'quiet',
+    );
+  }
+
   function hearPhrase() {
+    stopSpokenHelp();
     releaseAll();
     const destination = sound.playbackDestinations;
     void preview.hear(
@@ -464,6 +483,8 @@ export function usePianoSession(
           }
         : null,
     hintReady,
+    listeningSong,
+    hearSong,
     previewState,
     preview,
     hearPhrase,

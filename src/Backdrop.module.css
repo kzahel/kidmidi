@@ -1,0 +1,30 @@
+.art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.scene {
+  position: relative;
+  display: inline-flex;
+  align-items: end;
+  justify-content: center;
+  border-radius: 20px;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+}
+.foreground {
+  position: relative;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.foreground > span {
+  max-width: 100%;
+  max-height: 100%;
+}

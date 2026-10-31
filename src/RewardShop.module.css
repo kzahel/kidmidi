@@ -13,7 +13,19 @@
   flex-shrink: 0;
 }
 .categories button {
-  min-width: 90px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex-direction: column;
+  padding: 4px;
+  font-size: 12px;
+}
+.categories button > span:first-child {
+  font-size: 24px;
+  line-height: 26px;
 }
 .categories button[aria-pressed="true"] {
   background: #e1edd8;
@@ -50,20 +62,13 @@
     linear-gradient(150deg, #fbebc8, #e2efe4);
 }
 .companion {
+  position: relative;
   display: flex;
   animation: friend-hello 450ms ease-out;
 }
 .stage .companion > span {
   width: clamp(110px, 21vh, 180px);
   height: clamp(110px, 21vh, 180px);
-}
-.stage-note {
-  position: absolute;
-  top: 8%;
-  right: 12%;
-  font-size: 24px;
-  color: #a69664;
-  rotate: 15deg;
 }
 .preview-label {
   position: absolute;
@@ -114,17 +119,37 @@
 }
 .filter {
   display: flex;
-  flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
+  overflow: hidden;
+  padding: 2px;
 }
-.filter select {
+.filter button {
+  min-width: 48px;
+  flex: 1;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.filter button > span {
+  font-size: 22px;
+  line-height: 24px;
+}
+.filter small {
+  font-size: 10px;
+}
+.filter button[aria-pressed="true"] {
+  border-color: #648a67;
+  background: #e4efda;
+}
+.scene-thumb {
+  position: relative;
+  display: block;
   width: 100%;
-  min-width: 0;
-}
-.filter span {
-  font-size: 12px;
-  color: #65715c;
+  height: 64px;
+  border-radius: 8px;
 }
 .gallery {
   display: grid;
@@ -186,6 +211,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .companion {
+    position: relative;
     animation: none;
   }
 }
@@ -226,27 +252,12 @@
     font-size: 10px;
     bottom: 3px;
   }
-  .stage-note {
-    font-size: 18px;
-  }
   .categories button {
-    min-width: 75px;
+    min-width: 0;
+    font-size: 12px;
     padding-inline: 9px;
   }
   .categories > span {
-    font-size: 11px;
-  }
-  .filter {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-  }
-  .filter select {
-    flex: 1;
-    width: 50%;
-  }
-  .filter span {
-    width: 90px;
     font-size: 11px;
   }
   .gallery {
@@ -297,8 +308,7 @@
   .detail h3 {
     font-size: 17px;
   }
-  .detail p,
-  .filter span {
+  .detail p {
     display: none;
   }
   .detail .choose {

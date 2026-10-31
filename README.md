@@ -17,9 +17,12 @@ See [product direction](docs/product-direction.md) for age-specific design,
 extensibility, portability and possible voluntary support.
 
 The home menu has large activity cards for **Play a song**, **Free play**, and
-**Note hunt**. Songs have their own selection screen. **Home** returns to the menu; **← Lessons** stays in the main header during
+**Note hunt**. Songs have picture cards and a separate **Listen** button for a
+short melody preview. **Home** returns to the menu; **← Lessons** (an arrow on
+phones) stays in the main header during
 Note Hunt and Pattern Hunt, including on phones, and returns to the selected group;
-the learner button opens profiles, hearts and rewards, and the persistent
+the illustrated wardrobe opens the shop directly; the learner button opens
+profiles, hearts and rewards, and the persistent
 sound/gear button opens **Sound and settings** from every activity, including
 without a MIDI keyboard. **Sounds**, **Make**, **Output**, and **Keyboard** tabs
 keep settings on one screen without scrolling, including on phones. Activity **Options** contains notation size, Multiline
@@ -165,7 +168,7 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/Piano.tsx`, `src/PracticeScore.tsx`, `src/ActivityControls.tsx`: activity presentation.
 - `src/learning.ts` / `src/useHuntSession.ts`: daily review and adaptive Note Hunt sessions.
 - `src/lesson-catalog.ts` / `src/curriculum.ts`: versioned lessons, stars, decks and historical achievement policy.
-- `src/LearningMap.tsx`: labelled, paged lessons, best stars and next goals.
+- `src/LearningMap.tsx`: labelled, paged lessons, musical shape previews and best stars.
 - `src/Companion.tsx` / `src/companion-dance.ts`: equipped companion, live Free play discoveries and playing/success reactions, outside notation and piano keys.
 - `src/learners.ts` / `src/learner-repository.ts` / `src/useLearners.ts`: profiles, rewards and asynchronous IndexedDB storage.
 - Component-owned `*.module.css`: scoped styles with exact generated typings and unused-class checks.
@@ -215,7 +218,8 @@ patterns change the pitches you play, rather than hiding their names. Full scale
 show all eight notes together; on small screens their progress chips omit numbers
 while retaining note names and progress colour.
 
-Each card shows its permanent best stars and next goal. **Options** explains the
+Each exercise card shows a musical shape preview, short name and permanent best
+stars; detailed goals are in Options and Progress. **Options** explains the
 requirements before playing:
 
 - **★** Complete the whole set with at least 60% of its possible hearts.
@@ -256,8 +260,18 @@ cues, and preserve their existing held-key/1.6-second feedback pacing. The
 prominent **← Lessons** header button returns to the overview. MIDI, touch and computer
 keys work. See [Note hunt behavior](docs/note-hunt.md).
 
+Child-facing screens use large pictures, consistent home/back/wardrobe controls,
+short labels and visible selected/owned marks. Home has a wardrobe beside the
+pet; the header wardrobe works from every activity. **Hear help** offers a short
+spoken instruction when an installed English voice is available. It never speaks
+automatically, uses only local voices, and stops on navigation, blur, or live
+playing. Keyboard connection explanations stay in **Settings → Keyboard**.
+See [preliteracy design and backdrops](docs/preliteracy.md).
+
 **Learners & rewards** opens a fitted collection with **Rewards**,
-**Learners**, and **Progress** tabs. Rewards has **Friends** and **Dress up**:
+**Learners**, and **Progress** tabs. The direct **Wardrobe** opens Dress up and
+omits adult profile/progress tabs. Rewards has picture tabs for **Friends**,
+**Dress up** and **Places**:
 preview companions and outfits without spending, then explicitly buy or choose.
 Original illustrated fox, cat, bunny, puppy, bird, frog, panda and little dragon
 companions follow the selected learner through the home screen, song selection and
@@ -272,11 +286,18 @@ collection adds a witch hat, bat wings, pumpkin suit, smiling ghost charm, pumpk
 pail and vampire cape for 18–72 earned hearts. These stay available year-round,
 and you can combine them with existing outfits. The preview,
 collection cards and equipped companion use the same artwork. New equipment gives
-a small greeting; reduced motion disables movement and blinking. Friends and
-Dress up have scrollable thumbnail galleries with prices and wearing/owned marks.
-The preview and purchase controls stay visible while the gallery scrolls. Filter
-Dress up by Halloween, Hats & hair, Glasses & ears, Clothes & wings, Charms & bags, Yours,
-or Wearing to find a piece quickly.
+a small greeting; reduced motion disables movement and blinking. Friends, Dress
+up and Places have scrollable thumbnail galleries with prices and wearing/owned
+marks. The preview and purchase controls stay visible while the gallery scrolls.
+Picture filters for All, Halloween, Hats, Face, Clothes, Bags, Yours and On have a
+large arrow to page through choices. Item pictures preview immediately; Get buys,
+Use equips an owned item, and Off removes it.
+
+**Places** adds permanent illustrated backdrops: Treehouse (60 hearts), Moon
+garden (3 gems), Underwater (4 gems), and Spooky castle (5 gems). Meadow is free.
+Try any scene before spending, return to Meadow for free, or switch among owned
+scenes. The chosen scene follows the learner behind their pet on home, song
+selection, lessons and the playing dock; notation and keys stay clear.
 
 Each learner keeps their own history, lifetime hearts, badges, purchases, and
 separate heart/gem wallets. The fox is free. Hearts buy permanent friends and

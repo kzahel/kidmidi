@@ -30,7 +30,7 @@ test('back to lessons stays prominent on small screens and returns to the chosen
       exact: true,
     });
     await expect(back).toBeVisible();
-    await expect(back).toContainText('← Lessons');
+    await expect(back).toContainText('←');
     expect(
       await back.evaluate((button) => {
         const rect = button.getBoundingClientRect();
@@ -237,6 +237,7 @@ test('the scrollable gallery previews every find, filters accessories and restor
       ).toBeVisible();
       const drawing = await page
         .getByLabel('Outfit preview')
+        .getByRole('img')
         .locator('svg')
         .innerHTML();
       expect(drawings.has(drawing), `${name} has distinct artwork`).toBe(false);
@@ -244,7 +245,27 @@ test('the scrollable gallery previews every find, filters accessories and restor
     }
   }
   expect(await purchases(page)).toHaveLength(0);
-  const filter = page.getByRole('combobox', { name: 'Browse accessories' });
+  const filter = {
+    selectOption: async (id: string) => {
+      const name = (
+        {
+          all: 'All accessories',
+          halloween: 'Halloween',
+          owned: 'Yours',
+          wearing: 'Wearing',
+          head: 'Hats & hair',
+          face: 'Glasses & ears',
+          clothes: 'Clothes & wings',
+          trinkets: 'Charms & bags',
+        } as Record<string, string>
+      )[id];
+      const tabs = page.getByRole('navigation', { name: 'Shop filters' });
+      const button = tabs.getByRole('button', { name, exact: true });
+      for (let index = 0; index < 3 && !(await button.count()); index++)
+        await tabs.getByRole('button', { name: 'More shop filters' }).click();
+      await button.click();
+    },
+  };
   await filter.selectOption('head');
   await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(7);
   await filter.selectOption('face');
@@ -418,7 +439,27 @@ test('Halloween outfits preview freely, combine across friends and persist into 
   await seed(page, funded);
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await page.getByRole('button', { name: 'Dress up', exact: true }).click();
-  const filter = page.getByRole('combobox', { name: 'Browse accessories' });
+  const filter = {
+    selectOption: async (id: string) => {
+      const name = (
+        {
+          all: 'All accessories',
+          halloween: 'Halloween',
+          owned: 'Yours',
+          wearing: 'Wearing',
+          head: 'Hats & hair',
+          face: 'Glasses & ears',
+          clothes: 'Clothes & wings',
+          trinkets: 'Charms & bags',
+        } as Record<string, string>
+      )[id];
+      const tabs = page.getByRole('navigation', { name: 'Shop filters' });
+      const button = tabs.getByRole('button', { name, exact: true });
+      for (let index = 0; index < 3 && !(await button.count()); index++)
+        await tabs.getByRole('button', { name: 'More shop filters' }).click();
+      await button.click();
+    },
+  };
   await filter.selectOption('halloween');
   await expect(page.getByRole('button', { name: /^Preview / })).toHaveCount(6);
   const stage = page.getByLabel('Outfit preview');

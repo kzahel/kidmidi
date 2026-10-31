@@ -10,9 +10,9 @@ declare const styles: {
   readonly 'gallery': string;
   readonly 'ownership': string;
   readonly 'preview-label': string;
+  readonly 'scene-thumb': string;
   readonly 'shop': string;
   readonly 'showcase': string;
   readonly 'stage': string;
-  readonly 'stage-note': string;
 };
 export default styles;

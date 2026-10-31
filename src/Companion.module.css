@@ -8,6 +8,7 @@
   height: 156px;
   flex-shrink: 0;
   isolation: isolate;
+  border-radius: 20px;
 }
 .companion::before {
   content: "";
@@ -19,6 +20,7 @@
   z-index: -1;
 }
 .friend {
+  position: relative;
   display: flex;
   transform-origin: bottom center;
 }
@@ -35,6 +37,7 @@
   rotate: 10deg;
 }
 .caption {
+  position: relative;
   color: #62765d;
   font-size: 12px;
   line-height: 18px;

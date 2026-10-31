@@ -1,0 +1,12 @@
+.help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 48px;
+  font-size: 12px;
+  padding-inline: 8px;
+}
+.help > span:first-child {
+  font-size: 22px;
+}

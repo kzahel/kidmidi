@@ -18,6 +18,13 @@ notation as large as space allows; paginate multiline practice and advance pages
 with played-note feedback.
 Compact/Kid sizing and multiline are independent saved display preferences.
 
+Design most child-facing UI for pre-literate children, including around age three.
+Keep visible text to a minimum and provide plentiful visual hints: recognizable
+pictures, musical shape previews, consistent icons and positions, clear selected/owned
+states, and immediate reversible previews. Keep short labels and accessible names;
+use optional spoken help and demonstrations where useful. Put detailed explanations
+and adult settings behind help/settings rather than in the main play flow.
+
 Keep MIDI transport separate from practice and song data so native Android/iOS
 adapters can follow later. Practice targets use MusicXML; live MIDI is performance
 input. Just explore also turns that input into loose, local notation. Preserve raw

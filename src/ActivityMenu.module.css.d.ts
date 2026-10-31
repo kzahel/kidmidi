@@ -2,13 +2,14 @@
 declare const styles: {
   readonly 'activities': string;
   readonly 'explore': string;
-  readonly 'eyebrow': string;
-  readonly 'footnote': string;
   readonly 'hunt': string;
-  readonly 'icon': string;
   readonly 'level': string;
+  readonly 'listen': string;
   readonly 'menu': string;
+  readonly 'pet-home': string;
+  readonly 'picture': string;
   readonly 'song': string;
+  readonly 'song-card': string;
   readonly 'welcome': string;
 };
 export default styles;

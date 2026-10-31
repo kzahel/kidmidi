@@ -219,8 +219,10 @@ function LearningProgress({ controller }: { controller: LearnersController }) {
 export function LearnerMenu({
   controller,
   onClose,
+  wardrobe = false,
 }: {
   controller: LearnersController;
+  wardrobe?: boolean;
   onClose(): void;
 }) {
   const [tab, setTab] = useState('Rewards');
@@ -229,19 +231,28 @@ export function LearnerMenu({
   const stats = progress(snapshot);
   const journey = journeyProgress(snapshot);
   return (
-    <Dialog title="Learners & rewards" onClose={onClose} fitted>
-      <nav className={styles['tabs']} aria-label="Learner sections">
-        {['Rewards', 'Learners', 'Progress'].map((name) => (
-          <button
-            type="button"
-            key={name}
-            aria-pressed={tab === name}
-            onClick={() => setTab(name)}
-          >
-            {name}
-          </button>
-        ))}
-      </nav>
+    <Dialog
+      title={wardrobe ? 'Wardrobe' : 'Learners & rewards'}
+      onClose={onClose}
+      fitted
+    >
+      {!wardrobe && (
+        <nav className={styles['tabs']} aria-label="Learner sections">
+          {['Rewards', 'Learners', 'Progress'].map((name) => (
+            <button
+              type="button"
+              key={name}
+              aria-pressed={tab === name}
+              onClick={() => setTab(name)}
+            >
+              <span aria-hidden="true">
+                {name === 'Rewards' ? '🎁' : name === 'Learners' ? '👥' : '★'}
+              </span>{' '}
+              {name}
+            </button>
+          ))}
+        </nav>
+      )}
       <div className={styles['wallet']}>
         <span>
           ★ {journey.stars} · ♥ {stats.balance} · 💎 {journey.gemBalance}
@@ -250,7 +261,11 @@ export function LearnerMenu({
       </div>
       <div className={styles['panel']}>
         {tab === 'Rewards' ? (
-          <RewardShop key={snapshot.learner.id} controller={controller} />
+          <RewardShop
+            key={snapshot.learner.id}
+            controller={controller}
+            initialCategory={wardrobe ? 'charm' : 'pet'}
+          />
         ) : tab === 'Learners' ? (
           <Profiles key={snapshot.learner.id} controller={controller} />
         ) : (

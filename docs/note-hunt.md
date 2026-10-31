@@ -10,8 +10,9 @@ octave, without testing rhythm. All active exercises and relaxed Practice show n
 - Note Hunt opens **Lessons**, with labelled Find notes (Garden), Scales
   (Meadow), Patterns (River) and Coming soon groups. Every implemented lesson
   can be selected immediately: badges and hearts never block experimentation.
-  Cards show the range or pattern, length, best stars and the next star goal. Groups contain
-  at most four visible cards per page, with explicit Back/More controls when
+  Cards show musical shape pictures, short titles and best stars. Options and
+  Progress explain goals; accessible descriptions retain pitch/pattern details.
+  Groups contain at most four visible cards per page, with large paging arrows when
   needed. The complete browser fits the viewport without scrollbars, including
   tablet portrait/landscape and phones. The prominent ← Lessons header button returns to the active group, on
   desktop and phones. Home stays available.

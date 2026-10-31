@@ -10,7 +10,9 @@ export function ActivityOptions({ session }: { session: PianoSession }) {
     session;
   return (
     <details className={styles['options']}>
-      <summary>Options</summary>
+      <summary>
+        <span aria-hidden="true">⚙</span> Options
+      </summary>
       <div className={styles['option-panel']}>
         {!hunting && (
           <>

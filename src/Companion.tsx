@@ -1,3 +1,4 @@
+import { Backdrop } from './Backdrop';
 import styles from './Companion.module.css';
 import type { Dance, DanceMove } from './companion-dance';
 import type { Outfit } from './learners';
@@ -39,6 +40,7 @@ export function Companion({
       data-step={dance?.id}
       data-lift={dance?.lift}
     >
+      <Backdrop id={learner.backdrop} />
       <div className={freePlay ? styles['dance-floor'] : undefined}>
         <div
           key={dance?.id ?? celebration ?? 'listening'}

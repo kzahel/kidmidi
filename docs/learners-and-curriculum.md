@@ -138,8 +138,9 @@ The Progress tab pages through exercise stars, recent single-note evidence and e
 
 The active browser has Find notes (Garden), Scales (Meadow), Patterns (River) and
 Coming soon. Every implemented exercise is immediately selectable. Cards show
-best stars, pitch/pattern descriptions, set length where space allows, and a next
-star goal. Four cards fit a page, or two on narrow/short phones; paging keeps the
+a musical shape preview, short exercise name and best stars. Options and Progress
+explain star goals; accessible descriptions retain the range and pattern details.
+Four cards fit a page, or two on narrow/short phones; paging keeps the
 complete browser within the viewport. Home and the persistent ← Lessons button
 remain available, and returning reopens the chosen group.
 
@@ -294,3 +295,12 @@ and octaves, and introduce accidentals with their written spellings. F♯ and G�
 piano key but are separate notation concepts. Additional activities can consume
 the same learner identity and reward ledger while maintaining their own skill
 evidence and policies.
+
+## Backdrops and picture navigation
+
+The direct Wardrobe opens Rewards without adult profile/progress tabs. Its Places
+category uses the existing atomic purchase/equipment API and heart/gem wallets.
+`learner.backdrop` is optional; old saves and null use the free Meadow. A backdrop
+has its own reward slot, independent of pets and accessories. Previewing never
+persists or spends; buying equips once, switching owned scenes is free. See
+[preliteracy UI](preliteracy.md) for child-facing controls, speech and drawings.
