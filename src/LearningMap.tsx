@@ -37,7 +37,8 @@ const shelves = [
     description: 'More musical adventures. These are not playable yet.',
   },
 ];
-const smallScreen = '(max-width: 640px) and (max-height: 680px)';
+const smallScreen =
+  '(max-width: 360px), (max-width: 640px) and (max-height: 800px)';
 
 export function LearningMap({
   controller,

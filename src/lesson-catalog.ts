@@ -201,6 +201,56 @@ export const lessons: readonly Lesson[] = [
         [62, 64, 65, 64, 62],
       ],
     },
+    {
+      id: 'thirds',
+      name: 'Thirds',
+      icon: 'Ⅲ',
+      description: 'Skip one white key · C–E or G–E',
+      patterns: [
+        [60, 64],
+        [67, 64],
+      ],
+    },
+    {
+      id: 'fifths',
+      name: 'Fifths',
+      icon: 'Ⅴ',
+      description: 'Count five white keys · C–G or A–D',
+      patterns: [
+        [60, 67],
+        [69, 62],
+      ],
+    },
+    {
+      id: 'thirds-up',
+      name: 'Moving thirds up',
+      icon: '↗',
+      description: 'Rising pairs · C–E, D–F, E–G',
+      patterns: [
+        [60, 64, 62, 65, 64, 67],
+        [62, 65, 64, 67, 65, 69],
+      ],
+    },
+    {
+      id: 'thirds-down',
+      name: 'Moving thirds down',
+      icon: '↘',
+      description: 'Falling pairs · G–E, F–D, E–C',
+      patterns: [
+        [67, 64, 65, 62, 64, 60],
+        [69, 65, 67, 64, 65, 62],
+      ],
+    },
+    {
+      id: 'alberti',
+      name: 'Alberti bass',
+      icon: '🔄',
+      description: 'Low–high–middle–high · C–G–E–G',
+      patterns: [
+        [60, 67, 64, 67],
+        [62, 69, 65, 69],
+      ],
+    },
   ].map(
     (pattern): Lesson => ({
       ...pattern,

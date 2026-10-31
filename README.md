@@ -206,15 +206,20 @@ There is no 512-note capture limit. See [live notation and recording behavior](d
 notes**, **Patterns**, and **Coming soon** groups. Choose any implemented lesson
 immediately, including Quick and patterns: no earlier badge or heart purchase is
 required. Cards show the pitch range, name support, set length, and **Ready to
-play** or **Badge earned**. Pages show four cards, or two on short phones;
+play** or **Badge earned**. Pages show four cards, or two on narrow/short phones;
 Back/More buttons reveal the rest without scrolling. Returning from a lesson
 reopens its group. Pets are companions and rewards, not lesson levels.
 
 Find notes (Garden) has C/E/G, C–G and C–C lessons with names. Read notes
 (Treehouse) revisits those ranges without names; tap **💡** for help. Its optional
 **Quick** challenge measures fluent finds without a countdown or deadline.
-Patterns (River) has **Step up**, **Step down**, **Skip a key**, and **Out and back**.
-Each shows an entire three- or five-note shape on the staff, with progress checks
+Patterns (River) starts with **Step up**, **Step down**, **Skip a key**, and **Out and back**,
+then adds **Thirds**, **Fifths**, **Moving thirds up**, **Moving thirds down**,
+and **Alberti bass** on the following pages. Intervals are played one note at a
+time. Moving thirds link pairs such as C–E, D–F, E–G (or G–E, F–D, E–C going down).
+Alberti bass introduces low–high–middle–high, such as C–G–E–G, in the same
+middle-C treble range; no left-hand or bass-clef reading is required yet.
+Each shows an entire two- to six-note shape on the staff, with progress checks
 as you play. Notes within a pattern connect freely; a wrong note waits at that
 position. The completed pattern lingers while keys are held, then for 1.6 seconds
 after release, just like individual Note Hunt cards. Rhythm is not scored.

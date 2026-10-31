@@ -428,6 +428,141 @@ test('patterns can be tried first, accept connected notes and keep the celebrati
   ).toBeEnabled();
 });
 
+test('every pattern selection page fits narrow and short screens', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  for (const [layout, viewport] of [
+    ['desktop', { width: 1280, height: 800 }],
+    ['tablet', { width: 768, height: 1024 }],
+    ['phone', { width: 390, height: 844 }],
+    ['short-phone', { width: 390, height: 740 }],
+    ['narrow-phone', { width: 320, height: 844 }],
+    ['small-phone', { width: 320, height: 568 }],
+    ['landscape', { width: 844, height: 390 }],
+  ] as const) {
+    await page.setViewportSize(viewport);
+    await page.getByRole('button', { name: 'Patterns', exact: true }).click();
+    const next = page.getByRole('button', { name: 'Next lesson page' });
+    for (let index = 0; index < 5; index++) {
+      await fits(page, '[aria-label="Learning map"] button');
+      await page.screenshot({
+        path: `test-results/pattern-pages-${layout}-${index + 1}.png`,
+      });
+      if (await next.isDisabled()) break;
+      await next.click();
+    }
+  }
+});
+
+for (const [name, id, size] of [
+  ['Thirds', 'thirds', 2],
+  ['Fifths', 'fifths', 2],
+  ['Moving thirds up', 'thirds-up', 6],
+  ['Moving thirds down', 'thirds-down', 6],
+  ['Alberti bass', 'alberti', 4],
+] as const) {
+  test(`${name} is reachable through pattern pages and completes at the learner's pace`, async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+    await page.getByRole('button', { name: 'Patterns', exact: true }).click();
+    const choose = async (badge = false) => {
+      const button = page.getByRole('button', {
+        name: `River: ${name}${badge ? ', badge earned' : ''}`,
+        exact: true,
+      });
+      for (let i = 0; i < 5 && !(await button.isVisible()); i++)
+        await page.getByRole('button', { name: 'Next lesson page' }).click();
+      await expect(button).toBeEnabled();
+      await fits(page, '[aria-label="Learning map"] button');
+      return button;
+    };
+    await (await choose()).click();
+    const card = page.getByRole('region', { name: 'Play this pattern' });
+    for (const [layout, viewport] of [
+      ['desktop', { width: 1280, height: 800 }],
+      ['phone', { width: 390, height: 844 }],
+      ['small-phone', { width: 320, height: 568 }],
+      ['landscape', { width: 844, height: 390 }],
+    ] as const) {
+      await page.setViewportSize(viewport);
+      await page.clock.runFor(50);
+      await expect(card.locator('svg')).toBeVisible();
+      await fits(
+        page,
+        '[aria-label="Play this pattern"], [class*="__keyboard__"]',
+      );
+      await expect
+        .poll(() =>
+          card.evaluate((element) => {
+            const bounds = element.getBoundingClientRect();
+            return [
+              ...element.querySelectorAll(
+                'svg, [aria-label$="pattern notes found"] > span',
+              ),
+            ].every((child) => {
+              const rect = child.getBoundingClientRect();
+              return (
+                rect.left >= bounds.left &&
+                rect.right <= bounds.right &&
+                rect.top >= bounds.top &&
+                rect.bottom <= bounds.bottom
+              );
+            });
+          }),
+        )
+        .toBe(true);
+      await page.screenshot({ path: `test-results/${id}-${layout}.png` });
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (let phrase = 0; phrase < 4; phrase++) {
+      const score = card.getByRole('img', { name: /^Sheet music:/ });
+      await expect(score.locator('svg')).toBeVisible();
+      const label = await score.getAttribute('aria-label');
+      const notes = label!
+        .match(/Sheet music: ([\d, ]+)/)![1]
+        .split(',')
+        .map(Number);
+      expect(notes).toHaveLength(size);
+      // Neither an unhurried pause nor a wrong note resets the shape.
+      await page.clock.fastForward(60000);
+      if (phrase === 0) await playPitch(page, 61);
+      for (let i = 0; i < size; i++) {
+        await playPitch(page, notes[i]);
+        await expect(
+          page.getByLabel(`${i + 1} of ${size} pattern notes found`, {
+            exact: true,
+          }),
+        ).toBeVisible();
+      }
+      await page.clock.fastForward(1601);
+      await page.clock.runFor(50);
+    }
+    await expect(
+      page.getByRole('region', { name: 'Lesson complete' }),
+    ).toContainText('💎 +1');
+    await expect
+      .poll(async () => (await saved(page)).encounters.length)
+      .toBe(size * 4);
+    const snapshot = await saved(page);
+    expect(snapshot.learner.badges?.map((badge) => badge.lessonId)).toEqual([
+      id,
+    ]);
+    expect(
+      snapshot.encounters.reduce((sum, event) => sum + event.reward, 0),
+    ).toBe(size * 4 * 3 - 1);
+    await page.reload();
+    await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+    await page.getByRole('button', { name: 'Patterns', exact: true }).click();
+    await choose(true);
+    await page.screenshot({ path: `test-results/${id}-map-phone.png` });
+  });
+}
+
 function target(page: Page) {
   return page.getByRole('region', { name: 'Find this', exact: true });
 }

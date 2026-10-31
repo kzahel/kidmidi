@@ -289,7 +289,9 @@ test('pattern decks preserve complete shapes; badges require every phrase and su
 test('pattern following does not enter the independent-note adaptive path', () => {
   let state = newLearner();
   for (let day = 1; day <= 4; day++) {
-    for (const id of ['steps-up', 'skips', 'returns'])
+    for (const id of lessons
+      .filter((lesson) => lesson.patterns)
+      .map((lesson) => lesson.id))
       state = finishLesson(state, id, (event) => ({
         ...event,
         day: `2026-10-0${day}`,
@@ -302,4 +304,50 @@ test('pattern following does not enter the independent-note adaptive path', () =
     reason: 'introduce',
     detail: 'Meet a new note',
   });
+});
+
+test('interval lessons count white-key distances, move thirds by step and introduce Alberti order', () => {
+  const whiteKeys = [60, 62, 64, 65, 67, 69, 71, 72];
+  const degree = (pitch: number) => {
+    const index = whiteKeys.indexOf(pitch);
+    assert.ok(index >= 0, 'Introductory patterns stay on treble white keys');
+    return index;
+  };
+  for (const [id, distance] of [
+    ['thirds', 2],
+    ['fifths', 4],
+  ] as const) {
+    const lesson = lessonById(id)!;
+    const directions = new Set<number>();
+    for (const pattern of lesson.patterns!) {
+      assert.equal(pattern.length, 2);
+      const interval = degree(pattern[1]) - degree(pattern[0]);
+      assert.equal(Math.abs(interval), distance);
+      directions.add(Math.sign(interval));
+    }
+    assert.deepEqual(directions, new Set([1, -1]));
+  }
+  for (const [id, direction] of [
+    ['thirds-up', 1],
+    ['thirds-down', -1],
+  ] as const) {
+    for (const pattern of lessonById(id)!.patterns!) {
+      assert.equal(pattern.length, 6);
+      for (let i = 0; i < pattern.length; i += 2) {
+        assert.equal(
+          degree(pattern[i + 1]) - degree(pattern[i]),
+          2 * direction,
+        );
+        if (i > 0)
+          assert.equal(degree(pattern[i]) - degree(pattern[i - 2]), direction);
+      }
+    }
+  }
+  for (const pattern of lessonById('alberti')!.patterns!) {
+    assert.equal(pattern.length, 4);
+    const [low, high, middle, repeat] = pattern.map(degree);
+    assert.equal(middle - low, 2);
+    assert.equal(high - low, 4);
+    assert.equal(repeat, high);
+  }
 });

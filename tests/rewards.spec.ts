@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { journeyProgress, lessons } from '../src/curriculum';
+import { journeyProgress } from '../src/curriculum';
 import {
   type LearnerSnapshot,
   progress,
@@ -209,10 +209,21 @@ test('the scrollable gallery previews every find, filters accessories and restor
   await expect(
     page.getByRole('button', { name: 'Note hunt', exact: true }),
   ).toBeEnabled();
-  const funded = lessons.reduce(
-    (state, lesson) => finishLesson(state, lesson.id),
-    newLearner(),
-  );
+  // Keep this fixture at 15 gems: dragon + crown leave one gem, so the
+  // insufficient-funds check stays meaningful as the lesson catalog grows.
+  const funded = [
+    'find-three',
+    'find-five',
+    'find-octave',
+    'read-three',
+    'read-five',
+    'read-octave',
+    'fluent-octave',
+    'steps-up',
+    'steps-down',
+    'skips',
+    'returns',
+  ].reduce((state, id) => finishLesson(state, id), newLearner());
   await seed(page, funded);
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   const drawings = new Set<string>();

@@ -63,6 +63,23 @@ Treehouse hides names until 💡 or a match. See the [lesson catalog and assessm
 Patterns are available alongside early note finding, without prerequisites. Step
 up and Step down each use two three-note white-key sequences beginning on C/D or
 E/F; Skip a key uses C–E–G and G–E–C; Out and back uses C–D–E–D–C and D–E–F–E–D.
+Following pages extend the suggested order with these white-key exercises:
+
+| Lesson             | Written shapes                           |
+| ------------------ | ---------------------------------------- |
+| Thirds             | C4–E4; G4–E4                             |
+| Fifths             | C4–G4; A4–D4                             |
+| Moving thirds up   | C4–E4, D4–F4, E4–G4; D4–F4, E4–G4, F4–A4 |
+| Moving thirds down | G4–E4, F4–D4, E4–C4; A4–F4, G4–E4, F4–D4 |
+| Alberti bass       | C4–G4–E4–G4; D4–A4–F4–A4                 |
+
+Play each interval one note at a time. A third skips one white key; a fifth spans
+five white keys counting both endpoints. Moving thirds shift each pair one white
+key up or down. Alberti bass introduces the low–high–middle–high broken-chord
+shape in the familiar treble register. It does not yet teach bass clef, assign a
+hand or require simultaneous notes. All five lessons are available immediately,
+with separate permanent badges and one gem each.
+
 Each set shuffles two visits to each intact pattern. The staff stays fixed within
 a pattern, showing all notes from the start. Completed positions get green checks
 and the latest correct staff note highlights. Wrong pitches leave the current

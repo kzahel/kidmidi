@@ -140,6 +140,11 @@
   .lessons {
     gap: 8px;
   }
+  .lessons button,
+  .preview {
+    padding: 8px;
+    gap: 4px;
+  }
   .world-panel {
     gap: 8px;
   }
@@ -220,7 +225,7 @@
   }
 }
 
-@media (width <= 640px) and (height <= 680px) {
+@media (width <= 360px), (width <= 640px) and (height <= 800px) {
   .map-heading p,
   .panel-heading p,
   .lesson-icon,
@@ -229,11 +234,6 @@
   }
   .lessons {
     grid-template-rows: minmax(0, 1fr);
-  }
-  .lessons button,
-  .preview {
-    padding: 8px;
-    gap: 4px;
   }
 }
 
@@ -267,7 +267,7 @@
   }
 }
 
-@media (width <= 640px) and (height <= 680px) {
+@media (width <= 360px), (width <= 640px) and (height <= 800px) {
   .companion-summary {
     flex-direction: row;
     gap: 4px;

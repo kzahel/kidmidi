@@ -177,6 +177,16 @@ behavior. Transport, held-key celebration and song practice remain independent.
 
 ### Editing and adding content
 
+The Patterns shelf continues from steps/skips/returns into Thirds, Fifths, Moving
+thirds up, Moving thirds down and Alberti bass. These are sequential white-key
+patterns in C4–A4, with two written shapes per lesson and two visits per shape.
+Moving thirds connect three interval pairs; Alberti introduces
+low–high–middle–high in treble clef. The order is a suggestion, with no
+prerequisites, rhythm assessment, hand assignment or simultaneous-note matching.
+Each new lesson has its own stable ID and one-gem badge, and uses the same
+attempt rewards and exclusion from independent-note adaptive evidence. See
+[pattern shapes](note-hunt.md#pattern-hunt).
+
 Edit **`src/lesson-catalog.ts`**, rather than UI or persistence code:
 
 - World definitions provide stable `id`, short `name`, `icon`, parent-facing
