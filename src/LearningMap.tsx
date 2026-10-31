@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Companion } from './Companion';
 import {
-  hasBadge,
+  bestStars,
   journeyProgress,
   lessonLength,
   lessons,
   worlds,
 } from './curriculum';
 import styles from './LearningMap.module.css';
+import { LessonStars } from './LessonStars';
 import { progress } from './learners';
 import type { LearnersController } from './useLearners';
 
@@ -19,10 +20,10 @@ const shelves = [
     description: 'Find a note with its name to help.',
   },
   {
-    id: 'treehouse',
-    name: 'Read notes',
-    icon: '🌳',
-    description: 'Read the staff. Tap 💡 whenever you need a name.',
+    id: 'scales',
+    name: 'Scales',
+    icon: '🎹',
+    description: 'Longer walks and a full octave. Names always help.',
   },
   {
     id: 'river',
@@ -77,14 +78,17 @@ export function LearningMap({
   const shelf = shelves[selected];
   const content = lessons.filter((lesson) => lesson.world === shelf.id);
   const future = worlds.filter(
-    (world) => !lessons.some((lesson) => lesson.world === world.id),
+    (world) =>
+      world.id !== 'treehouse' &&
+      !lessons.some((lesson) => lesson.world === world.id),
   );
   const pages = Math.ceil(
     (shelf.id === 'soon' ? future.length : content.length) / pageSize,
   );
-  const earned = content.filter((lesson) =>
-    hasBadge(snapshot, lesson.id),
-  ).length;
+  const earned = content.reduce(
+    (sum, lesson) => sum + bestStars(snapshot, lesson.id),
+    0,
+  );
   return (
     <section className={styles['map']} aria-label="Learning map">
       <div className={styles['map-heading']}>
@@ -130,7 +134,7 @@ export function LearningMap({
             <Companion learner={snapshot.learner} compact />
             {content.length > 0 && (
               <span>
-                {earned}/{content.length} 🏅
+                {earned}/{content.length * 3} ★
               </span>
             )}
           </div>
@@ -139,17 +143,18 @@ export function LearningMap({
           {content
             .slice(page * pageSize, (page + 1) * pageSize)
             .map((lesson, index) => {
-              const badge = hasBadge(snapshot, lesson.id);
+              const stars = bestStars(snapshot, lesson.id);
               const world = worlds.find((world) => world.id === lesson.world)!;
               return (
                 <button
                   type="button"
                   key={lesson.id}
                   onClick={() => onLesson(lesson.id)}
-                  aria-label={`${world.name}: ${lesson.name}${badge ? ', badge earned' : ''}`}
+                  aria-label={`${world.name}: ${lesson.name}`}
+                  aria-describedby={`${lesson.id}-progress`}
                 >
-                  <span className={styles['lesson-icon']} aria-hidden="true">
-                    {lesson.icon}
+                  <span className={styles['lesson-stars']}>
+                    <LessonStars stars={stars} />
                   </span>
                   <strong>
                     {index + 1 + page * pageSize}. {lesson.name}
@@ -157,14 +162,17 @@ export function LearningMap({
                   <span className={styles['description']}>
                     {lesson.description}
                   </span>
-                  <small>
-                    {lesson.patterns
-                      ? `${lessonLength(lesson) / lesson.patterns[0].length} patterns`
-                      : `${lessonLength(lesson)} notes`}{' '}
-                    ·{' '}
-                    {badge
-                      ? '🏅 Badge earned'
-                      : `First badge: 💎 ${lesson.gems}`}
+                  <small id={`${lesson.id}-progress`}>
+                    <span className={styles['lesson-length']}>
+                      {lessonLength(lesson)} notes ·{' '}
+                    </span>
+                    {stars === 0
+                      ? '★ 60% hearts'
+                      : stars === 1
+                        ? '★★ No mistakes'
+                        : stars === 2
+                          ? `★★★ ${lesson.patterns ? '4s / 2s' : '4s'} finds`
+                          : 'All stars earned'}
                   </small>
                 </button>
               );
@@ -208,7 +216,7 @@ export function LearningMap({
       </section>
       <footer className={styles['map-footer']}>
         <span>
-          🏅 {journey.badges}/{lessons.length} badges
+          ★ {journey.stars}/{lessons.length * 3} stars
         </span>
         <span
           aria-label={`${stats.balance} hearts, ${journey.gemBalance} gems`}

@@ -16,11 +16,13 @@
   z-index: 8;
   display: grid;
   gap: 8px;
-  width: min(280px, 75vw);
+  width: min(280px, 70vw);
   padding: 16px;
   border: 1px solid #d0d9c7;
   border-radius: 16px;
   background: #fffefa;
+  max-height: calc(100dvh - 190px);
+  overflow-y: auto;
   box-shadow: 0 8px 24px #293d3726;
 }
 .option-panel > label {

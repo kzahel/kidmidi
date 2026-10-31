@@ -64,13 +64,15 @@ export const worlds: readonly World[] = [
   { id: 'keys', name: 'Keys', icon: '🗝️', topic: 'Key signatures' },
   { id: 'river', name: 'River', icon: '🛶', topic: 'Little phrases' },
   { id: 'castle', name: 'Castle', icon: '🏰', topic: 'Notes together' },
+  { id: 'scales', name: 'Meadow', icon: '🎹', topic: 'Scales and walks' },
 ];
 
 const anchors = [60, 64, 67];
 const five = [60, 62, 64, 65, 67];
 const octave = [60, 62, 64, 65, 67, 69, 71, 72];
 const assessment = { repetitions: 2, accuracy: 0.8, successesPerNote: 1 };
-export const lessons: readonly Lesson[] = [
+// Version-one content remains readable for saved encounters and earlier tabs.
+export const legacyLessons: readonly Lesson[] = [
   {
     id: 'find-three',
     description: 'C · E · G · names shown',
@@ -263,6 +265,125 @@ export const lessons: readonly Lesson[] = [
       ...pattern,
       revision: 1,
       world: 'river',
+      notes: [...new Set(pattern.patterns.flat())],
+      support: 'names',
+      heartMultiplier: 1,
+      gems: 1,
+      assessment,
+    }),
+  ),
+];
+
+export const mergedLessonId = (id: string) =>
+  ({
+    'read-three': 'find-three',
+    'read-five': 'find-five',
+    'read-octave': 'find-octave',
+    'fluent-octave': 'find-octave',
+  })[id] ?? id;
+
+export const lessons: readonly Lesson[] = [
+  ...legacyLessons
+    .filter((lesson) => lesson.world !== 'treehouse')
+    .map((lesson) => ({ ...lesson, revision: 2 })),
+  ...[
+    {
+      id: 'five-up',
+      name: 'Five notes up',
+      icon: '↗',
+      description: 'A longer walk · C–D–E–F–G',
+      world: 'scales',
+      patterns: [
+        [60, 62, 64, 65, 67],
+        [62, 64, 65, 67, 69],
+      ],
+    },
+    {
+      id: 'five-down',
+      name: 'Five notes down',
+      icon: '↘',
+      description: 'Walk back · G–F–E–D–C',
+      world: 'scales',
+      patterns: [
+        [67, 65, 64, 62, 60],
+        [69, 67, 65, 64, 62],
+      ],
+    },
+    {
+      id: 'scale-up',
+      name: 'C scale up',
+      icon: '🌈',
+      description: 'All eight white notes · C4–C5',
+      world: 'scales',
+      patterns: [[60, 62, 64, 65, 67, 69, 71, 72]],
+    },
+    {
+      id: 'scale-down',
+      name: 'C scale down',
+      icon: '🌈',
+      description: 'A whole octave back · C5–C4',
+      world: 'scales',
+      patterns: [[72, 71, 69, 67, 65, 64, 62, 60]],
+    },
+    {
+      id: 'repeats',
+      name: 'Play it twice',
+      icon: '🔁',
+      description: 'Lift and play again · C–C–D–D–E–E',
+      world: 'river',
+      patterns: [
+        [60, 60, 62, 62, 64, 64],
+        [65, 65, 64, 64, 62, 62],
+      ],
+    },
+    {
+      id: 'neighbours',
+      name: 'Back home',
+      icon: '🏠',
+      description: 'Return to one note · C–D–C–E–C–F',
+      world: 'river',
+      patterns: [
+        [60, 62, 60, 64, 60, 65],
+        [62, 64, 62, 65, 62, 67],
+      ],
+    },
+    {
+      id: 'mixed-steps',
+      name: 'Steps and skips',
+      icon: '🐾',
+      description: 'Changing distances · C–D–F–E–G',
+      world: 'river',
+      patterns: [
+        [60, 62, 65, 64, 67],
+        [62, 64, 67, 65, 69],
+      ],
+    },
+    {
+      id: 'broken-chords',
+      name: 'Chord fountain',
+      icon: '⛲',
+      description: 'Up and back · C–E–G–E–C',
+      world: 'river',
+      patterns: [
+        [60, 64, 67, 64, 60],
+        [62, 65, 69, 65, 62],
+      ],
+    },
+    {
+      id: 'moving-fifths',
+      name: 'Moving fifths',
+      icon: 'Ⅴ',
+      description: 'Bigger pairs · C–G, D–A, E–B',
+      world: 'river',
+      patterns: [
+        [60, 67, 62, 69, 64, 71],
+        [71, 64, 69, 62, 67, 60],
+      ],
+    },
+  ].map(
+    (pattern): Lesson => ({
+      ...pattern,
+      revision: 2,
       notes: [...new Set(pattern.patterns.flat())],
       support: 'names',
       heartMultiplier: 1,

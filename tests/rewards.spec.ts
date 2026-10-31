@@ -118,7 +118,7 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
     page.getByRole('button', { name: 'Take off Golden crown' }),
   ).toBeEnabled();
   await expect(
-    page.getByText('3 badges · ♥ 48 · 💎 6', { exact: true }),
+    page.getByText('★ 9 · ♥ 48 · 💎 6', { exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Friends', exact: true }).click();
 
@@ -139,7 +139,7 @@ test('reward previews cost nothing, accessories are wearable, and the fitted col
   ).toBeDisabled();
   expect(await purchases(page)).toHaveLength(2);
   await expect(
-    page.getByText('3 badges · ♥ 48 · 💎 3', { exact: true }),
+    page.getByText('★ 9 · ♥ 48 · 💎 3', { exact: true }),
   ).toBeVisible();
 
   for (const [name, viewport] of [
@@ -333,7 +333,7 @@ test('the scrollable gallery previews every find, filters accessories and restor
     expected = withPurchase(expected, id, id, 0);
   await expect(
     page.getByText(
-      `${journeyProgress(expected).badges} badges · ♥ ${progress(expected).balance} · 💎 ${journeyProgress(expected).gemBalance}`,
+      `★ ${journeyProgress(expected).stars} · ♥ ${progress(expected).balance} · 💎 ${journeyProgress(expected).gemBalance}`,
       { exact: true },
     ),
   ).toBeVisible();
@@ -670,7 +670,7 @@ test('the equipped companion follows every activity, reacts to playing and updat
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
   await layouts('lessons');
   await page
-    .getByRole('button', { name: 'Garden: 3 notes, badge earned', exact: true })
+    .getByRole('button', { name: 'Garden: 3 notes', exact: true })
     .click();
   await layouts('hunt');
   for (let card = 0; card < 6; card++) {

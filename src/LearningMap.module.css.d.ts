@@ -3,6 +3,8 @@ declare const styles: {
   readonly 'companion-summary': string;
   readonly 'description': string;
   readonly 'lesson-icon': string;
+  readonly 'lesson-length': string;
+  readonly 'lesson-stars': string;
   readonly 'lessons': string;
   readonly 'map': string;
   readonly 'map-footer': string;

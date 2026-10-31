@@ -164,8 +164,8 @@ Web MIDI is not a supported target; future apps need native MIDI adapters.
 - `src/usePianoSession.ts` / `src/useExploreSession.ts`: shared transport/input routing and recording lifecycle.
 - `src/Piano.tsx`, `src/PracticeScore.tsx`, `src/ActivityControls.tsx`: activity presentation.
 - `src/learning.ts` / `src/useHuntSession.ts`: daily review and adaptive Note Hunt sessions.
-- `src/lesson-catalog.ts` / `src/curriculum.ts`: editable, versioned lessons and pure badge/deck policy.
-- `src/LearningMap.tsx`: labelled, paged lessons and badge progress.
+- `src/lesson-catalog.ts` / `src/curriculum.ts`: versioned lessons, stars, decks and historical achievement policy.
+- `src/LearningMap.tsx`: labelled, paged lessons, best stars and next goals.
 - `src/Companion.tsx` / `src/companion-dance.ts`: equipped companion, live Free play discoveries and playing/success reactions, outside notation and piano keys.
 - `src/learners.ts` / `src/learner-repository.ts` / `src/useLearners.ts`: profiles, rewards and asynchronous IndexedDB storage.
 - Component-owned `*.module.css`: scoped styles with exact generated typings and unused-class checks.
@@ -202,49 +202,49 @@ the global sound route and current Screen voice, with piano highlights, and neve
 records itself. Live playing stops playback. Download a recording to keep a separate copy or transfer devices.
 There is no 512-note capture limit. See [live notation and recording behavior](docs/explore-transcription.md).
 
-**Note hunt** opens **Lessons**, a labelled browser with **Find notes**, **Read
-notes**, **Patterns**, and **Coming soon** groups. Choose any implemented lesson
-immediately, including Quick and patterns: no earlier badge or heart purchase is
-required. Cards show the pitch range, name support, set length, and first-badge
-gem reward or **Badge earned**. The overview explains the repeatable no-mistakes
-bonus. Pages show four cards, or two on narrow/short phones;
-Back/More buttons reveal the rest without scrolling. Returning from a lesson
-reopens its group. Pets are companions and rewards, not lesson levels.
+**Note hunt** opens **Lessons**, with **Find notes**, **Scales**, **Patterns**,
+and **Coming soon** groups. Choose any exercise immediately. Note names stay
+visible throughout; the former reading and Quick duplicates are merged into the
+matching note ranges. Existing hearts, gems, purchases and achievements stay saved.
 
-Find notes (Garden) has C/E/G, C–G and C–C lessons with names. Read notes
-(Treehouse) revisits those ranges without names; tap **💡** for help. Its optional
-**Quick** challenge measures fluent finds without a countdown or deadline.
-Patterns (River) starts with **Step up**, **Step down**, **Skip a key**, and **Out and back**,
-then adds **Thirds**, **Fifths**, **Moving thirds up**, **Moving thirds down**,
-and **Alberti bass** on the following pages. Intervals are played one note at a
-time. Moving thirds link pairs such as C–E, D–F, E–G (or G–E, F–D, E–C going down).
-Alberti bass introduces low–high–middle–high, such as C–G–E–G, in the same
-middle-C treble range; no left-hand or bass-clef reading is required yet.
-Each shows an entire two- to six-note shape on the staff, with progress checks
-as you play. Notes within a pattern connect freely; a wrong note waits at that
-position and appears as a faint ghost on the same staff, just like song practice.
-Correct notes use the same note-length/held-key green feedback. **Options → Idle
-hints** offers the same 1.8-second pause before a staff cursor, piano-key dot and
-next-note label appear; playing, holds and celebrations suppress these cues.
-The hint toggle is shared with songs for this session, and ghosts work with it
-off. The completed pattern lingers while keys are held, then for 1.6 seconds
-after release, just like individual Note Hunt cards. Rhythm is not scored.
-Bass clef, mixed clefs, accidentals, key signatures and simultaneous notes are
-labelled Coming soon, separate from playable lessons.
+Find notes has C/E/G, C–G and C–C sets. Scales adds **Five notes up**, **Five notes
+down**, **C scale up** and **C scale down**. Patterns has steps, skips, returns,
+thirds, fifths, moving thirds and Alberti bass, plus **Play it twice**, **Back
+home**, **Steps and skips**, **Chord fountain** and **Moving fifths**. The new
+patterns change the pitches you play, rather than hiding their names. Full scales
+show all eight notes together; on small screens their progress chips omit numbers
+while retaining note names and progress colour.
 
-Single-note lessons visit every note twice. Pattern lessons visit each of two
-written shapes twice. Badges require a complete set, at least 80% first-try finds
-and one for every pitch; reading badges require those finds without help.
-Pattern badges also require the complete written sequences, and do not establish
-independent single-note reading. The optional Quick badge adds a four-second
-response threshold. New badges give gems once. Every complete lesson set played
-without a wrong note also earns **one gem**, including replays, in addition to
-any first-badge gems. Name help, slow playing and interrupted timing do not affect
-this bonus, even in Quick. The result shows the no-mistakes and first-badge awards
-separately. Unfinished sets and sets with mistakes still keep their earned hearts.
-Garden and Patterns pay 3/2/1 hearts by attempt, Treehouse pays 6/4/2, and Quick
-pays 9/6/3. Long pauses never reduce those rewards. See the
-[curriculum and editing guide](docs/learners-and-curriculum.md).
+Each card shows its permanent best stars and next goal. **Options** explains the
+requirements before playing:
+
+- **★** Complete the whole set with at least 60% of its possible hearts.
+- **★★** Complete it without a wrong note, at any pace.
+- **★★★** No wrong notes and fluent finds: at most four seconds per isolated
+  note or first pattern note, then two seconds per following pattern note.
+
+These are optional fluency goals, not deadlines or rhythm scoring. The game
+always waits. Held keys, rendering and celebrations do not consume finding time.
+Interruptions exclude a response from fluency, while preserving accuracy and
+hearts. Names and idle hints are allowed for every star. Best stars never go down.
+A completed set below the first-star threshold still keeps its earned hearts.
+
+The first star for an exercise grants one gem once; earlier badges for the same
+merged exercise already count toward that reward. Every complete no-mistakes set
+also grants one gem, including replays. The result shows this run, personal best,
+next goal, hearts and separate gem awards. Find notes, scales and patterns pay
+3/2/1 hearts on attempts one/two/three, with no heart reward after later attempts.
+Earlier reading and Quick encounters retain their original multipliers/rewards.
+See the [curriculum and editing guide](docs/learners-and-curriculum.md).
+
+All patterns keep the full written shape visible. A wrong note waits and appears
+as a faint ghost on the staff. Correct notes use note-length/held-key green
+feedback. **Options → Idle hints** waits for 1.8 seconds of inactivity before
+showing a staff cursor, piano-key dot and next-note label. Playing, holds and
+celebrations suppress hints. The toggle is shared with songs for this session;
+ghosts remain with it off. Fresh correct notes advance immediately. A completed
+pattern lingers while keys are held, then for 1.6 seconds after release. Bass
+clef, accidentals, key signatures and simultaneous notes remain Coming soon.
 
 **Free practice** keeps the original relaxed game available. Its **My learning
 path** starts with C4/E4/G4, reviews earlier learning days and adds white notes
@@ -282,7 +282,7 @@ Each learner keeps their own history, lifetime hearts, badges, purchases, and
 separate heart/gem wallets. The fox is free. Hearts buy permanent friends and
 accessories, from a 12-heart bow to a 160-heart wizard hat. Gem treasures include
 the moon pendant (2), puppy (3), starlight cape (4), butterfly wings (5), crystal
-crown (6), and little dragon (8). Gems come from first badges and repeatable
+crown (6), and little dragon (8). Gems come from first stars and repeatable
 no-mistakes lesson sets, so every gem item can be collected through play.
 A friend can wear several compatible accessories at
 once: combine a hat, glasses, earrings, neckwear, necklace, coat, bag and cape or
@@ -301,7 +301,7 @@ direction](docs/learners-and-curriculum.md).
 Rhythm is approximate, with no inferred tempo, meter or hand independence.
 There is no audio transcription or automatic MIDI-file/photo import.
 Song position and unfinished lesson sets/current game rounds reset on refresh;
-completed finds, badges, gates, wallets, rewards and Explore recordings persist locally.
+completed finds, personal-best stars, earlier achievements, wallets, rewards and Explore recordings persist locally.
 There are no analytics, uploads, or external page assets. The first local install
 requires the network.
 

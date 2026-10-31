@@ -1,43 +1,36 @@
 import { expect, type Page, test } from '@playwright/test';
-import { type LearnerSnapshot, withPurchase } from '../src/learners';
+import { bestStars, journeyProgress } from '../src/curriculum';
+import { type LearnerSnapshot } from '../src/learners';
 import { finishLesson, gardenGraduate, newLearner } from './fixtures/journey';
 
-test('labelled lessons fit desktop, tablets and phones; direct choices earn badges and buy a gem pet', async ({
+test('named lessons explain stars, save personal bests and reward no-mistakes replays', async ({
   page,
 }) => {
   await page.clock.install();
   await page.goto('/');
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'Lessons', exact: true }),
+    page.getByRole('button', { name: 'Read notes', exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Garden: 3 notes', exact: true })
+    .click();
+  await expect(target(page)).toContainText(/[CEG]4/);
+  await page.locator('summary').filter({ hasText: 'Options' }).click();
+  await expect(page.getByLabel('Star requirements')).toContainText('60%');
+  await expect(page.getByLabel('Star requirements')).toContainText(
+    'Names and hints are always allowed',
+  );
+  await page.locator('summary').filter({ hasText: 'Options' }).click();
+  await playLesson(page, 6, 3, false, 5000);
+  await expect(
+    page.getByLabel('This run: 2 of 3 stars', { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Garden: 5 notes', exact: true }),
-  ).toBeEnabled();
-  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Treehouse: Quick', exact: true }),
-  ).toBeEnabled();
-  // A new learner can jump straight to the hardest reading lesson.
-  await page
-    .getByRole('button', { name: 'Treehouse: Quick', exact: true })
-    .click();
-  await expect(target(page).locator('svg')).toBeVisible();
-  await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Back to lessons', exact: true })
-    .click();
-  await page.getByRole('button', { name: 'Coming soon', exact: true }).click();
-  await expect(
-    page.getByText('Discover bass clef', { exact: true }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Next lesson page' }).click();
-  await expect(page.getByText('Notes together', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Find notes', exact: true }).click();
-  for (const [name, viewport] of [
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).toContainText('First star · 💎 +1');
+  for (const [layout, viewport] of [
     ['desktop', { width: 1280, height: 800 }],
-    ['tablet', { width: 1024, height: 768 }],
-    ['tablet-portrait', { width: 768, height: 1024 }],
     ['phone', { width: 390, height: 844 }],
     ['small-phone', { width: 320, height: 568 }],
     ['landscape', { width: 844, height: 390 }],
@@ -45,232 +38,171 @@ test('labelled lessons fit desktop, tablets and phones; direct choices earn badg
     await page.setViewportSize(viewport);
     await fits(
       page,
-      '[aria-label="Learning map"] button, [class*="__map-footer__"]',
+      '[aria-label="Lesson complete"], [aria-label="Lesson complete"] > *, [class*="__keyboard__"]',
     );
-    await page.screenshot({ path: `test-results/curriculum-map-${name}.png` });
+    await page.screenshot({ path: `test-results/stars-result-${layout}.png` });
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const [name, rounds] of [
-    ['3 notes', 6],
-    ['5 notes', 10],
-    ['8 notes', 16],
-  ] as const) {
-    await page
-      .getByRole('button', { name: `Garden: ${name}`, exact: true })
-      .click();
-    await playLesson(page, rounds, 3);
-    await expect(
-      page.getByRole('region', { name: 'Lesson complete' }),
-    ).toContainText('💎 +1');
-    await expect(
-      page.getByRole('region', { name: 'Lesson complete' }),
-    ).toContainText('No mistakes · 💎 +1');
-    if (name === '3 notes') {
-      for (const [layout, viewport] of [
-        ['desktop', { width: 1280, height: 800 }],
-        ['phone', { width: 390, height: 844 }],
-        ['small-phone', { width: 320, height: 568 }],
-        ['landscape', { width: 844, height: 390 }],
-      ] as const) {
-        await page.setViewportSize(viewport);
-        await fits(
-          page,
-          '[aria-label="Lesson complete"], [aria-label="Lesson complete"] > *, [class*="__keyboard__"]',
-        );
-        await page.screenshot({
-          path: `test-results/gem-result-${layout}.png`,
-        });
-      }
-      await page.setViewportSize({ width: 390, height: 844 });
-    }
-    await page
-      .getByRole('button', { name: 'Back to lessons', exact: true })
-      .click();
-    await expect(
-      page.getByRole('button', {
-        name: `Garden: ${name}, badge earned`,
-        exact: true,
-      }),
-    ).toBeEnabled();
+  await page.getByRole('button', { name: 'Play lesson again' }).click();
+  await playLesson(page, 6, 3, false, 1000);
+  await expect(
+    page.getByLabel('This run: 3 of 3 stars', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Play lesson again' }).click();
+  await pitch(page);
+  await playPitch(page, 61);
+  for (let i = 0; i < 6; i++) {
+    await playPitch(page, await pitch(page));
+    await page.clock.fastForward(1601);
   }
   await expect(
-    page.getByLabel('96 hearts, 6 gems', { exact: true }),
+    page.getByLabel('This run: 1 of 3 stars', { exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'Treehouse: 3 notes', exact: true })
-    .click();
-  await expect(target(page).locator('svg')).toBeVisible();
-  await expect(target(page)).not.toContainText(/[A-G]4/);
-  for (const [name, viewport] of [
-    ['desktop', { width: 1280, height: 800 }],
-    ['landscape', { width: 844, height: 390 }],
-    ['phone', { width: 390, height: 844 }],
-  ] as const) {
-    await page.setViewportSize(viewport);
-    await fits(page, '[class*="__hunt-card__"], [class*="__keyboard__"]');
-    await expect
-      .poll(() =>
-        target(page).evaluate((card) => {
-          const bounds = card.getBoundingClientRect();
-          return [...card.children].every((child) => {
-            const rect = child.getBoundingClientRect();
-            return rect.top >= bounds.top && rect.bottom <= bounds.bottom + 1;
-          });
-        }),
-      )
-      .toBe(true);
-    await page.screenshot({ path: `test-results/curriculum-read-${name}.png` });
-  }
-  await playLesson(page, 6, 6, true);
   await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('No mistakes · 💎 +1');
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).not.toContainText('First badge');
-  await page.getByRole('button', { name: 'Play lesson again' }).click();
-  await playLesson(page, 6, 6);
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('First badge · 💎 +2');
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('No mistakes · 💎 +1');
-  await page.screenshot({ path: 'test-results/curriculum-result-phone.png' });
-  await fits(page, '[aria-label="Lesson complete"], [class*="__keyboard__"]');
-  await page.getByRole('button', { name: 'Play lesson again' }).click();
-  await playLesson(page, 6, 6);
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('No mistakes · 💎 +1');
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).not.toContainText('First badge');
-  await page.getByRole('button', { name: 'Learners and rewards' }).click();
-  await page
-    .getByRole('button', { name: 'Preview Puppy friend', exact: true })
-    .click();
-  await page
-    .getByRole('button', { name: 'Get Puppy friend for 3 gems', exact: true })
-    .click();
-  await expect(
-    page.getByText('4 badges · ♥ 204 · 💎 8', { exact: true }),
+    page.getByLabel('Best: 3 of 3 stars', { exact: true }),
   ).toBeVisible();
-  await page.keyboard.press('Escape');
+  const state = await saved(page);
+  expect(bestStars(state, 'find-three')).toBe(3);
+  expect(journeyProgress(state).gems).toBe(3);
   await page.reload();
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
-  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
-  await expect(
-    page.getByRole('button', {
-      name: 'Treehouse: 3 notes, badge earned',
-      exact: true,
-    }),
-  ).toBeEnabled();
-  await expect(
-    page.getByLabel('204 hearts, 8 gems', { exact: true }),
-  ).toBeVisible();
   await expect(
     page
-      .getByRole('button', { name: 'Learners and rewards' })
-      .getByRole('img', { name: 'Puppy friend' }),
+      .getByRole('button', { name: 'Garden: 3 notes', exact: true })
+      .getByLabel('Best: 3 of 3 stars', { exact: true }),
   ).toBeVisible();
 });
 
-test('help and guesses survive settings; switching learner discards the old lesson and its callbacks', async ({
+test('earlier reading and Quick rewards merge into named notes without losing currency or awarding the first star twice', async ({
   page,
 }) => {
   await page.clock.install();
-  await seed(page, withPurchase(gardenGraduate(), 'gate-treehouse', 'gate', 0));
+  let legacy = gardenGraduate();
+  for (const id of ['read-three', 'read-five', 'read-octave', 'fluent-octave'])
+    legacy = finishLesson(legacy, id);
+  delete legacy.learner.lessonStars;
+  await seed(page, legacy);
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
-  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'Treehouse: 3 notes', exact: true })
-    .click();
-  const note = await pitch(page);
-  await page.getByRole('button', { name: 'Show note name' }).click();
-  await page.getByRole('button', { name: 'Play D4', exact: true }).click();
-  await page.getByRole('button', { name: 'Sound and settings' }).click();
-  await page.clock.fastForward(60000);
-  await page
-    .getByRole('button', { name: 'Close sound and settings', exact: true })
-    .click();
   await expect(
-    page.getByRole('button', { name: 'Show note name' }),
+    page.getByRole('button', { name: 'Read notes', exact: true }),
   ).toHaveCount(0);
-  expect(await pitch(page)).toBe(note);
-  await playPitch(page, note);
   await expect(
-    page.getByLabel('4 hearts earned', { exact: true }),
+    page
+      .getByRole('button', { name: 'Garden: 8 notes', exact: true })
+      .getByLabel('Best: 2 of 3 stars', { exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Garden: 3 notes', exact: true })
+    .click();
+  await playLesson(page, 6, 3);
+  await expect(
+    page.getByRole('region', { name: 'Lesson complete' }),
+  ).not.toContainText('First star');
   await expect
-    .poll(
-      async () =>
-        (await saved(page)).encounters.filter(
-          (event) => event.lesson?.id === 'read-three',
-        ).length,
-    )
-    .toBe(1);
-  const encounter = (await saved(page)).encounters.find(
-    (event) => event.lesson?.id === 'read-three',
-  )!;
-  expect(encounter.assistance).toBe('note-name');
-  expect(encounter.guesses).toEqual([62, note]);
-  expect(encounter.durationMs).toBeNull();
-  await page.getByRole('button', { name: 'Learners and rewards' }).click();
-  await page.getByRole('button', { name: 'Learners', exact: true }).click();
-  await page.getByRole('textbox', { name: 'New learner name' }).fill('Sibling');
-  await page.getByRole('button', { name: 'Add learner', exact: true }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Sibling', exact: true }),
-  ).toBeVisible();
-  await page.keyboard.press('Escape');
-  await page.clock.fastForward(3000);
-  await expect(page.getByRole('combobox', { name: 'Note range' })).toHaveValue(
-    'adaptive',
+    .poll(async () => journeyProgress(await saved(page)).gems)
+    .toBe(journeyProgress(legacy).gems + 1);
+  expect((await saved(page)).learner.badges).toHaveLength(
+    legacy.learner.badges!.length,
   );
-  await expect(target(page)).toContainText('C4');
-  await expect(page.getByLabel('0 points', { exact: true })).toBeVisible();
-  const sibling = await saved(page);
-  expect(sibling.encounters).toHaveLength(0);
-  expect(sibling.learner.badges ?? []).toHaveLength(0);
 });
 
-test('optional fluency waits indefinitely; mistake-free sets earn gems even without a quick badge', async ({
+test('star requirements and paged personal bests fit the smallest screens', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Garden: 3 notes', exact: true })
+    .click();
+  await page.locator('summary').filter({ hasText: 'Options' }).click();
+  await expect(page.getByLabel('Star requirements')).toBeVisible();
+  await expect
+    .poll(() =>
+      page.getByLabel('Star requirements').evaluate((element) => {
+        const panel = element.parentElement!.getBoundingClientRect();
+        return (
+          panel.top >= 0 &&
+          panel.bottom <= innerHeight &&
+          panel.left >= 0 &&
+          panel.right <= innerWidth
+        );
+      }),
+    )
+    .toBe(true);
+  await page.locator('summary').filter({ hasText: 'Options' }).click();
+  await page.getByRole('button', { name: 'Learners and rewards' }).click();
+  await page.getByRole('button', { name: 'Progress', exact: true }).click();
+  await expect(
+    page.getByRole('combobox', { name: 'Progress view' }),
+  ).toHaveValue('stars');
+  for (let index = 0; index < 6; index++) {
+    await expect
+      .poll(() =>
+        page.getByRole('dialog').evaluate(
+          (dialog) =>
+            [...dialog.querySelectorAll('article')].every((article) => {
+              const bounds = article.getBoundingClientRect();
+              return [...article.children].every((child) => {
+                const rect = child.getBoundingClientRect();
+                return (
+                  rect.top >= bounds.top &&
+                  rect.bottom <= bounds.bottom &&
+                  rect.left >= bounds.left &&
+                  rect.right <= bounds.right
+                );
+              });
+            }) && dialog.scrollHeight <= dialog.clientHeight + 1,
+        ),
+      )
+      .toBe(true);
+    await page.screenshot({
+      path: `test-results/star-progress-small-${index + 1}.png`,
+    });
+    const next = page.getByRole('button', { name: 'Next progress page' });
+    if (await next.isDisabled()) break;
+    await next.click();
+  }
+});
+
+test('holds and celebrations do not count against fluent pattern stars', async ({
   page,
 }) => {
   await page.clock.install();
-  let state = withPurchase(gardenGraduate(), 'gate-treehouse', 'gate', 0);
-  for (const id of ['read-three', 'read-five', 'read-octave'])
-    state = finishLesson(state, id);
-  await seed(page, state);
+  await page.addInitScript(() => {
+    Math.random = () => 0.999;
+  });
+  await page.goto('/');
   await page.getByRole('button', { name: 'Note hunt', exact: true }).click();
-  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
+  await page.getByRole('button', { name: 'Patterns', exact: true }).click();
   await page
-    .getByRole('button', { name: 'Treehouse: Quick', exact: true })
+    .getByRole('button', { name: 'River: Step up', exact: true })
     .click();
-  await playLesson(page, 16, 9, false, 60000);
+  const pattern = page.getByRole('region', { name: 'Play this pattern' });
+  for (let phrase = 0; phrase < 4; phrase++) {
+    await expect(
+      page.getByLabel('0 of 3 pattern notes found', { exact: true }),
+    ).toBeVisible();
+    await expect(pattern.locator('svg')).toBeVisible();
+    const label = await pattern
+      .getByRole('img', { name: /^Sheet music:/ })
+      .getAttribute('aria-label');
+    const notes = label!
+      .match(/Sheet music: ([\d, ]+)/)![1]
+      .split(',')
+      .map(Number);
+    const keys: Record<number, string> = { 60: 'a', 62: 's', 64: 'd', 65: 'f' };
+    for (const note of notes) {
+      await page.keyboard.down(keys[note]);
+      await page.clock.fastForward(5000);
+      await page.keyboard.up(keys[note]);
+    }
+    await page.clock.fastForward(1601);
+    await page.clock.runFor(50);
+  }
   await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('No mistakes · 💎 +1');
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).not.toContainText('First badge');
-  expect(
-    (await saved(page)).learner.badges?.some(
-      (badge) => badge.lessonId === 'fluent-octave',
-    ),
-  ).toBe(false);
-  await page.getByRole('button', { name: 'Play lesson again' }).click();
-  await playLesson(page, 16, 9, false, 1000);
-  await expect(
-    page.getByRole('region', { name: 'Lesson complete' }),
-  ).toContainText('First badge · 💎 +2');
-  expect(
-    (await saved(page)).learner.badges?.some(
-      (badge) => badge.lessonId === 'fluent-octave',
-    ),
-  ).toBe(true);
+    page.getByLabel('This run: 3 of 3 stars', { exact: true }),
+  ).toBeVisible();
 });
 
 test('a failed final badge save can be retried without blocking experimentation or doubling gems', async ({
@@ -304,9 +236,9 @@ test('a failed final badge save can be retried without blocking experimentation 
   await page
     .getByRole('button', { name: 'Back to lessons', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Read notes', exact: true }).click();
+  await page.getByRole('button', { name: 'Scales', exact: true }).click();
   await expect(
-    page.getByRole('button', { name: 'Treehouse: 8 notes', exact: true }),
+    page.getByRole('button', { name: 'Meadow: C scale up', exact: true }),
   ).toBeEnabled();
   await page.getByRole('button', { name: 'Retry saving', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveCount(0);
@@ -462,7 +394,7 @@ test('patterns can be tried first, accept connected notes and keep the celebrati
   await page.getByRole('button', { name: 'Patterns', exact: true }).click();
   await expect(
     page.getByRole('button', {
-      name: 'River: Out and back, badge earned',
+      name: 'River: Out and back',
       exact: true,
     }),
   ).toBeEnabled();
@@ -485,7 +417,7 @@ test('every pattern selection page fits narrow and short screens', async ({
     await page.setViewportSize(viewport);
     await page.getByRole('button', { name: 'Patterns', exact: true }).click();
     const next = page.getByRole('button', { name: 'Next lesson page' });
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < 10; index++) {
       await fits(page, '[aria-label="Learning map"] button');
       await page.screenshot({
         path: `test-results/pattern-pages-${layout}-${index + 1}.png`,
@@ -512,7 +444,7 @@ for (const [name, id, size] of [
     await page.getByRole('button', { name: 'Patterns', exact: true }).click();
     const choose = async (badge = false) => {
       const button = page.getByRole('button', {
-        name: `River: ${name}${badge ? ', badge earned' : ''}`,
+        name: `River: ${name}${badge ? '' : ''}`,
         exact: true,
       });
       for (let i = 0; i < 5 && !(await button.isVisible()); i++)

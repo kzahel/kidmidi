@@ -72,6 +72,23 @@ test('calendar days use the learner timezone across midnight and daylight saving
   );
 });
 
+test('holding pauses active finding time without invalidating it; interruptions still invalidate timing', () => {
+  let time = 0;
+  const timer = new ResponseTimer({ now: () => time, monotonic: () => time });
+  timer.start();
+  time = 500;
+  timer.hold();
+  time = 5500;
+  assert.equal(timer.read(), 500);
+  timer.resume();
+  time = 6000;
+  assert.equal(timer.read(), 1000);
+  timer.pause();
+  timer.resume();
+  time = 9000;
+  assert.equal(timer.read(), null);
+});
+
 test('response timing starts at render and interrupted responses have no comparable latency', () => {
   let mono = 100;
   let wall = 0;

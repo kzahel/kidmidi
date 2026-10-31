@@ -1,9 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import activityControlsStyles from './ActivityControls.module.css';
-import { type Lesson, lessonLength } from './curriculum';
+import { type Lesson, lessonLength, nextStarGoal } from './curriculum';
 import type { NoteHit } from './feedback';
 import { type HuntLevel, type HuntState, huntLevels } from './hunt';
+import { LessonStars } from './LessonStars';
 import { type Note, noteName, octave, type Song } from './music';
 import styles from './NoteHunt.module.css';
 import pianoWorkspaceStyles from './PianoWorkspace.module.css';
@@ -37,7 +38,6 @@ function NoteCard({
   matched,
   played,
   onReady,
-  names = true,
   icon,
 }: {
   midi: number | null;
@@ -45,7 +45,6 @@ function NoteCard({
   matched: boolean;
   played?: boolean;
   onReady?: () => void;
-  names?: boolean;
   icon?: string;
 }) {
   const notes = useMemo<Note[]>(() => [{ midi: midi ?? 60, beats: 2 }], [midi]);
@@ -81,7 +80,7 @@ function NoteCard({
         />
       )}
       <span className={styles['hunt-note-name']}>
-        {names ? (midi === null ? 'Your turn…' : label(midi)) : '\u00a0'}
+        {midi === null ? 'Your turn…' : label(midi)}
       </span>
     </section>
   );
@@ -121,6 +120,7 @@ function PatternCard({
     <section
       className={`${styles['hunt-card']} ${styles['pattern-card']} ${found ? styles['matched'] : ''}`}
       aria-label="Play this pattern"
+      data-long={pitches.length > 6 || undefined}
     >
       <span className={styles['hunt-card-title']}>
         Play from left to right · take your time
@@ -149,7 +149,10 @@ function PatternCard({
             className={index < pattern.index ? styles['pattern-done'] : ''}
             aria-current={index === pattern.index ? 'step' : undefined}
           >
-            {index < pattern.index ? '✓' : index + 1} {noteName(midi)}
+            <span className={styles['pattern-number']}>
+              {index < pattern.index ? '✓' : index + 1}{' '}
+            </span>
+            {noteName(midi)}
           </span>
         ))}
       </div>
@@ -176,8 +179,6 @@ export function NoteHunt({
   onReady,
   lesson,
   result,
-  helped,
-  onHelp,
   onMap,
   pattern,
   patternHit,
@@ -199,23 +200,20 @@ export function NoteHunt({
   onReset: () => void;
   lesson?: Lesson;
   result: LessonResult | null;
-  helped: boolean;
-  onHelp(): void;
   onMap(): void;
 }) {
   const multiplier = lesson?.heartMultiplier ?? 1;
   const hearts = state.found
     ? state.reward
     : Math.max(0, 3 - state.attempts) * multiplier;
-  const names = !lesson || lesson.support === 'names' || helped;
   if (result && lesson)
     return (
       <section
         className={`${pianoWorkspaceStyles['practice']} ${styles['lesson-result']}`}
         aria-label="Lesson complete"
       >
-        <span className={styles['result-icon']} aria-hidden="true">
-          {result.badge ? '🏅' : lesson.icon}
+        <span className={styles['result-icon']}>
+          <LessonStars stars={result.stars} label="This run" />
         </span>
         <p aria-label={`${result.hearts} hearts earned`}>
           ♥ +{result.hearts}{' '}
@@ -225,15 +223,14 @@ export function NoteHunt({
           <span className={styles['result-gems']}>
             {result.runGems > 0 && <span>No mistakes · 💎 +1</span>}
             {result.badgeGems > 0 && (
-              <span>First badge · 💎 +{result.badgeGems}</span>
+              <span>First star · 💎 +{result.badgeGems}</span>
             )}
           </span>
         )}
-        <span
-          aria-label={`${result.successes} of ${result.length} badge finds`}
-        >
-          Badge finds: {result.successes}/{result.length}
-          {result.badge ? ' · Badge earned!' : ''}
+        <span className={styles['result-best']}>
+          <span>Best</span>
+          <LessonStars stars={result.best} />
+          <span>{nextStarGoal(lesson, result.best)}</span>
         </span>
         <div>
           <button
@@ -306,16 +303,6 @@ export function NoteHunt({
         >
           ♥ {state.points}
         </span>
-        {!names && !state.found && (
-          <button
-            className={styles['note-help']}
-            type="button"
-            onClick={onHelp}
-            aria-label="Show note name"
-          >
-            💡
-          </button>
-        )}
         {options}
         <button
           type="button"
@@ -347,7 +334,6 @@ export function NoteHunt({
             title="Find this"
             matched={state.found}
             onReady={onReady}
-            names={names || state.found}
             icon={lesson ? '🎯' : undefined}
           />
           <NoteCard
@@ -355,7 +341,6 @@ export function NoteHunt({
             title="You played"
             played
             matched={state.found}
-            names={names || state.found}
             icon={lesson ? '🎹' : undefined}
           />
         </div>

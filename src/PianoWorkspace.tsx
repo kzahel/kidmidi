@@ -39,7 +39,7 @@ export function PianoWorkspace({
           patternAttempt={session.patternAttempt}
           hint={session.patternHint}
           options={
-            huntSession.pattern ? (
+            huntSession.lesson ? (
               <ActivityOptions session={session} />
             ) : undefined
           }
@@ -49,8 +49,6 @@ export function PianoWorkspace({
           onReady={huntSession.ready}
           lesson={huntSession.lesson}
           result={huntSession.result}
-          helped={huntSession.helped}
-          onHelp={huntSession.help}
           onMap={onMap}
           onReset={() => {
             session.releaseAll();

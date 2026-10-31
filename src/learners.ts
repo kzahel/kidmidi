@@ -1,12 +1,13 @@
 import {
   assessLesson,
+  bestStars,
   hasBadge,
   journeyProgress,
   type LessonBadge,
   type LessonRunReward,
+  type LessonStars,
   lessonById,
   lessonLength,
-  lessonOpen,
   worldOpen,
   worlds,
 } from './curriculum';
@@ -324,6 +325,7 @@ export type Learner = {
   accessories?: string[];
   badges?: LessonBadge[];
   runRewards?: LessonRunReward[];
+  lessonStars?: LessonStars[];
 };
 export type Purchase = {
   id: string;
@@ -383,7 +385,9 @@ export function learnerName(name: string) {
 }
 
 export function validateEncounter(event: Encounter) {
-  const lesson = event.lesson ? lessonById(event.lesson.id) : undefined;
+  const lesson = event.lesson
+    ? lessonById(event.lesson.id, event.lesson.revision)
+    : undefined;
   if (
     !event.id ||
     !event.learnerId ||
@@ -410,9 +414,11 @@ export function validateEncounter(event: Encounter) {
         (lesson.support === 'names' && event.assistance !== 'note-name'))) ||
     !Number.isFinite(event.startedAt) ||
     !/^\d{4}-\d{2}-\d{2}$/.test(event.day) ||
-    [event.firstResponseMs, event.durationMs].some(
-      (ms) => ms !== null && (!Number.isFinite(ms) || ms < 0),
-    )
+    [
+      event.firstResponseMs,
+      event.durationMs,
+      ...(event.fluentResponseMs === undefined ? [] : [event.fluentResponseMs]),
+    ].some((ms) => ms !== null && (!Number.isFinite(ms) || ms < 0))
   )
     throw new Error('This learning encounter is invalid.');
 }
@@ -425,9 +431,9 @@ export function withEncounter(
   if (snapshot.learner.id !== event.learnerId)
     throw new Error('Learner mismatch.');
   if (snapshot.encounters.some((old) => old.id === event.id)) return snapshot;
-  const lesson = event.lesson ? lessonById(event.lesson.id)! : undefined;
-  if (lesson && !lessonOpen(snapshot, lesson))
-    throw new Error('Open this lesson on the map first.');
+  const lesson = event.lesson
+    ? lessonById(event.lesson.id, event.lesson.revision)!
+    : undefined;
   if (
     event.lesson &&
     snapshot.encounters.some(
@@ -447,7 +453,17 @@ export function withEncounter(
   const assessment = lesson
     ? assessLesson(lesson, encounters, event.lesson!.runId)
     : undefined;
-  const award = lesson && !hasBadge(snapshot, lesson.id) && assessment?.earned;
+  const alreadyAwarded =
+    lesson &&
+    (lesson.revision === 1
+      ? badges.some((badge) => badge.lessonId === lesson.id)
+      : hasBadge(snapshot, lesson.id));
+  const award =
+    lesson &&
+    !alreadyAwarded &&
+    (lesson.revision === 1
+      ? assessment?.earned
+      : (assessment?.stars ?? 0) >= 1);
   const runAward =
     lesson &&
     assessment?.mistakeFree &&
@@ -458,6 +474,24 @@ export function withEncounter(
     learner: {
       ...snapshot.learner,
       unlocked: advanceCurriculum(snapshot.learner.unlocked, encounters),
+      ...(lesson &&
+      assessment &&
+      assessment.stars > bestStars(snapshot, lesson.id)
+        ? {
+            lessonStars: [
+              ...(snapshot.learner.lessonStars ?? []).filter(
+                (entry) => entry.lessonId !== lesson.id,
+              ),
+              {
+                lessonId: lesson.id,
+                revision: lesson.revision,
+                runId: event.lesson!.runId,
+                at: event.startedAt,
+                stars: assessment.stars,
+              },
+            ],
+          }
+        : {}),
       ...(runAward
         ? {
             runRewards: [

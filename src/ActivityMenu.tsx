@@ -38,9 +38,9 @@ export function ActivityMenu({
           {journey && (
             <div className={styles['level']}>
               <span
-                aria-label={`${journey.badges} badges, ${journey.gemBalance} gems`}
+                aria-label={`${journey.stars} stars, ${journey.gemBalance} gems`}
               >
-                🏅 {journey.badges} badges · 💎 {journey.gemBalance}
+                ★ {journey.stars} stars · 💎 {journey.gemBalance}
               </span>
             </div>
           )}

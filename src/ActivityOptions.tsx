@@ -1,5 +1,6 @@
 import styles from './ActivityOptions.module.css';
 import { assetUrl } from './assets';
+import { StarRules } from './LessonStars';
 import { downloadMusicXml } from './RecordingMenu';
 import type { PianoSession } from './usePianoSession';
 import type { ScoreSize } from './view';
@@ -44,7 +45,7 @@ export function ActivityOptions({ session }: { session: PianoSession }) {
             </label>
           </>
         )}
-        {!freePlay && (
+        {!freePlay && (!hunting || session.huntSession.pattern) && (
           <label className={styles['hint-toggle']}>
             <input
               type="checkbox"
@@ -53,6 +54,9 @@ export function ActivityOptions({ session }: { session: PianoSession }) {
             />
             Idle hints
           </label>
+        )}
+        {hunting && session.huntSession.lesson && (
+          <StarRules lesson={session.huntSession.lesson} />
         )}
         {!freePlay && !hunting && song.source && (
           <a

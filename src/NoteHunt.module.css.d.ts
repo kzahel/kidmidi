@@ -17,14 +17,15 @@ declare const styles: {
   readonly 'lesson-count': string;
   readonly 'lesson-result': string;
   readonly 'matched': string;
-  readonly 'note-help': string;
   readonly 'note-hunt': string;
   readonly 'pattern-card': string;
   readonly 'pattern-done': string;
   readonly 'pattern-hint-name': string;
   readonly 'pattern-hunt': string;
+  readonly 'pattern-number': string;
   readonly 'pattern-progress': string;
   readonly 'played-card': string;
+  readonly 'result-best': string;
   readonly 'result-gems': string;
   readonly 'result-icon': string;
 };

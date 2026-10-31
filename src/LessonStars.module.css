@@ -1,0 +1,15 @@
+.stars {
+  color: #a87516;
+  white-space: nowrap;
+  font-weight: 750;
+  letter-spacing: 2px;
+}
+.empty {
+  color: #7b8175;
+}
+.rules {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}

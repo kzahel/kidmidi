@@ -29,7 +29,7 @@ a shared local library, separate from learner assessments.
 
 Badges record completed skills; they do not restrict lesson access. All implemented
 lessons are immediately selectable, regardless of earned currency or earlier
-badges. The displayed progress is a badge count, with separate heart and gem
+badges. The displayed progress is a personal-best star count, with separate heart and gem
 wallets. Previous world purchases remain in the ledger and are not charged again;
 the old purchase policy is retained only for compatibility, with no gate-purchase
 control in the lesson browser. Existing hearts, badges, pets and charms stay intact.
@@ -129,131 +129,113 @@ when separate browser tabs buy/equip concurrently. Ownership is still checked
 before equipping, and preview data never enters the learner repository.
 
 Existing stable IDs, prices, purchases and equipment remain valid. Gems come from
-first badges and repeatable mistake-free lesson sets. Every gem reward, including
+first stars and repeatable mistake-free lesson sets. Every gem reward, including
 the 8-gem dragon, can be collected through play. Hearts remain replayable too.
 There are no paid or random purchases.
-The Progress tab pages through recent single-note evidence or lesson badges.
+The Progress tab pages through exercise stars, recent single-note evidence and earlier achievements.
 
 ## Lessons and progress
 
-Note Hunt opens **Lessons**. Labelled group buttons switch Find notes (Garden),
-Read notes (Treehouse), Patterns (River), and Coming soon. Cards show the concrete
-skill/range, assistance, set length, and first-badge gem reward or Badge earned. The
-overview states the one-gem reward for each set with no mistakes. No playable
-card is disabled by curriculum order. The catalog order suggests a progression,
-while learners can skip ahead or experiment freely. Pets do not select levels.
-The prominent ← Lessons button in the main header returns to the active
-lesson's group; Home remains available alongside it.
+The active browser has Find notes (Garden), Scales (Meadow), Patterns (River) and
+Coming soon. Every implemented exercise is immediately selectable. Cards show
+best stars, pitch/pattern descriptions, set length where space allows, and a next
+star goal. Four cards fit a page, or two on narrow/short phones; paging keeps the
+complete browser within the viewport. Home and the persistent ← Lessons button
+remain available, and returning reopens the chosen group.
 
-The browser displays at most four cards per page, with Back/More buttons as
-needed. It fills the available viewport without scrolling, on tablets in either
-orientation and on phones. Coming soon previews have their own pages: bass clef,
-mixed clefs/octaves, accidentals, key signatures and simultaneous notes. These
-are unimplemented directions, clearly separate from playable choices.
+All active exercises show note names. The three former Read notes lessons and
+Quick are no longer selectable. Their stable IDs remain in `legacyLessons`;
+`mergedLessonId` maps them to the corresponding Find notes range. This is one
+exercise progression, with no support-based duplicate ratings.
 
-| Group                     | Lessons                                      | Name support  | Hearts on attempts 1/2/3 | New badge gems |
-| ------------------------- | -------------------------------------------- | ------------- | ------------------------ | -------------- |
-| Find notes                | C/E/G; C–G; C–C                              | Always        | 3/2/1                    | 1 each         |
-| Read notes                | C/E/G; C–G; C–C                              | 💡 on request | 6/4/2                    | 2 each         |
-| Read notes optional Quick | C–C                                          | 💡 on request | 9/6/3                    | 2              |
-| Patterns                  | Step up; Step down; Skip a key; Out and back | Always        | 3/2/1 per note           | 1 each         |
+The active catalog has 21 exercises: three isolated-note ranges; four five-note
+walk/full C-scale lessons; and fourteen patterns. New patterns are repeated
+notes, neighbours returning home, mixed steps/skips, broken chords out and back,
+and moving fifths. Notes stay on white keys from C4 to C5. Full scales have one
+written shape repeated twice; other pattern sets have two shapes repeated twice.
+Each isolated-note set visits each pitch twice. Pattern decks preserve intact
+shapes. See [pattern content and feedback](note-hunt.md#pattern-hunt).
 
-Each single-note lesson generates a balanced, shuffled set with two visits per
-pitch (6, 10 or 16 cards). Pattern lessons shuffle two intact two- to six-note
-shapes twice (four patterns per set); badge assessment also verifies complete
-pattern sequences, rather than just pitch totals. Normal mixed single-note cards
-never immediately repeat. A badge requires:
+### Three stars
 
-- A complete set from one run and one lesson revision; sets cannot be combined.
-- At least 80% first-attempt finds and at least one qualifying find for every pitch.
-- For reading lessons, those qualifying finds must have used no note-name help.
-- For optional Quick only, qualifying first responses must be at most 4,000ms.
-  Null/interrupted timings do not qualify. Ordinary lessons ignore timing.
+A complete set must contain every expected index and pitch, with every written
+pattern intact. Partial or combined runs cannot qualify.
 
-Help remains available on every reading card, and matched cards reveal their
-names after assessment. A miss, help or long pause never ends a card or removes
-earned currency. Heart rewards depend on attempts and the selected lesson, not
-response speed. There is no countdown, timeout, buzzer, negative result screen or
-streak loss. The ending shows hearts, qualifying finds and a badge/new gems when
-earned, with replay and map buttons. These initial thresholds need playtesting;
-they are not validated learning-efficacy measures.
+| Rating | Requirement                                                     |
+| ------ | --------------------------------------------------------------- |
+| ★      | Complete the set with at least 60% of its maximum hearts.       |
+| ★★     | Complete the set with every pitch correct on its first attempt. |
+| ★★★    | No mistakes and every target found within the fluency limit.    |
 
-A new badge grants gems once per stable lesson ID. Each complete lesson run also
-grants one gem if every target was found on its first attempt. This is independent
-of badge qualification: name help, long pauses, null/interrupted response timing
-and Quick's fluency threshold do not affect it. Pattern runs must contain every
-complete written shape, not just the right pitch totals. Mistake-free replays
-earn one gem each; mistakes and incomplete runs keep hearts without a run gem.
-Songs, open-ended Free practice and Free play do not award run gems.
+Maximum hearts is note count × three × the lesson's heart multiplier. This keeps
+the first-star percentage comparable across lengths and historical multipliers.
+The fluency limit is 4,000ms for isolated notes and the first note of each pattern,
+then 2,000ms for subsequent notes. These are starting playtest parameters, not
+validated learning-efficacy thresholds. Names and idle hints do not affect stars.
+There is no countdown, timeout, failure screen or rhythm requirement. Completion
+below 60% still retains hearts. A replay cannot reduce a personal best.
 
-The result displays total gems plus separate "No mistakes" and "First badge"
-amounts. For example, a first clean Find notes set gives two gems (one badge + one
-run); its next clean replay gives one. A slow or helped clean reading/Quick set
-can earn a run gem without a badge. Gem prices range from a two-gem moon pendant
-to an eight-gem little dragon. Heart and gem spending are separate ledgers.
-Badges and `learner.runRewards` commit with the completing encounter in the same
-IndexedDB transaction. Each run reward stores lesson ID/revision, stable run ID,
-award time and one gem. Duplicate encounter/run checks prevent replaying a save
-from duplicating the award; competing tabs cannot overspend either wallet.
-A storage failure keeps pending
-encounters in the tab for retry; purchases wait until they save.
+Fluency has a separate response clock. It starts once the staff/target is ready,
+and excludes held-key time and between-pattern/card celebrations. Early connected
+attacks are accepted immediately. Settings, blur and visibility interruptions
+invalidate the affected response for the third star, without invalidating the
+no-mistakes rating or gem. The ordinary response clock remains separate for
+historical and adaptive evidence. `fluentResponseMs` stores the active finding
+time; explicit null does not fall back to a different timer.
 
-Opening settings/profiles suspends a lesson card/pattern position, preserving its
-guesses and help state and invalidating its response timing. Switching learners cancels the old
-lesson and callbacks. Returning to the map/restarting begins a new run; refresh
-also resets the unfinished run. Already completed finds/hearts always persist,
-but partial sets do not earn badges or run gems. Practice rounds retain their earlier reset
-behavior. Transport, held-key celebration and song practice remain independent.
+### Currency and saved progress
+
+Active revision-two exercises award their first-star gem once, using the existing
+achievement ledger. The first qualifying star grants the catalog gem amount
+(currently one). An earlier badge from any merged variant already satisfies this
+milestone, preventing another first-time payout. Earlier badge entries, including
+original gem amounts, are never removed or rewritten. Every complete mistake-free
+set also grants one run gem, including replays and three-star runs. The third star
+does not add a separate repeatable currency reward. Hearts remain attempt-based:
+3/2/1 on the first/second/third find, zero thereafter.
+
+Results show this run's stars, saved best, next goal, hearts, "First star" gems
+and "No mistakes" gems. Options explains the full rules before playing. Profiles
+show Exercise stars, Recent finds, Earlier achievements and Stars & gems.
+
+`learner.lessonStars` stores only improvements (lesson ID/revision, run ID, time
+and best stars). `learner.runRewards` retains repeatable one-gem awards. Both
+commit with the completing encounter in one IndexedDB transaction. Stable
+encounter/run IDs make retries idempotent; competing tabs cannot duplicate awards
+or overspend. A failed save keeps pending encounters for retry in that tab.
+
+No database upgrade or destructive migration is required. Missing star projections
+mean zero new ratings; earlier badges imply at least one star, and saved
+no-mistakes run rewards imply two. These fallback ratings use merged lesson IDs,
+so equivalent variants cannot multiply the star total. Historical speed is not
+invented. New fluent runs can improve these ratings to three. Currency is always
+calculated from the original saved awards and purchases, never from inferred
+stars, so loading an older save does not mint gems. Old revision-one encounters
+and rewards remain readable and valid; older unfinished sets can still save.
+New selection starts revision two. Songs, open-ended Free practice and Free play
+remain outside lesson-star/run-gem scoring.
 
 ### Editing and adding content
 
-The Patterns shelf continues from steps/skips/returns into Thirds, Fifths, Moving
-thirds up, Moving thirds down and Alberti bass. These are sequential white-key
-patterns in C4–A4, with two written shapes per lesson and two visits per shape.
-Moving thirds connect three interval pairs; Alberti introduces
-low–high–middle–high in treble clef. The order is a suggestion, with no
-prerequisites, rhythm assessment, hand assignment or simultaneous-note matching.
-Each new lesson has its own stable ID and one-gem badge, and uses the same
-attempt rewards and exclusion from independent-note adaptive evidence. See
-[pattern shapes](note-hunt.md#pattern-hunt).
+`src/lesson-catalog.ts` is the content source. Stable IDs, revisions, worlds,
+descriptions, pitches and equal-length pattern arrays define exercises. Active
+content lives in `lessons`; original version-one definitions stay in
+`legacyLessons` for saved evidence. `lessonById(id, revision)` reads exact old
+versions, while ordinary selection uses current versions only. Preserve old
+versions when changing assessment meaning and never recycle IDs. Existing
+purchases, badges, stars and run rewards stay permanent.
 
-Edit **`src/lesson-catalog.ts`**, rather than UI or persistence code:
+New clefs, signatures and simultaneous notes need their own appropriate renderer
+and recognition policy before appearing as playable content. Future worlds are
+noninteractive previews. Pattern following does not enter independent single-note
+adaptive review/expansion.
 
-- World definitions provide stable `id`, short `name`, `icon`, parent-facing
-  `topic`, and legacy entry/gate metadata for older world purchases. Those
-  fields no longer restrict lesson access. The browser groups playable worlds
-  by explicit skill labels; unsupported worlds appear only under Coming soon.
-- Lesson definitions provide stable `id`, positive `revision`, world ID, short
-  name/icon, pitches, support policy, suggested predecessor, heart multiplier, gem award
-  and assessment parameters (repetitions, accuracy, successes per pitch, optional
-  fluent-response threshold).
-- `description` supplies the visible range/support or pattern example. Optional
-  `patterns` supplies equal-length pitch arrays: the session recognises each
-  pitch and celebrates at pattern boundaries; `notes` is their unique pitch union.
-  Current patterns always show names and use the ordinary attempt rewards.
-- Reorder definitions freely. Bump `revision` when changing assessment meaning;
-  earlier-run evidence cannot satisfy a revised assessment. Previously awarded
-  badges, gems and purchases remain permanent. Use a **new ID** for a separate
-  skill that should award its own badge/gems. IDs must not be recycled.
-- A new single-note treble lesson can use the existing renderer/session. New
-  clefs, signatures or chords also need an appropriate renderer and
-  recognition policy before adding playable content. Do not expose those worlds
-  as purchasable previews.
-
-Old version-1 IndexedDB records need no destructive migration: absent `badges`
-or `runRewards` means none, absent purchase `currency` means hearts, and encounters without lesson
-metadata remain practice evidence. Completed lesson encounters include stable
-lesson/revision/run IDs, card index and explicit assistance. Badge awards live on
-the learner projection; existing records and all device/recording stores remain
-untouched. Historical completed runs are not credited retroactively; newly
-completed mistake-free sets receive the bonus. Later remote sync must reconcile
-badge and run awards as well as encounters.
-
-Focused tests cover free advanced-lesson access, intact pattern decks, balanced
-decks, accuracy/coverage, help, timing, revising assessments, permanent badges, repeatable run rewards, legacy records, two wallets,
-idempotency and concurrent transactions. Browser journeys cover actual rendering,
-the Garden badge journey, direct advanced choices, assisted/unassisted reading,
-Quick, profile isolation, settings interruptions, pet purchases, scrollable galleries, combined outfits, individual removal, reloads and small-screen fit.
+Tests cover star boundaries, per-pattern fluency, held-time exclusion,
+interruptions, complete decks, repetitions, legacy aliases, permanent bests,
+first-time and repeatable gem awards, retries, profile isolation and concurrent
+transactions. Browser journeys cover all new exercises, eight-note scale
+rendering, repeats requiring fresh attacks, visible names, legacy saves, star
+rules/results, reward purchases, ghost/hint feedback and desktop/phone fit.
 
 ## Relaxed Practice learning path
 
@@ -301,7 +283,7 @@ An eventual remote repository/sync adapter will need an outbox, server-side
 idempotency for encounter and purchase IDs, authorization per account/learner,
 schema migrations, deletion/export, and explicit conflict resolution for profile
 edits and simultaneous offline spending. The server must validate awards and
-prices, including badge and run gems; local transactional protection is
+prices, including first-star, earlier badge and run gems; local transactional protection is
 not server authority. Prefer merging
 immutable encounters/purchases and rebuilding projections over last-write-wins
 heart totals. Device calibration stays local. Profile history includes learning

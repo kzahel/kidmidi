@@ -1,7 +1,14 @@
 import { useState } from 'react';
-import { journeyProgress, lessonById } from './curriculum';
+import {
+  bestStars,
+  journeyProgress,
+  lessonById,
+  lessons,
+  nextStarGoal,
+} from './curriculum';
 import { Dialog } from './Dialog';
 import styles from './LearnerMenu.module.css';
+import { LessonStars } from './LessonStars';
 import { progress } from './learners';
 import { curriculum, noteEvidence } from './learning';
 import { noteName, octave } from './music';
@@ -83,14 +90,20 @@ function Profiles({ controller }: { controller: LearnersController }) {
 }
 
 function LearningProgress({ controller }: { controller: LearnersController }) {
-  const [view, setView] = useState('finds');
+  const [view, setView] = useState('stars');
   const [page, setPage] = useState(0);
   const snapshot = controller.snapshot;
   if (!snapshot) return null;
   const notes = curriculum.slice(0, snapshot.learner.unlocked);
   const badges = snapshot.learner.badges ?? [];
   const total =
-    view === 'about' ? 2 : view === 'finds' ? notes.length : badges.length;
+    view === 'about'
+      ? 2
+      : view === 'finds'
+        ? notes.length
+        : view === 'stars'
+          ? lessons.length
+          : badges.length;
   return (
     <section className={styles['progress']} aria-label="Learning progress">
       <label className={styles['field']}>
@@ -103,9 +116,10 @@ function LearningProgress({ controller }: { controller: LearnersController }) {
             setPage(0);
           }}
         >
+          <option value="stars">Exercise stars</option>
           <option value="finds">Recent finds</option>
-          <option value="badges">Lesson badges</option>
-          <option value="about">How badges work</option>
+          <option value="badges">Earlier achievements</option>
+          <option value="about">Stars & gems</option>
         </select>
       </label>
       <div
@@ -114,10 +128,10 @@ function LearningProgress({ controller }: { controller: LearnersController }) {
         {view === 'about' ? (
           <>
             <article>
-              <strong>Lesson badges</strong>
+              <strong>Three stars</strong>
               <span>
-                80% first try, with a success for every pitch. First badges give
-                gems once. Reading needs no help; Quick adds 4-second finds.
+                ★ Finish with 60% hearts. ★★ No mistakes. ★★★ No mistakes and
+                fluent finds. Names stay visible. Your best never goes down.
               </span>
             </article>
             <article>
@@ -128,6 +142,16 @@ function LearningProgress({ controller }: { controller: LearnersController }) {
               </span>
             </article>
           </>
+        ) : view === 'stars' ? (
+          lessons.slice(page * 4, (page + 1) * 4).map((lesson) => (
+            <article key={lesson.id}>
+              <strong>{lesson.name}</strong>
+              <LessonStars stars={bestStars(snapshot, lesson.id)} />
+              <small>
+                {nextStarGoal(lesson, bestStars(snapshot, lesson.id))}
+              </small>
+            </article>
+          ))
         ) : view === 'finds' ? (
           notes.slice(page * 4, (page + 1) * 4).map((note) => {
             const evidence = noteEvidence(snapshot.encounters, note);
@@ -220,7 +244,7 @@ export function LearnerMenu({
       </nav>
       <div className={styles['wallet']}>
         <span>
-          {journey.badges} badges · ♥ {stats.balance} · 💎 {journey.gemBalance}
+          ★ {journey.stars} · ♥ {stats.balance} · 💎 {journey.gemBalance}
         </span>
         <span>{stats.earned} hearts earned, forever</span>
       </div>

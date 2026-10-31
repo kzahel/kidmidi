@@ -3,21 +3,20 @@
 Patient note-finding cards and short pattern lessons for the piano. Two cards show a target
 and the latest guess on the same treble-clef notation used in practice. Written
 note lengths are just notation; the game matches exact MIDI pitch, including the
-octave, without testing rhythm. Garden and relaxed Practice show note names;
-Treehouse hides names until 💡 or a match. See the [lesson catalog and assessment policy](learners-and-curriculum.md).
+octave, without testing rhythm. All active exercises and relaxed Practice show note names. See the [lesson catalog and assessment policy](learners-and-curriculum.md).
 
 ## Rounds and rewards
 
-- Note Hunt opens **Lessons**, with labelled Find notes (Garden), Read notes
-  (Treehouse), Patterns (River) and Coming soon groups. Every implemented lesson
+- Note Hunt opens **Lessons**, with labelled Find notes (Garden), Scales
+  (Meadow), Patterns (River) and Coming soon groups. Every implemented lesson
   can be selected immediately: badges and hearts never block experimentation.
-  Cards show range/support, length and first-badge gem rewards/Badge earned. Groups contain
+  Cards show the range or pattern, length, best stars and the next star goal. Groups contain
   at most four visible cards per page, with explicit Back/More controls when
   needed. The complete browser fits the viewport without scrollbars, including
   tablet portrait/landscape and phones. The prominent ← Lessons header button returns to the active group, on
   desktop and phones. Home stays available.
   Future topics are noninteractive Coming soon previews, not locked lessons.
-  Existing badges and earlier gate purchases stay saved. New badges grant gems
+  Existing badges and earlier gate purchases stay saved. First stars grant gems
   once. Every complete lesson set with no wrong notes grants one additional gem,
   including replays. The puppy costs three gems.
 - **🎹 Free practice** opens the original relaxed game. Its default is **My learning
@@ -33,8 +32,8 @@ Treehouse hides names until 💡 or a match. See the [lesson catalog and assessm
 - Only fresh attacks count. Transport deduplicates held note-ons by source,
   channel and pitch; releases never count as guesses. Repeated fresh attacks on
   the same wrong note do count. Chords count each attack as a guess.
-- Finding a note on attempt one/two/three earns three/two/one hearts in Practice,
-  Garden and Patterns, six/four/two in Treehouse, and nine/six/three in optional Quick, added
+- Finding a note on attempt one/two/three earns three/two/one hearts in Practice
+  and all active lessons, added
   to the running point total. Speed never reduces those rewards. Later finds earn
   zero; existing points never decrease.
   Pale hearts show which bonus hearts are no longer available on this card.
@@ -89,7 +88,7 @@ on that waiting note's horizontal position. The latest wrong pitch replaces the
 ghost, which stays after release until the correct attack. Its geometry,
 accidentals and labelled octave displacement reuse the song renderer; it never
 reflows the written pattern. Accepted earlier notes remain checked.
-Names are shown, rhythm is not assessed and there is no required speed.
+Names are shown and rhythm is not assessed. Speed is an optional third-star goal.
 
 **Options → Idle hints** shares the song setting for the current app session.
 After 1.8 seconds of inactivity, a cursor marks the waiting staff note, a piano
@@ -98,8 +97,8 @@ staff note and key warm to amber and the label strengthens. Any fresh attack
 restarts the pause, including a wrong guess. Held keys, correct-note feedback,
 dialogs and the final-pattern celebration suppress hints. Turning Idle hints off
 removes target cues without removing wrong-note ghosts, names or progress checks.
-Single-note finding/reading lessons retain their separate target/played cards
-and on-request help; these automatic cues apply only to pattern lessons and songs.
+Single-note finding lessons retain their separate target/played cards
+with names visible; these automatic cues apply only to pattern lessons and songs.
 
 Correct-note feedback also reuses the song controller: a quarter-note hit lasts
 480ms, or through its physical hold, with a short release tail. It highlights the
@@ -113,24 +112,29 @@ Fresh correct attacks advance inside the visible pattern immediately. Only the
 pattern's final note starts the existing held-key/1.6-second celebration. Further
 playing in that celebration cannot score or advance. Each accepted pitch saves
 one attempt-based encounter, including its lesson/run/index, with 3/2/1 hearts.
-The lesson badge requires all complete catalog patterns, 80% first-try notes and
-at least one first-try find for every pitch. This is supported pattern following,
+Stars require all complete catalog patterns. This is supported pattern following,
 not evidence of independent single-note reading. Pattern encounters are excluded
 from adaptive single-note review/expansion. Settings preserve the current position
 and guesses; switching learners discards unfinished runs. Completed finds and
-awards persist, including through reload; partial runs do not earn badges.
+awards persist, including through reload; partial runs do not earn stars or gems.
 
-All finite single-note and pattern lessons also award one gem per complete
-mistake-free set. Every accepted target must be a first-attempt find across the
-whole set, not just one pattern/card. This bonus ignores name help, response
-speed and interrupted timing; Quick can award it without awarding a fluency
-badge. Repeating an exercise can earn another gem. A first badge and the bonus
-can be earned together, and the result names both awards separately. Wrong-note
-and unfinished runs retain their normal hearts but do not earn this bonus.
-Relaxed Free practice is open-ended and has no set-completion gem; songs and
-Free play remain separate. The lesson overview and Progress explanation state
-the gem rules. Rewards save once per learner/run with the completing encounter;
-retries, reloads and competing tabs do not duplicate them.
+All finite lessons use the shared [three-star rules](learners-and-curriculum.md#three-stars):
+complete with 60% of the possible hearts; no mistakes at any pace; then no mistakes
+with fluent finds. Names and hints are always allowed. Every no-mistakes set
+earns one gem, including replays; a first star grants its one-time gem too.
+The result explains both awards and shows this run alongside the permanent best.
+Earlier reading/Quick variants are merged into named note ranges, with old
+achievements, original gems and purchases preserved. The removed variants do not
+appear as locked or Coming soon content. Open-ended Free practice, songs and
+Free play do not award lesson stars.
+
+Scales adds Five notes up/down (C–G and D–A shapes) and full C-scale up/down
+(C4–C5). The full scale is eight notes and repeats twice. Additional River
+patterns are Play it twice (C–C–D–D–E–E; F–F–E–E–D–D), Back home
+(C–D–C–E–C–F; D–E–D–F–D–G), Steps and skips (C–D–F–E–G; D–E–G–F–A),
+Chord fountain (C–E–G–E–C; D–F–A–F–D), and Moving fifths
+(C–G, D–A, E–B; B–E, A–D, G–C). Progress chips keep all note names visible;
+small screens omit chip numbers for eight-note patterns to fit the full shape.
 
 ## Rendering and validation
 

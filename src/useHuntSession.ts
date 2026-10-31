@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   assessLesson,
+  bestStars,
   hasBadge,
   lessonById,
   lessonDeck,
   lessonOpen,
   patternSize,
+  type StarCount,
 } from './curriculum';
 import { guessHunt, type HuntLevel, nextHunt, startHunt } from './hunt';
 import type { LearnerSnapshot } from './learners';
@@ -27,6 +29,8 @@ export type LessonResult = {
   badge: boolean;
   successes: number;
   length: number;
+  stars: StarCount;
+  best: StarCount;
 };
 
 export function useHuntSession(
@@ -39,7 +43,6 @@ export function useHuntSession(
   const [adaptive, setAdaptive] = useState(true);
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [result, setResult] = useState<LessonResult | null>(null);
-  const [helped, setHelped] = useState(false);
   const run = useRef<{
     lessonId: string;
     id: string;
@@ -59,6 +62,7 @@ export function useHuntSession(
   const model = useRef(state);
   const auto = useRef(true);
   const owner = useRef<string | null>(null);
+  const held = useRef(false);
   const round = useRef<{
     id: string;
     learnerId: string;
@@ -66,8 +70,10 @@ export function useHuntSession(
     day: string;
     choice: LearningChoice;
     timer: ResponseTimer;
+    fluency: ResponseTimer;
     guesses: number[];
     firstResponseMs: number | null;
+    fluentResponseMs: number | null;
     input: Encounter['input'] | null;
     assistance: Encounter['assistance'];
   } | null>(null);
@@ -129,8 +135,10 @@ export function useHuntSession(
       day,
       choice: plan,
       timer: new ResponseTimer(browserClock),
+      fluency: new ResponseTimer(browserClock),
       guesses: [],
       firstResponseMs: null,
+      fluentResponseMs: null,
       input: null,
       assistance:
         run.current && lesson?.support === 'on-request' ? 'none' : 'note-name',
@@ -139,14 +147,18 @@ export function useHuntSession(
     model.current = updated;
     setState(updated);
     setChoice(plan);
-    setHelped(false);
     if (
       lesson?.patterns &&
       run.current &&
       run.current.completed % patternSize(lesson) !== 0
     ) {
       round.current.timer.start();
-      if (document.hidden || !document.hasFocus()) round.current.timer.pause();
+      round.current.fluency.start();
+      if (held.current) round.current.fluency.hold();
+      if (document.hidden || !document.hasFocus()) {
+        round.current.timer.pause();
+        round.current.fluency.pause();
+      }
     }
   }
   useLayoutEffect(() => {
@@ -163,10 +175,12 @@ export function useHuntSession(
       round.current = suspended.current;
       suspended.current = null;
       round.current.timer.resume();
+      if (!held.current) round.current.fluency.resume();
     } else begin();
     return () => {
       if (run.current && round.current) {
         round.current.timer.pause();
+        round.current.fluency.pause();
         suspended.current = round.current;
       }
       round.current = null;
@@ -174,9 +188,15 @@ export function useHuntSession(
   }, [enabled, snapshot?.learner.id]);
 
   useEffect(() => {
-    const pause = () => round.current?.timer.pause();
+    const pause = () => {
+      round.current?.timer.pause();
+      round.current?.fluency.pause();
+    };
     const resume = () => {
-      if (!document.hidden) round.current?.timer.resume();
+      if (!document.hidden) {
+        round.current?.timer.resume();
+        if (!held.current) round.current?.fluency.resume();
+      }
     };
     const visibility = () => (document.hidden ? pause() : resume());
     window.addEventListener('blur', pause);
@@ -199,6 +219,7 @@ export function useHuntSession(
           : 'pointer';
     if (!active.guesses.length) {
       active.firstResponseMs = active.timer.read();
+      active.fluentResponseMs = active.fluency.read();
       active.input = input;
     } else if (active.input !== input) active.input = 'mixed';
     active.guesses.push(midi);
@@ -228,6 +249,7 @@ export function useHuntSession(
         spelling: `${noteName(next.target)}${octave(next.target)}`,
         guesses: [...active.guesses],
         firstResponseMs: active.firstResponseMs,
+        fluentResponseMs: active.fluentResponseMs,
         durationMs: active.timer.read(),
         assistance: active.assistance,
         input: active.input ?? input,
@@ -256,7 +278,7 @@ export function useHuntSession(
             activeRun.id,
           );
           const badgeGems =
-            assessment.earned && !hasBadge(profile, lesson.id)
+            assessment.stars > 0 && !hasBadge(profile, lesson.id)
               ? lesson.gems
               : 0;
           const runGems = assessment.mistakeFree ? 1 : 0;
@@ -265,7 +287,12 @@ export function useHuntSession(
             gems: badgeGems + runGems,
             badgeGems,
             runGems,
-            badge: assessment.earned,
+            badge: assessment.stars > 0,
+            stars: assessment.stars,
+            best: Math.max(
+              bestStars(profile, lesson.id),
+              assessment.stars,
+            ) as StarCount,
             successes: assessment.successes,
             length: assessment.length,
           };
@@ -322,14 +349,18 @@ export function useHuntSession(
     choice,
     lesson: activeLesson,
     result,
-    helped,
     chooseLesson,
-    help: () => {
-      if (!round.current || model.current.found) return;
-      round.current.assistance = 'note-name';
-      setHelped(true);
-    },
     guess,
+    setHeld: (value: boolean) => {
+      held.current = value;
+      if (value) round.current?.fluency.hold();
+      else if (
+        latest.current.enabled &&
+        !document.hidden &&
+        document.hasFocus()
+      )
+        round.current?.fluency.resume();
+    },
     reset: () => {
       if (run.current) chooseLesson(run.current.lessonId);
       else begin();
@@ -349,7 +380,12 @@ export function useHuntSession(
     },
     ready: () => {
       round.current?.timer.start();
-      if (document.hidden || !document.hasFocus()) round.current?.timer.pause();
+      round.current?.fluency.start();
+      if (held.current) round.current?.fluency.hold();
+      if (document.hidden || !document.hasFocus()) {
+        round.current?.timer.pause();
+        round.current?.fluency.pause();
+      }
     },
   };
 }

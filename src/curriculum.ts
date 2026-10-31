@@ -1,22 +1,36 @@
 import type { LearnerSnapshot } from './learners';
 import type { Encounter } from './learning';
-import { type Lesson, lessons, type World, worlds } from './lesson-catalog';
+import {
+  type Lesson,
+  legacyLessons,
+  lessons,
+  mergedLessonId,
+  type World,
+  worlds,
+} from './lesson-catalog';
 
 export {
   type Lesson,
   type LessonBadge,
   type LessonRunReward,
+  legacyLessons,
   lessons,
   type World,
   worlds,
 } from './lesson-catalog';
 
-export function lessonById(id: string) {
-  return lessons.find((lesson) => lesson.id === id);
+export function lessonById(id: string, revision?: number) {
+  return [...lessons, ...legacyLessons].find(
+    (lesson) =>
+      lesson.id === id &&
+      (revision === undefined || lesson.revision === revision),
+  );
 }
 export function hasBadge(snapshot: LearnerSnapshot, id: string) {
   return (
-    snapshot.learner.badges?.some((badge) => badge.lessonId === id) ?? false
+    snapshot.learner.badges?.some(
+      (badge) => mergedLessonId(badge.lessonId) === mergedLessonId(id),
+    ) ?? false
   );
 }
 // Legacy purchased-world milestones remain readable; they no longer gate lessons.
@@ -41,6 +55,41 @@ export function lessonLength(lesson: Lesson) {
 export function patternSize(lesson: Lesson) {
   return lesson.patterns?.[0]?.length ?? 1;
 }
+export type StarCount = 0 | 1 | 2 | 3;
+export type LessonStars = {
+  lessonId: string;
+  stars: StarCount;
+  revision: number;
+  runId: string;
+  at: number;
+};
+export function fluencyMs(lesson: Lesson, index: number) {
+  return lesson.patterns && index % patternSize(lesson) !== 0 ? 2000 : 4000;
+}
+export function bestStars(snapshot: LearnerSnapshot, id: string): StarCount {
+  const same = (other: string) => mergedLessonId(other) === mergedLessonId(id);
+  return Math.max(
+    0,
+    ...(snapshot.learner.lessonStars ?? [])
+      .filter((entry) => same(entry.lessonId))
+      .map((entry) => entry.stars),
+    ...(snapshot.learner.badges ?? [])
+      .filter((entry) => same(entry.lessonId))
+      .map(() => 1),
+    ...(snapshot.learner.runRewards ?? [])
+      .filter((entry) => same(entry.lessonId))
+      .map(() => 2),
+  ) as StarCount;
+}
+export function nextStarGoal(lesson: Lesson, stars: number) {
+  return stars === 0
+    ? 'Finish with 60% hearts'
+    : stars === 1
+      ? 'No mistakes'
+      : stars === 2
+        ? `Fluent: ${lesson.patterns ? '4s / 2s' : '4s'} finds`
+        : 'All three stars earned';
+}
 export function journeyProgress(snapshot: LearnerSnapshot) {
   const badges = snapshot.learner.badges ?? [];
   const gems =
@@ -60,6 +109,10 @@ export function journeyProgress(snapshot: LearnerSnapshot) {
       ),
     ),
     badges: badges.length,
+    stars: lessons.reduce(
+      (sum, lesson) => sum + bestStars(snapshot, lesson.id),
+      0,
+    ),
     gems,
     gemBalance: gems - spent,
   };
@@ -130,12 +183,34 @@ export function assessLesson(
         (event.firstResponseMs !== null &&
           event.firstResponseMs <= lesson.assessment.fluentMs)),
   );
+  const mistakeFree =
+    complete && rounds.every((event) => event.guesses.length === 1);
+  const fluent =
+    mistakeFree &&
+    rounds.every((event) => {
+      const ms =
+        event.fluentResponseMs === undefined
+          ? event.firstResponseMs
+          : event.fluentResponseMs;
+      return ms !== null && ms <= fluencyMs(lesson, event.lesson!.index);
+    });
+  const hearts = rounds.reduce((total, event) => total + event.reward, 0);
+  const stars: StarCount = !complete
+    ? 0
+    : fluent
+      ? 3
+      : mistakeFree
+        ? 2
+        : hearts >= length * 3 * lesson.heartMultiplier * 0.6
+          ? 1
+          : 0;
   return {
     complete,
-    mistakeFree:
-      complete && rounds.every((event) => event.guesses.length === 1),
+    mistakeFree,
+    stars,
     successes: successes.length,
     length,
+    // Version-one badge policy is retained for exact historical definitions.
     earned:
       complete &&
       successes.length / length >= lesson.assessment.accuracy &&

@@ -123,7 +123,7 @@ export function App() {
             </span>
             <span>
               {stats && learners.snapshot
-                ? `🏅 ${journeyProgress(learners.snapshot).badges} · ♥ ${stats.balance}`
+                ? `★ ${journeyProgress(learners.snapshot).stars} · ♥ ${stats.balance}`
                 : ''}
             </span>
           </button>

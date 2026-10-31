@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { journeyProgress } from '../src/curriculum';
+import { bestStars, journeyProgress } from '../src/curriculum';
 import { IndexedDbLearners } from '../src/learner-repository';
 import { type LearnerSnapshot, progress, wearing } from '../src/learners';
 import type { Encounter } from '../src/learning';
@@ -149,4 +149,31 @@ test('concurrent compatible purchases and individual removals retain the rest of
   assert.deepEqual(wearing(state.learner), ['star', 'bow']);
   assert.equal(state.purchases.length, 3);
   assert.equal(progress(state).balance, 24);
+});
+
+test('competing exercise completions persist the higher stars and award each run only once', async () => {
+  const first = new IndexedDbLearners();
+  const other = new IndexedDbLearners();
+  const state = await first.create(newLearner('star-concurrency').learner);
+  const slow = lessonEvents(state, 'find-three', (event) => ({
+    ...event,
+    firstResponseMs: 60000,
+  }));
+  const fast = lessonEvents(state, 'find-three');
+  await Promise.all([
+    ...slow.map((event) => first.record(event)),
+    ...fast.map((event) => other.record(event)),
+  ]);
+  await first.record(slow.at(-1)!);
+  await other.record(fast.at(-1)!);
+  const saved = await new IndexedDbLearners().load('star-concurrency');
+  assert.equal(bestStars(saved, 'find-three'), 3);
+  assert.equal(
+    saved.learner.lessonStars!.filter(
+      (entry) => entry.lessonId === 'find-three',
+    ).length,
+    1,
+  );
+  assert.equal(saved.learner.runRewards!.length, 2);
+  assert.equal(journeyProgress(saved).gems, 3);
 });

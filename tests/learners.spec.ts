@@ -95,7 +95,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
   for (let round = 0; round < 4; round++) await solve(page);
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
-  ).toContainText('🏅 0 · ♥ 12');
+  ).toContainText('★ 0 · ♥ 12');
   await page
     .getByRole('combobox', { name: 'Note range' })
     .selectOption('octave');
@@ -108,7 +108,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
   await expect(bow).toBeEnabled();
   await bow.click();
   await expect(
-    page.getByText('0 badges · ♥ 0 · 💎 0', { exact: true }),
+    page.getByText('★ 0 · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Take off Party bow', exact: true }),
@@ -127,7 +127,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
     page.getByRole('heading', { name: 'Ben', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText('0 badges · ♥ 0 · 💎 0', { exact: true }),
+    page.getByText('★ 0 · ♥ 0 · 💎 0', { exact: true }),
   ).toBeVisible();
   await page.keyboard.press('a'); // Profile forms never play or award notes.
   await closeLearners(page);
@@ -156,7 +156,7 @@ test('learners keep separate hearts, badges and cosmetics across switches, reloa
   ).toContainText('Ada');
   await expect(
     page.getByRole('button', { name: 'Learners and rewards' }),
-  ).toContainText('🏅 0 · ♥ 0');
+  ).toContainText('★ 0 · ♥ 0');
   await page.getByRole('button', { name: 'Learners and rewards' }).click();
   await expect(
     page

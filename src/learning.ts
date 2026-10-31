@@ -12,6 +12,7 @@ export type Encounter = {
   spelling: string;
   guesses: number[];
   firstResponseMs: number | null;
+  fluentResponseMs?: number | null;
   durationMs: number | null;
   assistance: 'note-name' | 'none';
   input: 'midi' | 'pointer' | 'computer' | 'mixed';
@@ -181,6 +182,10 @@ export class ResponseTimer {
   pause() {
     if (!this.ready) return;
     this.interrupted = true;
+    this.hold();
+  }
+  // A held key is intentional playing time, not an interruption or a deadline.
+  hold() {
     if (this.since !== null)
       this.elapsed += Math.max(0, this.clock.monotonic() - this.since);
     this.since = null;

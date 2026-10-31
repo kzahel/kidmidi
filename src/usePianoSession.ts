@@ -142,6 +142,7 @@ export function usePianoSession(
     player.stop();
     preview.stop();
     held.current.clear();
+    huntController.current.setHeld(false);
     setPressed(new Set());
     sound.stopAll();
     feedback.cancel();
@@ -170,6 +171,7 @@ export function usePianoSession(
         if (player.playing) player.stop();
         if (preview.playing) preview.stop();
         held.current.set(id, event.note);
+        huntController.current.setHeld(true);
         setLastNote(event.note);
         sound.play(
           id,
@@ -222,6 +224,7 @@ export function usePianoSession(
         }
       }
       setPressed(new Set(held.current.values()));
+      huntController.current.setHeld(held.current.size > 0);
     },
     [dancer, feedback, recorder, player, preview, sound],
   );
@@ -386,7 +389,8 @@ export function usePianoSession(
     await library.flush();
     return library.read(id);
   }
-  const shownPosition = hit?.position ?? position;
+  // Pattern feedback has its own note indices, independent of the selected song.
+  const shownPosition = hunting ? position : (hit?.position ?? position);
   const notes = song.phrases[shownPosition.phrase];
   const expected = notes[shownPosition.note].midi;
   const page = practicePage(
