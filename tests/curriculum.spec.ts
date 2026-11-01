@@ -141,18 +141,20 @@ test('star requirements and paged personal bests fit the smallest screens', asyn
       .poll(() =>
         page.getByRole('dialog').evaluate(
           (dialog) =>
-            [...dialog.querySelectorAll('article')].every((article) => {
-              const bounds = article.getBoundingClientRect();
-              return [...article.children].every((child) => {
-                const rect = child.getBoundingClientRect();
-                return (
-                  rect.top >= bounds.top &&
-                  rect.bottom <= bounds.bottom &&
-                  rect.left >= bounds.left &&
-                  rect.right <= bounds.right
-                );
-              });
-            }) && dialog.scrollHeight <= dialog.clientHeight + 1,
+            [...dialog.querySelectorAll('article, button[data-lesson]')].every(
+              (article) => {
+                const bounds = article.getBoundingClientRect();
+                return [...article.children].every((child) => {
+                  const rect = child.getBoundingClientRect();
+                  return (
+                    rect.top >= bounds.top &&
+                    rect.bottom <= bounds.bottom &&
+                    rect.left >= bounds.left &&
+                    rect.right <= bounds.right
+                  );
+                });
+              },
+            ) && dialog.scrollHeight <= dialog.clientHeight + 1,
         ),
       )
       .toBe(true);

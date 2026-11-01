@@ -13,6 +13,13 @@ export function Dialog({
   fitted?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const backdropPress = useRef(false);
+  const outside = (element: HTMLDialogElement, x: number, y: number) => {
+    const bounds = element.getBoundingClientRect();
+    return (
+      x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom
+    );
+  };
   useEffect(() => {
     const dialog = ref.current;
     const opener =
@@ -30,6 +37,25 @@ export function Dialog({
       ref={ref}
       className={`${styles['dialog']} ${fitted ? styles['fitted'] : ''}`}
       aria-label={title}
+      onPointerDown={(event) => {
+        backdropPress.current =
+          event.button === 0 &&
+          event.target === event.currentTarget &&
+          outside(event.currentTarget, event.clientX, event.clientY);
+      }}
+      onPointerCancel={() => {
+        backdropPress.current = false;
+      }}
+      onClick={(event) => {
+        const startedOutside = backdropPress.current;
+        backdropPress.current = false;
+        if (
+          startedOutside &&
+          event.target === event.currentTarget &&
+          outside(event.currentTarget, event.clientX, event.clientY)
+        )
+          onClose();
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onClose();

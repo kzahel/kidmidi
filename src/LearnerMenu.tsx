@@ -89,7 +89,13 @@ function Profiles({ controller }: { controller: LearnersController }) {
   );
 }
 
-function LearningProgress({ controller }: { controller: LearnersController }) {
+function LearningProgress({
+  controller,
+  onLesson,
+}: {
+  controller: LearnersController;
+  onLesson(id: string): void;
+}) {
   const [view, setView] = useState('stars');
   const [page, setPage] = useState(0);
   const snapshot = controller.snapshot;
@@ -144,13 +150,26 @@ function LearningProgress({ controller }: { controller: LearnersController }) {
           </>
         ) : view === 'stars' ? (
           lessons.slice(page * 4, (page + 1) * 4).map((lesson) => (
-            <article key={lesson.id}>
+            <button
+              type="button"
+              key={lesson.id}
+              className={styles['exercise']}
+              data-lesson={lesson.id}
+              aria-label={`Play ${lesson.name}`}
+              aria-describedby={`${lesson.id}-goal`}
+              onClick={() => onLesson(lesson.id)}
+            >
               <strong>{lesson.name}</strong>
-              <LessonStars stars={bestStars(snapshot, lesson.id)} />
-              <small>
+              <span className={styles['exercise-rating']}>
+                <LessonStars stars={bestStars(snapshot, lesson.id)} />
+                <span className={styles['play']} aria-hidden="true">
+                  ▶
+                </span>
+              </span>
+              <small id={`${lesson.id}-goal`}>
                 {nextStarGoal(lesson, bestStars(snapshot, lesson.id))}
               </small>
-            </article>
+            </button>
           ))
         ) : view === 'finds' ? (
           notes.slice(page * 4, (page + 1) * 4).map((note) => {
@@ -220,9 +239,11 @@ export function LearnerMenu({
   controller,
   onClose,
   wardrobe = false,
+  onLesson,
 }: {
   controller: LearnersController;
   wardrobe?: boolean;
+  onLesson(id: string): void;
   onClose(): void;
 }) {
   const [tab, setTab] = useState('Rewards');
@@ -269,7 +290,11 @@ export function LearnerMenu({
         ) : tab === 'Learners' ? (
           <Profiles key={snapshot.learner.id} controller={controller} />
         ) : (
-          <LearningProgress key={snapshot.learner.id} controller={controller} />
+          <LearningProgress
+            key={snapshot.learner.id}
+            controller={controller}
+            onLesson={onLesson}
+          />
         )}
       </div>
       {controller.error && (

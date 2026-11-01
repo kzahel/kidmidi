@@ -14,7 +14,13 @@ play, and a magnifying glass over notes for Note hunt. A wardrobe beside the pet
 opens the shop directly; the matching header wardrobe works from all activities.
 Home stays at the top left. A separate left arrow returns from a lesson to its
 group. On phones the house and arrow remain visible while their long labels are
-omitted. Profiles and detailed progress remain under the learner button.
+omitted. Profiles and detailed progress remain under the learner button. Exercise stars
+in Progress are large play buttons: tap a card to close the dialog and begin
+that exercise. A play triangle marks the action beside its title, with best stars
+and the next goal retained. All shared modals can be dismissed by tapping the
+dimmed backdrop, using the checkmark, or pressing Escape. Inside taps and drags
+across the dialog boundary do not dismiss it; the closing tap does not play the
+piano or activate controls underneath.
 
 Song cards use recognizable star, bun and rain drawings. Their separate speaker
 buttons play the first phrase through the global sound route, without advancing

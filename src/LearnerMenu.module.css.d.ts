@@ -3,11 +3,14 @@ declare const styles: {
   readonly 'about': string;
   readonly 'error': string;
   readonly 'evidence': string;
+  readonly 'exercise': string;
+  readonly 'exercise-rating': string;
   readonly 'field': string;
   readonly 'forms': string;
   readonly 'name-form': string;
   readonly 'pages': string;
   readonly 'panel': string;
+  readonly 'play': string;
   readonly 'profiles': string;
   readonly 'progress': string;
   readonly 'quiet': string;

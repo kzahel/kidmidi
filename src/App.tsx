@@ -58,6 +58,12 @@ export function App() {
     session.setRangeOpen(false);
     setWardrobeOpen(true);
   }
+  function startLesson(id: string) {
+    setLearnersOpen(false);
+    setWardrobeOpen(false);
+    navigate('hunt');
+    hunt.chooseLesson(id);
+  }
   return (
     <main className={styles['app']}>
       <header
@@ -173,10 +179,7 @@ export function App() {
           key={learners.snapshot?.learner.id}
           controller={learners}
           initialWorld={hunt.lesson?.world}
-          onLesson={(id) => {
-            navigate('hunt');
-            hunt.chooseLesson(id);
-          }}
+          onLesson={startLesson}
           onPractice={() => {
             navigate('hunt');
             hunt.chooseRange('adaptive');
@@ -205,6 +208,7 @@ export function App() {
         <LearnerMenu
           controller={learners}
           wardrobe
+          onLesson={startLesson}
           onClose={() => {
             stopSpokenHelp();
             setWardrobeOpen(false);
@@ -214,6 +218,7 @@ export function App() {
       {learnersOpen && (
         <LearnerMenu
           controller={learners}
+          onLesson={startLesson}
           onClose={() => setLearnersOpen(false)}
         />
       )}

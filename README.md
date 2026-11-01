@@ -269,7 +269,9 @@ playing. Keyboard connection explanations stay in **Settings → Keyboard**.
 See [preliteracy design and backdrops](docs/preliteracy.md).
 
 **Learners & rewards** opens a fitted collection with **Rewards**,
-**Learners**, and **Progress** tabs. The direct **Wardrobe** opens Dress up and
+**Learners**, and **Progress** tabs. Tap an exercise in Progress → Exercise stars
+to close the modal and start that exercise. Modals also close when you tap the
+dimmed area outside them, as well as with the checkmark or Escape. The direct **Wardrobe** opens Dress up and
 omits adult profile/progress tabs. Rewards has picture tabs for **Friends**,
 **Dress up** and **Places**:
 preview companions and outfits without spending, then explicitly buy or choose.

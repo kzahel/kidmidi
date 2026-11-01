@@ -197,7 +197,9 @@ does not add a separate repeatable currency reward. Hearts remain attempt-based:
 
 Results show this run's stars, saved best, next goal, hearts, "First star" gems
 and "No mistakes" gems. Options explains the full rules before playing. Profiles
-show Exercise stars, Recent finds, Earlier achievements and Stars & gems.
+show Exercise stars, Recent finds, Earlier achievements and Stars & gems. Exercise
+star cards launch their exercise directly, closing the modal and starting a new
+set for the selected learner.
 
 `learner.lessonStars` stores only improvements (lesson ID/revision, run ID, time
 and best stars). `learner.runRewards` retains repeatable one-gem awards. Both
